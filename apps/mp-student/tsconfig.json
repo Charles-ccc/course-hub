@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2018",
+    "lib": ["ES2018", "DOM"],
+    "module": "commonjs",
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "strict": false,
+    "paths": {
+      "@wangke/shared-types": ["../../packages/shared-types/src"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,17 @@
+node_modules
+dist
+.next
+.turbo
+*.log
+.env
+.env.local
+.DS_Store
+coverage
+dist/
+build/
+# Taro
+apps/mp-student/dist/
+apps/mp-staff/dist/
+# Prisma
+apps/api/prisma/dev.db
+apps/api/mock-data/

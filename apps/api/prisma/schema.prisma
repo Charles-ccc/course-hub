@@ -1,0 +1,453 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 机构 ====================
+model Org {
+  id                 String    @id @default(uuid())
+  name               String
+  unifiedCreditCode  String    @unique
+  businessLicenseUrl String
+  eduQualificationUrl String
+  alipayMerchantId   String?
+  settlementFeeRate  Decimal   @db.Decimal(5, 4)
+  depositBalance     Int       @default(0)
+  exitNoticeDays     Int       @default(90)
+  status             OrgStatus @default(PENDING)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  courses     Course[]
+  orders      Order[]
+  settlements Settlement[]
+  depositLedger DepositLedger[]
+
+  @@map("org")
+}
+
+enum OrgStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  EXITED
+}
+
+// ==================== 业务员 ====================
+model Staff {
+  id               String           @id @default(uuid())
+  name             String
+  phone            String           @unique
+  openidWeixin     String?          @unique
+  openidAlipay     String?          @unique
+  qrCode           String?
+  groupId          String?
+  contractType     StaffContractType
+  commissionConfigId String?
+  status           StaffStatus      @default(ACTIVE)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  students    Student[]
+  commissions Commission[]
+  orders      Order[]      @relation("OrderAttribution")
+
+  @@map("staff")
+}
+
+enum StaffContractType {
+  EMPLOYEE
+  AGENT
+}
+
+enum StaffStatus {
+  ACTIVE
+  DISABLED
+}
+
+// ==================== 学员 ====================
+model Student {
+  id                 String   @id @default(uuid())
+  openidWeixin       String?  @unique
+  openidAlipay       String?  @unique
+  phone              String   @unique
+  realname           String
+  idNoHash           String   @unique
+  idNoEncrypted      String
+  realnameVerified   Boolean  @default(false)
+  ageVerifiedAdult   Boolean  @default(false)
+  referrerStaffId    String?
+  referrerStudentId  String?
+  zhimaAuthStatus    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  referrerStaff    Staff?   @relation(fields: [referrerStaffId], references: [id])
+  referrerStudent  Student? @relation("StudentReferral", fields: [referrerStudentId], references: [id])
+  referredStudents Student[] @relation("StudentReferral")
+
+  orders              Order[]
+  learningCheckins    LearningCheckin[]
+  sentReferralRewards ReferralReward[] @relation("InviterRewards")
+  receivedReferralRewards ReferralReward[] @relation("InviteeRewards")
+  creditAuthorizations CreditAuthorization[]
+
+  @@map("student")
+}
+
+// ==================== 课程 ====================
+model Course {
+  id               String      @id @default(uuid())
+  orgId            String
+  title            String
+  outline          String      @db.Text
+  teacherInfo      String      @db.Text
+  videoAssetIds    Json
+  price            Int
+  installmentPlanId String?
+  periodCount      Int
+  reviewPeriodDays Int         @default(180)
+  status           CourseStatus @default(ONLINE)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  org    Org     @relation(fields: [orgId], references: [id])
+  orders Order[]
+
+  @@map("course")
+}
+
+enum CourseStatus {
+  ONLINE
+  OFFLINE
+}
+
+// ==================== 订单 ====================
+model Order {
+  id                 String      @id @default(uuid())
+  studentId          String
+  courseId           String
+  sellerOrgId        String
+  attributionStaffId String?
+  totalAmount        Int
+  periodCount        Int
+  periodAmount       Int
+  status             OrderStatus @default(CREATED)
+  contractId         String?
+  coolingOffDeadline DateTime?
+  invoiceSubject     String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  student           Student          @relation(fields: [studentId], references: [id])
+  course            Course           @relation(fields: [courseId], references: [id])
+  sellerOrg         Org              @relation(fields: [sellerOrgId], references: [id])
+  attributionStaff  Staff?           @relation("OrderAttribution", fields: [attributionStaffId], references: [id])
+  contract          Contract?
+
+  installmentItems    InstallmentItem[]
+  deductions          Deduction[]
+  commissions         Commission[]
+  referralRewards     ReferralReward[]
+  creditDecisions     CreditDecision[]
+  creditAgreements    CreditAgreement[]
+  serviceRecords      ServiceRecord[]
+  paymentAuths        PaymentAuth[]
+
+  @@map("order")
+}
+
+enum OrderStatus {
+  CREATED
+  COOLING_OFF
+  ACTIVE
+  COMPLETED
+  REFUNDED
+  TERMINATED
+}
+
+// ==================== 分期计划 ====================
+model InstallmentItem {
+  id                 String          @id @default(uuid())
+  orderId            String
+  periodNo           Int
+  dueDate            DateTime
+  planAmount         Int
+  incentiveApplied   Int             @default(0)
+  actualAmount       Int
+  deductedAmount     Int             @default(0)
+  status             InstallmentStatus @default(PENDING)
+  contentDeliveredAt DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  deductions Deduction[]
+
+  @@unique([orderId, periodNo])
+  @@map("installment_item")
+}
+
+enum InstallmentStatus {
+  PENDING
+  DELIVERED
+  PAID
+  OVERDUE
+  WRITTEN_OFF
+}
+
+// ==================== 合同 ====================
+model Contract {
+  id              String   @id @default(uuid())
+  orderId         String   @unique
+  partyAOrgId     String
+  partyBStudentId String
+  templateId      String
+  esignProvider   String
+  esignRef        String?
+  signedAt        DateTime?
+  createdAt       DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("contract")
+}
+
+// ==================== 支付授权 ====================
+model PaymentAuth {
+  id        String          @id @default(uuid())
+  orderId   String
+  studentId String
+  channels  Json
+  priority  Int             @default(0)
+  status    String          @default("active")
+  createdAt DateTime        @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payment_auth")
+}
+
+// ==================== 代扣记录 ====================
+model Deduction {
+  id              String          @id @default(uuid())
+  orderId         String
+  periodNo        Int
+  installmentItemId String?
+  payeeOrgId      String
+  channel         PaymentChannel
+  amount          Int
+  status          DeductionStatus @default(PENDING)
+  retryCount      Int             @default(0)
+  attempts        Json            @default("[]")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  order           Order           @relation(fields: [orderId], references: [id])
+  installmentItem InstallmentItem? @relation(fields: [installmentItemId], references: [id])
+
+  @@map("deduction")
+}
+
+enum PaymentChannel {
+  WECHAT_SCORE
+  ZHIMA
+  BANKCARD
+}
+
+enum DeductionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// ==================== 信用授权 ====================
+model CreditAuthorization {
+  id        String   @id @default(uuid())
+  studentId String
+  provider  String
+  authToken String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  student  Student @relation(fields: [studentId], references: [id])
+
+  @@map("credit_authorization")
+}
+
+model CreditDecision {
+  id          String   @id @default(uuid())
+  orderId     String
+  authId      String?
+  provider    String
+  eligible    Boolean
+  riskTier    String?
+  suggestedLimit Int?
+  providerRef String
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("credit_decision")
+}
+
+model CreditAgreement {
+  id           String   @id @default(uuid())
+  orderId      String
+  provider     String
+  agreementNo  String?
+  status       String   @default("pending")
+  signedAt     DateTime?
+  createdAt    DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("credit_agreement")
+}
+
+// ==================== 提成 ====================
+model Commission {
+  id        String           @id @default(uuid())
+  staffId   String
+  orderId   String
+  type      CommissionType
+  periodNo  Int?
+  amount    Int
+  status    CommissionStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  staff Staff @relation(fields: [staffId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("commission")
+}
+
+enum CommissionType {
+  CLOSING
+  PERFORMANCE
+}
+
+enum CommissionStatus {
+  PENDING
+  SETTLED
+  HELD
+  CLAWED_BACK
+}
+
+// ==================== 拉新奖励 ====================
+model ReferralReward {
+  id               String        @id @default(uuid())
+  inviterStudentId String
+  inviteeStudentId String
+  orderId          String
+  grossAmount      Int
+  taxWithheld      Int           @default(0)
+  netAmount        Int
+  status           ReferralStatus @default(PENDING)
+  trigger          String        @default("invitee_first_repayment")
+  createdAt        DateTime      @default(now())
+
+  inviterStudent Student @relation("InviterRewards", fields: [inviterStudentId], references: [id])
+  inviteeStudent Student @relation("InviteeRewards", fields: [inviteeStudentId], references: [id])
+  order          Order   @relation(fields: [orderId], references: [id])
+
+  @@map("referral_reward")
+}
+
+enum ReferralStatus {
+  PENDING
+  PAID
+}
+
+// ==================== 学习打卡 ====================
+model LearningCheckin {
+  id            String   @id @default(uuid())
+  orderId       String
+  studentId     String
+  coursePeriod  Int
+  faceMatchRef  String?
+  matched       Boolean  @default(false)
+  ts            DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@map("learning_checkin")
+}
+
+model Incentive {
+  id              String  @id @default(uuid())
+  orderId         String
+  sourceOrgId     String
+  amount          Int
+  appliedToPeriod Int?
+  status          String  @default("granted")
+  createdAt       DateTime @default(now())
+
+  @@map("incentive")
+}
+
+// ==================== 服务记录 ====================
+model ServiceRecord {
+  id         String            @id @default(uuid())
+  orderId    String
+  type       ServiceRecordType
+  payloadRef String?
+  actorId    String
+  ts         DateTime          @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("service_record")
+}
+
+enum ServiceRecordType {
+  QA
+  TEACHER_OUTREACH
+  CONTENT_UNLOCK
+  CHECKIN
+}
+
+// ==================== 结算 ====================
+model Settlement {
+  id                String           @id @default(uuid())
+  orgId             String
+  period            String
+  gmv               Int
+  platformServiceFee Int
+  status            SettlementStatus @default(PENDING)
+  createdAt         DateTime         @default(now())
+
+  org Org @relation(fields: [orgId], references: [id])
+
+  @@map("settlement")
+}
+
+enum SettlementStatus {
+  PENDING
+  SETTLED
+}
+
+model DepositLedger {
+  id           String           @id @default(uuid())
+  orgId        String
+  type         DepositLedgerType
+  amount       Int
+  balanceAfter Int
+  reason       String
+  ts           DateTime         @default(now())
+
+  org Org @relation(fields: [orgId], references: [id])
+
+  @@map("deposit_ledger")
+}
+
+enum DepositLedgerType {
+  DEPOSIT_IN
+  RISK_DEDUCTION
+  REFUND
+}

@@ -1,0 +1,109 @@
+.profile-page {
+  padding: 24px;
+  background: linear-gradient(180deg, #eef5ff 0%, #f6f4ef 100%);
+  min-height: 100vh;
+}
+.not-logged {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.hint {
+  font-size: 30px;
+  color: #7b8493;
+  margin-bottom: 28px;
+}
+.login-btn {
+  background: linear-gradient(135deg, #2563eb, #1748d6);
+  color: #fff;
+  border-radius: 22px;
+  font-size: 28px;
+  height: 84px;
+  width: 100%;
+}
+.user-card {
+  background: linear-gradient(145deg, #2152d8, #3787f7);
+  border-radius: 28px;
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  position: relative;
+  box-shadow: 0 20px 38px rgba(37, 99, 235, 0.18);
+}
+.avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+}
+.avatar-text {
+  font-size: 34px;
+  color: #fff;
+}
+.user-info {
+  flex: 1;
+}
+.name {
+  display: block;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.phone {
+  display: block;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.82);
+}
+.verified-badge {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  background: #10b981;
+  color: #fff;
+  font-size: 20px;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.menu-list {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 28px;
+  padding: 0 22px;
+  margin-bottom: 24px;
+  box-shadow: 0 14px 32px rgba(73, 86, 113, 0.06);
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 88px;
+  border-bottom: 1px solid #edf0f4;
+}
+.menu-item:last-child {
+  border-bottom: none;
+}
+.menu-label {
+  font-size: 26px;
+  color: #243244;
+}
+.menu-warn {
+  color: #f59e0b;
+}
+.menu-arrow {
+  font-size: 24px;
+  color: #9aa3b2;
+}
+.logout-btn {
+  background: #fff;
+  color: #ef4444;
+  border: 1px solid #efb3b3;
+  border-radius: 22px;
+  font-size: 26px;
+  height: 84px;
+}

@@ -1,0 +1,81 @@
+.staff-students-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: linear-gradient(180deg, #edf8f6 0%, #eef3ef 100%);
+}
+
+.staff-students-title,
+.staff-students-subtitle,
+.staff-students-loading,
+.staff-student-name,
+.staff-student-phone,
+.staff-student-chip,
+.staff-students-empty {
+  display: block;
+}
+
+.staff-students-title {
+  font-size: 38px;
+  font-weight: 700;
+  color: #18362d;
+  margin-bottom: 8px;
+}
+
+.staff-students-subtitle {
+  font-size: 22px;
+  color: #667085;
+  line-height: 1.7;
+  margin-bottom: 18px;
+}
+
+.staff-students-loading {
+  font-size: 24px;
+  color: #8a93a1;
+  margin-bottom: 16px;
+}
+
+.staff-students-list {
+  max-height: 72vh;
+}
+
+.staff-student-card {
+  margin-bottom: 16px;
+  padding: 24px 22px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 30px rgba(43, 82, 64, 0.08);
+}
+
+.staff-student-name {
+  margin-bottom: 8px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #18362d;
+}
+
+.staff-student-phone {
+  margin-bottom: 16px;
+  font-size: 22px;
+  color: #7b8493;
+}
+
+.staff-student-order-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.staff-student-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #edf9f7;
+  color: #0f766e;
+  font-size: 20px;
+}
+
+.staff-students-empty {
+  padding: 88px 24px;
+  text-align: center;
+  font-size: 26px;
+  color: #8a93a1;
+}

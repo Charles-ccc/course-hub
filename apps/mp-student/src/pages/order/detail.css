@@ -1,0 +1,153 @@
+.order-detail-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f6f4ef;
+}
+.scroll-area {
+  flex: 1;
+  height: calc(100vh - 120px);
+}
+.order-info-card {
+  background: #fff;
+  margin: 24px 24px 16px;
+  border-radius: 28px;
+  padding: 28px 24px;
+  box-shadow: 0 16px 34px rgba(73, 86, 113, 0.08);
+}
+.course-title {
+  display: block;
+  font-size: 34px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #172033;
+  margin-bottom: 10px;
+}
+.org-name {
+  display: block;
+  font-size: 22px;
+  color: #717b89;
+  margin-bottom: 22px;
+}
+.amount-grid {
+  display: flex;
+  justify-content: space-between;
+}
+.amount-item {
+  text-align: center;
+}
+.amount-label {
+  display: block;
+  font-size: 20px;
+  color: #7b8493;
+  margin-bottom: 8px;
+}
+.amount-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #172033;
+}
+.cooling-notice {
+  background: #edf5ff;
+  margin: 0 24px 16px;
+  border-radius: 24px;
+  padding: 22px;
+}
+.cooling-title {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin-bottom: 8px;
+}
+.cooling-text {
+  display: block;
+  font-size: 24px;
+  color: #1e40af;
+  margin-bottom: 8px;
+}
+.cooling-deadline {
+  display: block;
+  font-size: 22px;
+  color: #3b82f6;
+}
+.installment-list {
+  background: #fff;
+  margin: 0 24px 20px;
+  border-radius: 28px;
+  padding: 22px;
+  box-shadow: 0 14px 30px rgba(73, 86, 113, 0.06);
+}
+.section-title {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #172033;
+  margin-bottom: 16px;
+}
+.installment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid #edf0f4;
+}
+.installment-item:last-child {
+  border-bottom: none;
+}
+.item-period {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  color: #172033;
+}
+.item-date {
+  display: block;
+  font-size: 20px;
+  color: #7b8493;
+  margin-top: 4px;
+}
+.item-amount {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #172033;
+  text-align: right;
+}
+.item-status {
+  display: block;
+  font-size: 20px;
+  text-align: right;
+  margin-top: 4px;
+}
+.status-paid {
+  color: #10b981;
+}
+.status-overdue {
+  color: #ef4444;
+}
+.status-delivered {
+  color: #f59e0b;
+}
+.status-pending {
+  color: #6b7280;
+}
+.action-bar {
+  padding: 14px 24px 28px;
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid #edf0f4;
+}
+.action-btn {
+  font-size: 28px;
+  border-radius: 22px;
+  height: 88px;
+}
+.action-btn.primary {
+  background: linear-gradient(135deg, #2563eb, #1748d6);
+  color: #fff;
+}
+.action-btn.danger {
+  background: #ef4444;
+  color: #fff;
+}

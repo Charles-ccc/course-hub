@@ -1,0 +1,124 @@
+.index-page {
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at 12% 10%,
+      rgba(255, 184, 92, 0.18),
+      transparent 24%
+    ),
+    linear-gradient(180deg, #f8f1e2 0%, #f6f4ef 34%, #f6f4ef 100%);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.06);
+  border-radius: 26px;
+  padding: 0 20px;
+  height: 76px;
+  box-shadow: 0 12px 28px rgba(73, 86, 113, 0.08);
+}
+
+.search-input {
+  flex: 1;
+  font-size: 26px;
+  color: #1f2937;
+}
+
+.search-btn {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2563eb;
+  margin-left: 12px;
+}
+
+.section-title {
+  padding: 8px 4px 18px;
+  font-size: 34px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.course-list {
+  height: calc(100vh - 166px);
+}
+
+.course-card {
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 28px;
+  padding: 28px 24px 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 32px rgba(73, 86, 113, 0.09);
+}
+
+.course-title {
+  display: block;
+  font-size: 30px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #172033;
+  margin-bottom: 8px;
+}
+
+.course-org {
+  display: block;
+  font-size: 22px;
+  color: #717b89;
+  margin-bottom: 18px;
+}
+
+.course-price-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.price-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.period-count {
+  background: #edf4ff;
+  color: #2563eb;
+  font-size: 20px;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.period-amount {
+  font-size: 34px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.total-price {
+  font-size: 22px;
+  color: #717b89;
+}
+
+.badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 20px;
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 88px 32px;
+  color: #8a93a1;
+  font-size: 26px;
+}
