@@ -1,14 +1,14 @@
 {
   "miniprogramRoot": "dist/",
   "projectname": "网课超市-业务员端",
-  "appid": "wx9fac44e9404445b0",
+  "appid": "wxb5295c87801846b3",
   "setting": {
     "urlCheck": false,
     "es6": false,
     "enhance": true,
     "minified": true,
     "checkInvalidKey": false,
-    "postcss": false,
+    "postcss": true,
     "compileWorklet": false,
     "uglifyFileName": false,
     "uploadWithSourceMap": true,
@@ -35,5 +35,6 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.16.1"
 }

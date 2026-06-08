@@ -161,6 +161,47 @@ export class OrderService {
     return order;
   }
 
+  /** 法大大 / e签宝 签约入口（开发阶段直接激活订单） */
+  async signWithProvider(studentId: string, orderId: string, provider: 'fadadada' | 'eqianbao') {
+    const order = await this.findStudentOrder(studentId, orderId);
+
+    if (order.status !== OrderStatus.CREATED) {
+      throw new BadRequestException('订单状态不允许签约');
+    }
+
+    // 创建合同记录
+    const contract = await this.prisma.contract.create({
+      data: {
+        orderId: order.id,
+        partyAOrgId: order.sellerOrgId,
+        partyBStudentId: studentId,
+        templateId: 'default_installment_template',
+        esignProvider: provider,
+        signedAt: new Date(),
+      },
+    });
+
+    // 签约完成直接进入 ACTIVE（跳过冷静期）
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.ACTIVE,
+        contractId: contract.id,
+      },
+    });
+
+    const signUrl = `https://mock-${provider}.wangke.com/sign/${orderId}`;
+    return { success: true, signUrl, order: updated };
+  }
+
+  async getSignStatus(studentId: string, orderId: string) {
+    const order = await this.findStudentOrder(studentId, orderId);
+    return {
+      signed: order.status !== OrderStatus.CREATED,
+      status: order.status,
+    };
+  }
+
   async activateCoolingOffOrders() {
     const now = new Date();
     await this.prisma.order.updateMany({

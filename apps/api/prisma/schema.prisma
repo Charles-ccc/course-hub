@@ -74,10 +74,11 @@ model Student {
   id                 String   @id @default(uuid())
   openidWeixin       String?  @unique
   openidAlipay       String?  @unique
-  phone              String   @unique
-  realname           String
-  idNoHash           String   @unique
-  idNoEncrypted      String
+  phone              String?  @unique
+  passwordHash       String?
+  realname           String?
+  idNoHash           String?  @unique
+  idNoEncrypted      String?
   realnameVerified   Boolean  @default(false)
   ageVerifiedAdult   Boolean  @default(false)
   referrerStaffId    String?

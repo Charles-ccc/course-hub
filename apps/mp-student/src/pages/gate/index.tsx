@@ -1,16 +1,61 @@
-import { useState } from 'react'
-import Taro from '@tarojs/taro'
-import { View, Text, Button, Input } from '@tarojs/components'
-import './index.css'
+import { useEffect, useState } from "react";
+import Taro from "@tarojs/taro";
+import { View, Text, Button } from "@tarojs/components";
+import { api } from "../../services/api";
+import { useUserStore } from "../../store";
+import "./index.css";
 
 export default function GatePage() {
-  const [devCode, setDevCode] = useState('')
-  const isDev = process.env.NODE_ENV === 'development'
+  const [checking, setChecking] = useState(true);
+  const { isLoggedIn, setToken, setProfile } = useUserStore();
 
-  const handleDevEntry = () => {
-    const code = devCode.trim() || 'staff-demo-001'
-    Taro.setStorageSync('referrerStaffId', code)
-    Taro.switchTab({ url: '/pages/index/index' })
+  useEffect(() => {
+    const init = async () => {
+      if (isLoggedIn) {
+        Taro.switchTab({ url: "/pages/index/index" });
+        return;
+      }
+
+      const phone = Taro.getStorageSync("registeredPhone");
+      if (phone) {
+        try {
+          const { code: authCode } = await Taro.login();
+          const res = await api.alipayLogin(authCode, undefined, undefined);
+          setToken(res.token);
+          setProfile(res.student);
+          Taro.switchTab({ url: "/pages/index/index" });
+          return;
+        } catch {
+          // 静默登录失败，回落到欢迎页
+        }
+      }
+
+      setChecking(false);
+    };
+
+    init();
+  }, []);
+
+  const handleGoRegister = () => {
+    Taro.navigateTo({ url: "/pages/auth/register" });
+  };
+
+  const handleGoLogin = () => {
+    Taro.navigateTo({ url: "/pages/auth/login" });
+  };
+
+  if (checking) {
+    return (
+      <View className='gate-page'>
+        <View className='hero'>
+          <Text className='logo'>网课超市</Text>
+          <Text className='tagline'>先学后付 · 放心上课</Text>
+        </View>
+        <Text style={{ textAlign: "center", color: "#999", fontSize: "28px" }}>
+          加载中...
+        </Text>
+      </View>
+    );
   }
 
   return (
@@ -20,34 +65,35 @@ export default function GatePage() {
         <Text className='tagline'>先学后付 · 放心上课</Text>
       </View>
 
-      <View className='card'>
-        <Text className='card-icon'>📲</Text>
-        <Text className='card-title'>请通过业务员邀请进入</Text>
-        <Text className='card-desc'>
-          本平台课程需通过业务员专属二维码报名，扫码后即可注册并选课。
+      <View className='welcome-desc'>
+        <Text className='welcome-text'>
+          优质在线课程，先体验后付款。由业务员邀请注册，开启学习之旅。
         </Text>
       </View>
 
-      <View className='steps'>
-        <View className='step'><Text className='step-num'>1</Text><Text className='step-text'>联系业务员获取专属二维码</Text></View>
-        <View className='step'><Text className='step-num'>2</Text><Text className='step-text'>扫码进入注册</Text></View>
-        <View className='step'><Text className='step-num'>3</Text><Text className='step-text'>完成实名认证后选课</Text></View>
+      <View className='welcome-actions'>
+        <Button className='welcome-btn-primary' onClick={handleGoRegister}>
+          立即注册
+        </Button>
+        <Button className='welcome-btn-secondary' onClick={handleGoLogin}>
+          已有账号，去登录
+        </Button>
       </View>
 
-      {isDev && (
-        <View className='dev-entry'>
-          <Text className='dev-title'>开发模式快速入口</Text>
-          <Input
-            className='dev-input'
-            placeholder='业务员ID（默认 staff-demo-001）'
-            value={devCode}
-            onInput={e => setDevCode(e.detail.value)}
-          />
-          <Button className='dev-btn' onClick={handleDevEntry}>
-            模拟扫码进入
-          </Button>
+      <View className='steps'>
+        <View className='step'>
+          <Text className='step-num'>1</Text>
+          <Text className='step-text'>联系业务员获取机构码</Text>
         </View>
-      )}
+        <View className='step'>
+          <Text className='step-num'>2</Text>
+          <Text className='step-text'>手机注册并完成实名</Text>
+        </View>
+        <View className='step'>
+          <Text className='step-num'>3</Text>
+          <Text className='step-text'>免费试学，满意再付款</Text>
+        </View>
+      </View>
     </View>
-  )
+  );
 }

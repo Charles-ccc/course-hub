@@ -518,4 +518,108 @@ export const mockStudentApi = {
     await wait();
     return clone(mockStudentState.referralRewards);
   },
+
+  // 手机号体系（mock 不校验验证码和密码，任意值均成功）
+  async sendSmsCode(_phone: string, _type: "register" | "reset") {
+    await wait();
+    return { success: true };
+  },
+
+  async registerByPhone(phone: string, _code: string, _password: string, _orgCode: string) {
+    await wait();
+    mockStudentState.profile.phone = phone;
+    return {
+      token: `mock-student-token-register-${phone}`,
+      student: clone(mockStudentState.profile),
+      isNew: true,
+    };
+  },
+
+  async loginByPhone(phone: string, _password: string) {
+    await wait();
+    if (phone) {
+      mockStudentState.profile.phone = phone;
+    }
+    return {
+      token: `mock-student-token-phone-${phone}`,
+      student: clone(mockStudentState.profile),
+      isNew: !mockStudentState.profile.realnameVerified,
+    };
+  },
+
+  async resetPassword(_phone: string, _code: string, _newPassword: string) {
+    await wait();
+    return { success: true };
+  },
+
+  // 视频
+  async getCourseVideos(courseId: string) {
+    await wait();
+    return [
+      { id: `${courseId}-v1`, title: "第一节：课程介绍", duration: "12:30" },
+      { id: `${courseId}-v2`, title: "第二节：基础入门", duration: "28:45" },
+      { id: `${courseId}-v3`, title: "第三节：核心技能", duration: "35:20" },
+      { id: `${courseId}-v4`, title: "第四节：实战演练", duration: "42:10" },
+    ];
+  },
+
+  async getVideoUrl(videoId: string) {
+    await wait();
+    // 返回一个示例视频地址（实际接入时替换为真实防盗链 URL）
+    return `https://vod.example.com/mock/${videoId}.mp4`;
+  },
+
+  // 教师
+  async getTeacherInfo(courseId: string) {
+    await wait();
+    const teacherMap: Record<string, any> = {
+      "course-ui-001": {
+        name: "韩松",
+        title: "资深 UI 设计师",
+        bio: "11 年 B 端与电商设计经验，服务过多家上市公司，带过 300+ 学员项目落地。",
+        phone: "13800138001",
+        qrCode: "",
+      },
+      "course-video-001": {
+        name: "陈洛",
+        title: "短视频运营专家",
+        bio: "操盘过多条百万播放账号，擅长账号定位与内容爆款方法论。",
+        phone: "13800138002",
+        qrCode: "",
+      },
+      "course-ai-001": {
+        name: "顾言",
+        title: "企业数字化顾问",
+        bio: "深耕 AI 办公效率领域，为多家企业提供数字化转型方案。",
+        phone: "13800138003",
+        qrCode: "",
+      },
+    };
+    return teacherMap[courseId] || { name: "授课老师", title: "讲师", bio: "", phone: "" };
+  },
+
+  // 签约（mock 直接成功）
+  async signWithFadadada(orderId: string) {
+    await wait(400);
+    const order = mockStudentState.orders.find((item) => item.id === orderId);
+    if (order) {
+      order.status = "ACTIVE";
+    }
+    return { success: true, signUrl: `https://mock-fadadada.com/sign/${orderId}` };
+  },
+
+  async signWithEqianbao(orderId: string) {
+    await wait(400);
+    const order = mockStudentState.orders.find((item) => item.id === orderId);
+    if (order) {
+      order.status = "ACTIVE";
+    }
+    return { success: true, signUrl: `https://mock-eqianbao.com/sign/${orderId}` };
+  },
+
+  async checkSignStatus(orderId: string) {
+    await wait();
+    const order = mockStudentState.orders.find((item) => item.id === orderId);
+    return { signed: order?.status === "ACTIVE" };
+  },
 };

@@ -12,12 +12,6 @@ export default function IndexPage() {
   const isLoggedIn = useUserStore(s => s.isLoggedIn)
 
   useEffect(() => {
-    // 检查是否有业务员来源，无来源跳引导页
-    const staffId = Taro.getStorageSync('referrerStaffId')
-    if (!staffId) {
-      Taro.redirectTo({ url: '/pages/gate/index' })
-      return
-    }
     loadCourses()
   }, [])
 

@@ -2,7 +2,9 @@ import Taro from "@tarojs/taro";
 import { mockStudentApi } from "./mock";
 
 const BASE_URL = process.env.TARO_APP_API_URL || "http://localhost:3000";
-const useMockApi = process.env.TARO_APP_USE_FRONTEND_MOCK === "true";
+const useMockApi =
+  process.env.NODE_ENV === "development" ||
+  process.env.TARO_APP_USE_FRONTEND_MOCK === "true";
 
 function getToken() {
   return Taro.getStorageSync("token") || "";
@@ -29,7 +31,7 @@ async function request<T = any>(
 }
 
 const realApi = {
-  // 认证
+  // 认证 — OAuth（用于静默自动登录）
   wechatLogin: (
     code: string,
     referrerStaffId?: string,
@@ -54,6 +56,33 @@ const realApi = {
       referrerStudentId,
     }),
 
+  // 认证 — 手机号体系
+  sendSmsCode: (phone: string, type: "register" | "reset") =>
+    request("POST", "/api/v1/auth/sms/send", { phone, type }),
+
+  registerByPhone: (
+    phone: string,
+    code: string,
+    password: string,
+    orgCode: string,
+  ) =>
+    request("POST", "/api/v1/auth/phone/register", {
+      phone,
+      code,
+      password,
+      orgCode,
+    }),
+
+  loginByPhone: (phone: string, password: string) =>
+    request("POST", "/api/v1/auth/phone/login", { phone, password }),
+
+  resetPassword: (phone: string, code: string, newPassword: string) =>
+    request("POST", "/api/v1/auth/phone/reset-password", {
+      phone,
+      code,
+      newPassword,
+    }),
+
   // 实名
   verifyRealname: (data: { name: string; idNo: string; phone: string }) =>
     request("POST", "/api/v1/users/realname", data),
@@ -72,15 +101,20 @@ const realApi = {
 
   getCourseDetail: (id: string) => request("GET", `/api/v1/courses/${id}`),
 
+  // 视频
+  getCourseVideos: (courseId: string) =>
+    request("GET", `/api/v1/courses/${courseId}/videos`),
+
+  getVideoUrl: (videoId: string) =>
+    request<string>("GET", `/api/v1/courses/videos/${videoId}/url`),
+
+  // 教师
+  getTeacherInfo: (courseId: string) =>
+    request("GET", `/api/v1/courses/${courseId}/teacher`),
+
   // 订单
   createOrder: (courseId: string) =>
     request("POST", "/api/v1/orders", { courseId }),
-
-  signOrder: (orderId: string) =>
-    request("POST", `/api/v1/orders/${orderId}/sign`),
-
-  refundOrder: (orderId: string) =>
-    request("POST", `/api/v1/orders/${orderId}/refund`),
 
   getOrders: () => request("GET", "/api/v1/orders"),
 
@@ -89,7 +123,17 @@ const realApi = {
   getInstallments: (orderId: string) =>
     request("GET", `/api/v1/orders/${orderId}/installments`),
 
-  // 信用
+  // 签约（法大大 / e签宝）
+  signWithFadadada: (orderId: string) =>
+    request("POST", `/api/v1/orders/${orderId}/sign/fadadada`),
+
+  signWithEqianbao: (orderId: string) =>
+    request("POST", `/api/v1/orders/${orderId}/sign/eqianbao`),
+
+  checkSignStatus: (orderId: string) =>
+    request("GET", `/api/v1/orders/${orderId}/sign/status`),
+
+  // 信用（保留，供后端兼容）
   creditAuthorize: (orderId: string) =>
     request("POST", "/api/v1/credit/authorize", {
       orderId,
@@ -110,7 +154,7 @@ const realApi = {
       faceToken,
     }),
 
-  // 拉新
+  // 拉新（保留路由，前端入口已移除）
   generateInviteLink: () => request("POST", "/api/v1/referral/invite"),
 
   getReferralRewards: () => request("GET", "/api/v1/referral/rewards"),

@@ -181,7 +181,7 @@ export class CommissionService {
     // 脱敏：隐藏姓名中间字
     const masked = items.map((s) => ({
       ...s,
-      realname: s.realname.replace(/(?<=.).(?=.)/, "*"),
+      realname: s.realname ? s.realname.replace(/(?<=.).(?=.)/, "*") : null,
     }));
     return { items: masked, total, page, size };
   }

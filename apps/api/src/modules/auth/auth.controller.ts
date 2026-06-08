@@ -60,6 +60,30 @@ export class AuthController {
     return { token, orgId: org.id, orgName: org.name };
   }
 
+  /** 发送短信验证码 */
+  @Post('sms/send')
+  sendSmsCode(@Body() dto: { phone: string; type: 'register' | 'reset' }) {
+    return this.authService.sendSmsCode(dto.phone, dto.type);
+  }
+
+  /** 手机号注册 */
+  @Post('phone/register')
+  registerByPhone(@Body() dto: { phone: string; code: string; password: string; orgCode: string }) {
+    return this.authService.registerByPhone(dto);
+  }
+
+  /** 手机号 + 密码登录 */
+  @Post('phone/login')
+  loginByPhone(@Body() dto: { phone: string; password: string }) {
+    return this.authService.loginByPhone(dto);
+  }
+
+  /** 忘记密码 — 验证码重置 */
+  @Post('phone/reset-password')
+  resetPassword(@Body() dto: { phone: string; code: string; newPassword: string }) {
+    return this.authService.resetPassword(dto);
+  }
+
   /** 平台后台登录（开发阶段固定账号） */
   @Post('admin/login')
   async adminLogin(@Body() dto: { username: string; password: string }) {

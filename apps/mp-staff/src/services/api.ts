@@ -2,7 +2,9 @@ import Taro from "@tarojs/taro";
 import { mockStaffApi } from "./mock";
 
 const BASE_URL = process.env.TARO_APP_API_URL || "http://localhost:3000";
-const useMockApi = process.env.TARO_APP_USE_FRONTEND_MOCK === "true";
+const useMockApi =
+  process.env.NODE_ENV === "development" ||
+  process.env.TARO_APP_USE_FRONTEND_MOCK === "true";
 
 function getToken() {
   return Taro.getStorageSync("staff_token") || "";

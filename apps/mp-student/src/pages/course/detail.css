@@ -126,3 +126,92 @@
   border-radius: 22px;
   height: 88px;
 }
+
+.trial-btn {
+  width: 100%;
+  height: 80px;
+  line-height: 80px;
+  border-radius: 20px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: #2563eb;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.trial-btn::after {
+  border: none;
+}
+
+.pay-type-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pay-type-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(248, 249, 250, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.12);
+}
+
+.pay-type-option--active {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.pay-type-radio {
+  font-size: 26px;
+  color: #2563eb;
+  line-height: 1;
+}
+
+.pay-type-label {
+  font-size: 24px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.benefits-card {
+  background: linear-gradient(135deg, #f0f9f4, #e8f5ed);
+  margin: 0 24px 16px;
+  border-radius: 28px;
+  padding: 26px 24px;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.benefits-title {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #065f46;
+  margin-bottom: 16px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.benefit-item:last-child {
+  margin-bottom: 0;
+}
+
+.benefit-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.benefit-text {
+  font-size: 24px;
+  color: #064e3b;
+  line-height: 1.6;
+}

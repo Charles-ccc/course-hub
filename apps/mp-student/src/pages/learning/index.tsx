@@ -1,35 +1,50 @@
 import { useState, useEffect } from "react";
-import Taro, { useRouter } from "@tarojs/taro";
-import { View, Text, ScrollView, Button } from "@tarojs/components";
+import Taro from "@tarojs/taro";
+import { View, Text, ScrollView } from "@tarojs/components";
 import { api } from "../../services/api";
+import { useUserStore } from "../../store";
 import "./index.css";
 
 const STATUS_LABEL: Record<string, string> = {
-  PENDING: "待解锁",
-  DELIVERED: "已解锁/待扣款",
-  PAID: "已完成",
-  OVERDUE: "已逾期",
+  CREATED: "待签约",
+  ACTIVE: "学习中",
+  COMPLETED: "已完成",
+  TERMINATED: "已终止",
 };
+
 const STATUS_COLOR: Record<string, string> = {
-  PENDING: "#999",
-  DELIVERED: "#F59E0B",
-  PAID: "#10B981",
-  OVERDUE: "#EF4444",
+  CREATED: "#F59E0B",
+  ACTIVE: "#10B981",
+  COMPLETED: "#6B7280",
+  TERMINATED: "#6B7280",
 };
 
 export default function LearningPage() {
-  const router = useRouter();
-  const orderId = router.params.orderId!;
-  const [progress, setProgress] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      Taro.redirectTo({ url: "/pages/auth/login" });
+      return;
+    }
     api
-      .getLearningProgress(orderId)
-      .then(setProgress)
+      .getOrders()
+      .then(setOrders)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [orderId]);
+  }, []);
+
+  const handleCourseClick = (order: any) => {
+    if (order.status === "ACTIVE" || order.status === "COMPLETED") {
+      Taro.navigateTo({
+        url: `/pages/learning/player?orderId=${order.id}&courseId=${order.course?.id}`,
+      });
+    } else {
+      Taro.navigateTo({ url: `/pages/order/detail?id=${order.id}` });
+    }
+  };
 
   if (loading)
     return (
@@ -38,59 +53,69 @@ export default function LearningPage() {
       </View>
     );
 
-  const items = progress?.installments || [];
-  const checkins = progress?.checkins || [];
-  const incentives = progress?.incentives || [];
-  const totalIncentive = incentives.reduce(
-    (s: number, i: any) => s + i.amount,
-    0,
-  );
-
   return (
     <View className='learning-page'>
-      <View className='learning-balance-card'>
-        <Text className='learning-balance-label'>学习激励余额</Text>
-        <Text className='learning-balance-value'>
-          ¥{(totalIncentive / 100).toFixed(2)}
-        </Text>
-        <Text className='learning-balance-subtitle'>
-          累计打卡 {checkins.filter((c: any) => c.matched).length} 次
-        </Text>
-      </View>
-
-      <Text className='learning-section-title'>课程进度</Text>
+      <Text className='learning-page-title'>我的学习</Text>
       <ScrollView scrollY className='learning-list'>
-        {items.map((item: any) => (
-          <View key={item.id} className='learning-item'>
-            <View>
-              <Text className='learning-item-title'>第 {item.periodNo} 期</Text>
-              <Text className='learning-item-date'>
-                {new Date(item.dueDate).toLocaleDateString()}
-              </Text>
-            </View>
-            <View className='learning-item-right'>
-              <Text className='learning-item-amount'>
-                ¥{(item.actualAmount / 100).toFixed(0)}
+        {orders.map((order) => (
+          <View
+            key={order.id}
+            className='learning-course-card'
+            onClick={() => handleCourseClick(order)}
+          >
+            <View className='learning-course-header'>
+              <Text className='learning-course-title'>
+                {order.course?.title}
               </Text>
               <Text
-                className='learning-item-status'
-                style={{ color: STATUS_COLOR[item.status] }}
+                className='learning-course-status'
+                style={{ color: STATUS_COLOR[order.status] || "#6B7280" }}
               >
-                {STATUS_LABEL[item.status]}
+                {STATUS_LABEL[order.status] || order.status}
               </Text>
             </View>
+            <Text className='learning-course-org'>{order.sellerOrg?.name}</Text>
+            <View className='learning-course-footer'>
+              <Text className='learning-course-amount'>
+                ¥{(order.totalAmount / 100).toFixed(0)}
+              </Text>
+              {(order.status === "ACTIVE" || order.status === "COMPLETED") && (
+                <View className='learning-course-action'>
+                  <Text className='learning-course-action-text'>
+                    点击播放课程 →
+                  </Text>
+                </View>
+              )}
+            </View>
+            {order.status === "ACTIVE" && (
+              <View className='learning-teacher-btn-wrap'>
+                <Text
+                  className='learning-teacher-link'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    Taro.navigateTo({
+                      url: `/pages/learning/teacher?courseId=${order.course?.id}`,
+                    });
+                  }}
+                >
+                  联系老师
+                </Text>
+              </View>
+            )}
           </View>
         ))}
+        {orders.length === 0 && (
+          <View className='learning-empty'>
+            <Text className='learning-empty-text'>还没有报名课程</Text>
+            <Text
+              className='learning-empty-link'
+              onClick={() => Taro.switchTab({ url: "/pages/index/index" })}
+            >
+              去选课 →
+            </Text>
+          </View>
+        )}
       </ScrollView>
-
-      <Button
-        className='learning-checkin-btn'
-        onClick={() =>
-          Taro.navigateTo({ url: `/pages/learning/checkin?orderId=${orderId}` })
-        }
-      >
-        扫脸打卡领激励
-      </Button>
     </View>
   );
 }

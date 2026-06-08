@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "网课超市-学员端",
   "description": "先学后付网课超市学员端",
-  "appid": "wx9fac44e9404445b0",
+  "appid": "wxb5295c87801846b3",
   "setting": {
     "urlCheck": false,
     "es6": false,
@@ -44,5 +44,6 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.16.1"
 }

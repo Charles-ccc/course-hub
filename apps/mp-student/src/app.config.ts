@@ -1,8 +1,10 @@
 export default defineAppConfig({
   pages: [
-    "pages/gate/index", // ← 首页：无来源时拦截
-    "pages/index/index", // ← tabBar 首页（有来源后可见）
+    "pages/gate/index",    // ← 启动路由（检查登录状态）
+    "pages/index/index",
     "pages/auth/login",
+    "pages/auth/register",
+    "pages/auth/forgot",
     "pages/auth/realname",
     "pages/course/list",
     "pages/course/detail",
@@ -10,6 +12,8 @@ export default defineAppConfig({
     "pages/order/list",
     "pages/order/detail",
     "pages/learning/index",
+    "pages/learning/player",
+    "pages/learning/teacher",
     "pages/learning/checkin",
     "pages/profile/index",
     "pages/profile/referral",
@@ -33,8 +37,8 @@ export default defineAppConfig({
         selectedIconPath: "assets/tab-home-active.png",
       },
       {
-        pagePath: "pages/order/list",
-        text: "我的课程",
+        pagePath: "pages/learning/index",
+        text: "学习",
         iconPath: "assets/tab-course.png",
         selectedIconPath: "assets/tab-course-active.png",
       },

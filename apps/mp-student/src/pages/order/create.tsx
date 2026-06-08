@@ -7,7 +7,10 @@ import "./create.css";
 export default function OrderCreatePage() {
   const router = useRouter();
   const courseId = router.params.courseId!;
+  const payType = router.params.payType || "instant";
   const [loading, setLoading] = useState(false);
+
+  const isInstant = payType === "instant";
 
   const handleCreate = async () => {
     setLoading(true);
@@ -29,19 +32,35 @@ export default function OrderCreatePage() {
     <View className='order-create-page'>
       <Text className='order-create-title'>确认下单</Text>
       <View className='order-create-card'>
-        <Text className='order-create-tip'>
-          下单后进入 7 天冷静期，可无条件退课
-        </Text>
-        <Text className='order-create-tip'>
-          签约方与收款方均为课程机构，平台不参与收款
-        </Text>
+        {isInstant ? (
+          <>
+            <Text className='order-create-tip order-create-tip--highlight'>
+              一次性付款，立即开始学习
+            </Text>
+            <Text className='order-create-tip'>
+              签约方与收款方均为课程机构，平台不参与收款
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text className='order-create-tip order-create-tip--highlight'>
+              先学后付，每期课程结束后再扣款
+            </Text>
+            <Text className='order-create-tip'>
+              签约前请仔细阅读授权协议，完成签约后开始学习
+            </Text>
+            <Text className='order-create-tip'>
+              签约方与收款方均为课程机构，平台不参与收款
+            </Text>
+          </>
+        )}
       </View>
       <Button
         className='order-create-button'
         loading={loading}
         onClick={handleCreate}
       >
-        确认下单并签约
+        {isInstant ? "确认付款" : "确认并签约"}
       </Button>
     </View>
   );

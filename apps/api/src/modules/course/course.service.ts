@@ -64,4 +64,43 @@ export class CourseService {
 
     return this.prisma.course.update({ where: { id }, data: dto });
   }
+
+  /** 课程视频列表（从 videoAssetIds 字段派生） */
+  async getCourseVideos(courseId: string) {
+    const course = await this.prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) throw new NotFoundException('课程不存在');
+
+    const assetIds = Array.isArray(course.videoAssetIds) ? course.videoAssetIds : [];
+
+    // 将 videoAssetIds 转为带元数据的列表；生产环境可从视频平台 API 拉取真实信息
+    return assetIds.map((assetId: any, index: number) => ({
+      id: typeof assetId === 'string' ? assetId : `${courseId}-v${index + 1}`,
+      title: `第 ${index + 1} 节`,
+      duration: null,
+      index,
+    }));
+  }
+
+  /** 获取视频播放地址（生产环境接入防盗链 CDN） */
+  async getVideoUrl(videoId: string) {
+    // 开发模式返回占位地址；生产接入 VOD 防盗链签名
+    return `https://vod.example.com/videos/${videoId}/index.m3u8`;
+  }
+
+  /** 课程教师信息（从 teacherInfo 文本解析，生产可改为单独 Teacher 模型） */
+  async getTeacherInfo(courseId: string) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      include: { org: { select: { name: true } } },
+    });
+    if (!course) throw new NotFoundException('课程不存在');
+
+    return {
+      name: course.teacherInfo || '授课老师',
+      title: `${course.org.name} 讲师`,
+      bio: course.teacherInfo,
+      phone: null,
+      qrCode: null,
+    };
+  }
 }
