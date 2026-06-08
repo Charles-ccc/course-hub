@@ -17,8 +17,6 @@ export default defineAppConfig({
     backgroundColor: "#fbfcfb",
     list: [
       { pagePath: "pages/index/index", text: "首页" },
-      { pagePath: "pages/students/list", text: "我的学员" },
-      { pagePath: "pages/commission/index", text: "提成" },
       { pagePath: "pages/profile/index", text: "我的" },
     ],
   },

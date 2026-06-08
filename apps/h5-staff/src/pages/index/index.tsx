@@ -1,12 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Taro from "@tarojs/taro";
-import { View, Text } from "@tarojs/components";
+import { View, Text, Canvas, Image } from "@tarojs/components";
 import { staffApi } from "../../services/api";
 import "./index.css";
+
+function useQrDataUrl(text: string): string {
+  const [dataUrl, setDataUrl] = useState("");
+  useEffect(() => {
+    if (!text) return;
+    // qrcode only available in H5; skip in mini-program environments
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const QRCode = require("qrcode");
+      QRCode.toDataURL(text, { width: 200, margin: 2 }, (_err: any, url: string) => {
+        if (url) setDataUrl(url);
+      });
+    } catch {
+      // mini-program build: qrcode not available, silently skip
+    }
+  }, [text]);
+  return dataUrl;
+}
 
 export default function StaffIndexPage() {
   const [dashboard, setDashboard] = useState<any>(null);
   const [staffId, setStaffId] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const sid = Taro.getStorageSync("staff_id");
@@ -19,6 +38,13 @@ export default function StaffIndexPage() {
   }, []);
 
   const qrUrl = `${process.env.TARO_APP_SHARE_URL || "https://mp.wangke.com"}/register?staff=${staffId}`;
+  const qrDataUrl = useQrDataUrl(staffId ? qrUrl : "");
+
+  const handleCopy = () => {
+    Taro.setClipboardData({ data: qrUrl });
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <View className='staff-index'>
@@ -51,10 +77,25 @@ export default function StaffIndexPage() {
       </View>
 
       <View className='qr-card'>
-        <Text className='qr-title'>我的专属邀请码</Text>
-        <Text className='qr-desc'>分享给学员，绑定归属关系</Text>
-        <Text className='qr-link'>{qrUrl}</Text>
-        <Text className='qr-tip'>注：强催收由机构执行，请勿代行债权催收</Text>
+        <View className='qr-card-header'>
+          <View>
+            <Text className='qr-title'>邀请学员</Text>
+            <Text className='qr-desc'>扫码后学员将自动绑定至您名下</Text>
+          </View>
+          <View className='qr-copy-btn' onClick={handleCopy}>
+            <Text className='qr-copy-text'>{copied ? "已复制" : "复制链接"}</Text>
+          </View>
+        </View>
+
+        {qrDataUrl ? (
+          <View className='qr-image-wrap'>
+            <Image className='qr-image' src={qrDataUrl} mode='aspectFit' />
+          </View>
+        ) : (
+          <View className='qr-link-box'>
+            <Text className='qr-link'>{qrUrl}</Text>
+          </View>
+        )}
       </View>
 
       <View className='nav-list'>

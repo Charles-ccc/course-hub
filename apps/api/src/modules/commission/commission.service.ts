@@ -152,37 +152,97 @@ export class CommissionService {
     });
   }
 
-  async getStaffStudents(staffId: string, page = 1) {
+  async getStaffStudents(staffId: string, page = 1, tab = 'all') {
     const size = 20;
-    const [items, total] = await Promise.all([
-      this.prisma.student.findMany({
-        where: { referrerStaffId: staffId },
-        select: {
-          id: true,
-          phone: true,
-          realname: true,
-          createdAt: true,
-          orders: {
-            select: {
-              id: true,
-              status: true,
-              totalAmount: true,
-              createdAt: true,
+    const now = new Date();
+    const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const students = await this.prisma.student.findMany({
+      where: { referrerStaffId: staffId },
+      select: {
+        id: true,
+        phone: true,
+        realname: true,
+        createdAt: true,
+        orders: {
+          select: {
+            id: true,
+            status: true,
+            totalAmount: true,
+            periodCount: true,
+            createdAt: true,
+            installmentItems: {
+              select: {
+                periodNo: true,
+                status: true,
+                dueDate: true,
+              },
+              orderBy: { periodNo: 'asc' },
             },
-            orderBy: { createdAt: "desc" },
-            take: 5,
           },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
         },
-        skip: (page - 1) * size,
-        take: size,
-      }),
-      this.prisma.student.count({ where: { referrerStaffId: staffId } }),
-    ]);
+      },
+    });
+
+    // 计算每个学员最新订单的 nextDueDate 和 completedPeriods
+    const enriched = students.map((s) => {
+      const orders = s.orders.map((o) => {
+        const items = o.installmentItems;
+        const completedPeriods = items.filter(
+          (i) => i.status === 'PAID',
+        ).length;
+        const nextPending = items
+          .filter((i) => i.status === 'PENDING' || i.status === 'OVERDUE')
+          .sort((a, b) => a.periodNo - b.periodNo)[0];
+        return {
+          id: o.id,
+          status: o.status,
+          totalAmount: o.totalAmount,
+          periodCount: o.periodCount,
+          completedPeriods,
+          nextDueDate: nextPending?.dueDate?.toISOString() ?? null,
+          createdAt: o.createdAt,
+        };
+      });
+      return { ...s, orders };
+    });
+
+    // tab 过滤（在内存中）
+    let filtered = enriched;
+    if (tab === 'overdue') {
+      filtered = enriched.filter((s) =>
+        s.orders.some((o) => o.status === 'OVERDUE'),
+      );
+    } else if (tab === 'due7') {
+      filtered = enriched.filter((s) =>
+        s.orders.some((o) => {
+          if (!o.nextDueDate) return false;
+          const due = new Date(o.nextDueDate);
+          return due >= now && due <= sevenDaysLater;
+        }),
+      );
+    } else if (tab === 'due') {
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      filtered = enriched.filter((s) =>
+        s.orders.some((o) => {
+          if (!o.nextDueDate) return false;
+          const due = new Date(o.nextDueDate);
+          return due >= now && due <= tomorrow;
+        }),
+      );
+    }
+
+    const total = filtered.length;
+    const paged = filtered.slice((page - 1) * size, page * size);
+
     // 脱敏：隐藏姓名中间字
-    const masked = items.map((s) => ({
+    const masked = paged.map((s) => ({
       ...s,
-      realname: s.realname ? s.realname.replace(/(?<=.).(?=.)/, "*") : null,
+      realname: s.realname ? s.realname.replace(/(?<=.).(?=.)/, '*') : null,
     }));
+
     return { items: masked, total, page, size };
   }
 }

@@ -55,26 +55,18 @@ const persistStaffSession = (auth: {
 };
 
 const realStaffApi = {
-  async loginWithWechat(code: string) {
-    const payload = await request("POST", "/api/v1/auth/wechat/login", {
-      code,
-      appType: "staff",
-    });
-    return normalizeLoginResult(payload);
-  },
-
-  async loginWithAlipay(authCode: string) {
-    const payload = await request("POST", "/api/v1/auth/alipay/login", {
-      authCode,
-      appType: "staff",
+  async loginByPhone(phone: string, password: string) {
+    const payload = await request("POST", "/api/v1/auth/staff/login", {
+      phone,
+      password,
     });
     return normalizeLoginResult(payload);
   },
 
   getCommissionDashboard: () => request("GET", "/api/v1/staff/commission"),
 
-  getStudents: (page = 1) =>
-    request("GET", `/api/v1/staff/students?page=${page}`),
+  getStudents: (page = 1, tab = "all") =>
+    request("GET", `/api/v1/staff/students?page=${page}&tab=${tab}`),
 
   async getProfile() {
     const profile = await request("GET", "/api/v1/staff/profile");
@@ -86,17 +78,13 @@ const realStaffApi = {
 const driver = useMockApi ? mockStaffApi : realStaffApi;
 
 export const staffApi = {
-  async loginWithWechat(code: string) {
-    return persistStaffSession(await driver.loginWithWechat(code));
-  },
-
-  async loginWithAlipay(authCode: string) {
-    return persistStaffSession(await driver.loginWithAlipay(authCode));
+  async loginByPhone(phone: string, password: string) {
+    return persistStaffSession(await driver.loginByPhone(phone, password));
   },
 
   getCommissionDashboard: () => driver.getCommissionDashboard(),
 
-  getStudents: (page = 1) => driver.getStudents(page),
+  getStudents: (page = 1, tab = "all") => driver.getStudents(page, tab),
 
   getProfile: () => driver.getProfile(),
 };

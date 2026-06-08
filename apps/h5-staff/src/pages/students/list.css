@@ -1,0 +1,188 @@
+.staff-students-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 28px 24px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #edf8f6 0%, #eef3ef 100%);
+}
+
+.staff-students-title {
+  display: block;
+  font-size: 40px;
+  font-weight: 700;
+  color: #18362d;
+  margin-bottom: 20px;
+}
+
+/* ===== Tab row ===== */
+.staff-tab-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px;
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(43, 82, 64, 0.07);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.staff-tab-item {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 8px;
+  border-radius: 14px;
+  text-align: center;
+  transition: background 0.18s;
+}
+
+.staff-tab-item--active {
+  background: #0f766e;
+}
+
+.staff-tab-label {
+  display: block;
+  font-size: 24px;
+  font-weight: 500;
+  color: #8a9aa0;
+  white-space: nowrap;
+}
+
+.staff-tab-item--active .staff-tab-label {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ===== List ===== */
+.staff-students-loading {
+  display: block;
+  font-size: 24px;
+  color: #8a93a1;
+  margin-bottom: 16px;
+}
+
+.staff-students-list {
+  height: calc(100vh - 260px);
+  height: calc(100dvh - 260px);
+}
+
+/* ===== Card ===== */
+.staff-student-card {
+  margin-bottom: 16px;
+  padding: 24px 22px 20px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 24px rgba(43, 82, 64, 0.07);
+}
+
+.staff-student-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.staff-student-info {
+  flex: 1;
+}
+
+.staff-student-name {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #18362d;
+}
+
+.staff-student-phone {
+  display: block;
+  font-size: 24px;
+  color: #7b8493;
+}
+
+/* Status chip (top-right of card) */
+.staff-student-status-chip {
+  padding: 8px 16px;
+  border-radius: 999px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.chip-text {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.chip--active {
+  background: #ecfdf5;
+}
+
+.chip--active .chip-text {
+  color: #059669;
+}
+
+.chip--completed {
+  background: #f0f9ff;
+}
+
+.chip--completed .chip-text {
+  color: #0284c7;
+}
+
+.chip--overdue {
+  background: #fef2f2;
+}
+
+.chip--overdue .chip-text {
+  color: #dc2626;
+}
+
+/* Tags row (bottom of card) */
+.staff-student-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.staff-tag {
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.staff-tag-text {
+  display: block;
+  font-size: 22px;
+}
+
+.staff-tag--progress {
+  background: #edf9f7;
+}
+
+.staff-tag--progress .staff-tag-text {
+  color: #0f766e;
+}
+
+.staff-tag--due {
+  background: #fff7ed;
+}
+
+.staff-tag--due .staff-tag-text {
+  color: #d97706;
+}
+
+.staff-tag--overdue {
+  background: #fef2f2;
+}
+
+.staff-tag--overdue .staff-tag-text {
+  color: #dc2626;
+}
+
+.staff-students-empty {
+  display: block;
+  padding: 88px 24px;
+  text-align: center;
+  font-size: 26px;
+  color: #8a93a1;
+}

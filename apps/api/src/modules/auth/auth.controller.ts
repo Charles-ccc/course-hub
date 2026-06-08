@@ -84,6 +84,12 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
+  /** 业务员手机号+密码登录 */
+  @Post('staff/login')
+  staffLoginByPhone(@Body() dto: { phone: string; password: string }) {
+    return this.authService.staffLoginByPhone(dto);
+  }
+
   /** 平台后台登录（开发阶段固定账号） */
   @Post('admin/login')
   async adminLogin(@Body() dto: { username: string; password: string }) {

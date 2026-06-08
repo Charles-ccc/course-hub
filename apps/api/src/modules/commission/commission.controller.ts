@@ -19,8 +19,12 @@ export class CommissionController {
   }
 
   @Get('students')
-  myStudents(@CurrentUser('id') staffId: string, @Query('page') page = '1') {
-    return this.commissionService.getStaffStudents(staffId, +page);
+  myStudents(
+    @CurrentUser('id') staffId: string,
+    @Query('page') page = '1',
+    @Query('tab') tab = 'all',
+  ) {
+    return this.commissionService.getStaffStudents(staffId, +page, tab);
   }
 }
 

@@ -1,5 +1,5 @@
 const config = {
-  projectName: "mp-staff",
+  projectName: "h5-staff",
   date: "2024-01-01",
   designWidth: 750,
   deviceRatio: {
@@ -26,18 +26,24 @@ const config = {
       process.env.TARO_APP_USE_FRONTEND_MOCK || "false",
     ),
   },
-  mini: {
-    postcss: {
-      pxtransform: { enable: true, config: {} },
-      url: { enable: true, config: { limit: 1024 } },
-      cssModules: { enable: false },
-    },
-  },
   h5: {
     publicPath: "/",
     staticDirectory: "static",
+    meta: [
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
+      },
+    ],
     postcss: {
       autoprefixer: { enable: true, config: {} },
+      pxtransform: {
+        enable: true,
+        config: {
+          selectorBlackList: [/van-/, /weui-/],
+        },
+      },
       cssModules: { enable: false },
     },
     devServer: {

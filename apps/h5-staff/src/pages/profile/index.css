@@ -1,6 +1,8 @@
 .staff-profile-page {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 24px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, #edf8f6 0%, #eef3ef 100%);
 }
 

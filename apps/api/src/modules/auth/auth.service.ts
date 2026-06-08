@@ -343,6 +343,41 @@ export class AuthService {
     return { token, student, isNew: !student.realnameVerified };
   }
 
+  // ---------- 业务员手机号+密码登录 ----------
+  async staffLoginByPhone(dto: { phone: string; password: string }) {
+    const isDev = this.config.get('NODE_ENV') !== 'production';
+
+    let staff = await this.prisma.staff.findUnique({ where: { phone: dto.phone } });
+
+    if (!staff && isDev) {
+      staff = await this.prisma.staff.create({
+        data: {
+          name: `演示业务员_${dto.phone.slice(-4)}`,
+          phone: dto.phone,
+          contractType: 'EMPLOYEE',
+          status: 'ACTIVE',
+        } as any,
+      });
+    }
+
+    if (!staff) {
+      throw new UnauthorizedException('该手机号未注册业务员账号，请联系管理员');
+    }
+    if (staff.status === 'DISABLED') {
+      throw new UnauthorizedException('业务员账号已被禁用');
+    }
+
+    if (!isDev) {
+      const passwordHash = (staff as any).passwordHash as string | null;
+      if (!passwordHash) throw new UnauthorizedException('该账号未设置密码，请联系管理员');
+      const valid = await bcrypt.compare(dto.password, passwordHash);
+      if (!valid) throw new UnauthorizedException('密码错误');
+    }
+
+    const token = this.jwtService.sign({ sub: staff.id, role: 'staff' });
+    return { token, staff, isNew: false };
+  }
+
   async resetPassword(dto: { phone: string; code: string; newPassword: string }) {
     const isDev = this.config.get('NODE_ENV') !== 'production';
 
