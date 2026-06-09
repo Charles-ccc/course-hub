@@ -9,14 +9,6 @@
       "cache": false,
       "persistent": true
     },
-    "dev:weixin": {
-      "cache": false,
-      "persistent": true
-    },
-    "dev:alipay": {
-      "cache": false,
-      "persistent": true
-    },
     "lint": {
       "dependsOn": ["^build"]
     },

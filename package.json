@@ -4,20 +4,9 @@
   "private": true,
   "scripts": {
     "dev:api": "turbo run dev --filter=api",
-    "dev:api:mock": "cd apps/api && pnpm dev:mock",
-    "start:api:mock": "cd apps/api && pnpm build && pnpm start:mock",
-    "dev:mp-student": "turbo run dev:weixin --filter=mp-student",
-    "dev:mp-student:alipay": "turbo run dev:alipay --filter=mp-student",
-    "dev:mp-staff": "turbo run dev:weixin --filter=mp-staff",
-    "dev:mp-staff:alipay": "turbo run dev:alipay --filter=mp-staff",
-    "dev:web-institution": "turbo run dev --filter=web-institution",
-    "dev:web-admin": "turbo run dev --filter=web-admin",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "test": "turbo run test",
-    "db:migrate": "cd apps/api && pnpm prisma migrate dev",
-    "db:generate": "cd apps/api && pnpm prisma generate",
-    "db:studio": "cd apps/api && pnpm prisma studio"
+    "test": "turbo run test"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

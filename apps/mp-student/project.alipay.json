@@ -1,8 +1,0 @@
-{
-  "miniprogramRoot": "dist/",
-  "component2": true,
-  "axmlStrictCheck": false,
-  "enableNodeModuleBabelTransform": false,
-  "format": 2,
-  "appId": "YOUR_ALIPAY_STUDENT_APPID"
-}
