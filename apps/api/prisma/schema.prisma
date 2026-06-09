@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  PLATFORM_ADMIN
+}
+
+enum InstitutionStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  EXITED
+}
+
+enum InstitutionUserRole {
+  INSTITUTION_ADMIN
+}
+
+enum CourseStatus {
+  ONLINE
+  OFFLINE
+}
+
+enum CourseAuditStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum SalesmanStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ContractType {
+  EMPLOYEE
+  AGENT
+}
+
+enum OrderStatus {
+  CREATED
+  COOLING_OFF
+  ACTIVE
+  COMPLETED
+  REFUNDED
+  TERMINATED
+}
+
+enum PeriodStatus {
+  PENDING
+  DELIVERED
+  PAID
+  OVERDUE
+  WRITTEN_OFF
+}
+
+enum SettlementStatus {
+  PENDING
+  SETTLED
+}
+
+enum RefreshTokenStatus {
+  ACTIVE
+  REVOKED
+}
+
+model AdminUser {
+  id           String    @id
+  username     String    @unique
+  displayName  String
+  passwordHash String
+  role         AdminRole @default(PLATFORM_ADMIN)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  refreshTokens RefreshToken[]
+}
+
+model Institution {
+  id                        String              @id
+  name                      String
+  socialCreditCode          String              @unique
+  settlementRate            Decimal             @db.Decimal(5, 2)
+  depositBalanceCents       Int
+  cumulativeGmvCents        Int
+  cumulativeServiceFeeCents Int
+  status                    InstitutionStatus
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  users                     InstitutionUser[]
+  courses                   Course[]
+  salesmen                  Salesman[]
+  orders                    Order[]
+  settlements               SettlementRecord[]
+  questions                 Question[]
+}
+
+model InstitutionUser {
+  id           String              @id
+  phone        String              @unique
+  displayName  String
+  passwordHash String
+  role         InstitutionUserRole @default(INSTITUTION_ADMIN)
+  institutionId String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  institution  Institution         @relation(fields: [institutionId], references: [id])
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id                 String             @id
+  userId             String
+  role               String
+  tokenHash          String
+  status             RefreshTokenStatus @default(ACTIVE)
+  expiresAt          DateTime
+  revokedAt          DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  adminUserId        String?
+  institutionUserId  String?
+  adminUser          AdminUser?         @relation(fields: [adminUserId], references: [id])
+  institutionUser    InstitutionUser?   @relation(fields: [institutionUserId], references: [id])
+
+  @@index([userId, role, status])
+}
+
+model Course {
+  id             String            @id
+  institutionId  String
+  name           String
+  description    String
+  instructorInfo String
+  priceCents     Int
+  periodCount    Int
+  status         CourseStatus
+  auditStatus    CourseAuditStatus @default(APPROVED)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  institution    Institution       @relation(fields: [institutionId], references: [id])
+  orders         Order[]
+}
+
+model Salesman {
+  id                        String        @id
+  institutionId             String
+  username                  String        @unique
+  passwordHash              String
+  name                      String
+  phone                     String        @unique
+  contractType              ContractType
+  status                    SalesmanStatus
+  studentCount              Int           @default(0)
+  cumulativeCommissionCents Int           @default(0)
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  institution               Institution   @relation(fields: [institutionId], references: [id])
+}
+
+model Order {
+  id               String      @id
+  institutionId    String
+  courseId         String?
+  studentName      String
+  courseName       String
+  totalAmountCents Int
+  periodCount      Int
+  status           OrderStatus
+  coolingOffEndAt  DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  institution      Institution @relation(fields: [institutionId], references: [id])
+  course           Course?     @relation(fields: [courseId], references: [id])
+  installments     Installment[]
+}
+
+model Installment {
+  id                  String       @id
+  orderId             String
+  periodNo            Int
+  dueDate             DateTime
+  plannedAmountCents  Int
+  paidAmountCents     Int          @default(0)
+  contentDeliveredAt  DateTime?
+  status              PeriodStatus
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  order               Order        @relation(fields: [orderId], references: [id])
+
+  @@unique([orderId, periodNo])
+}
+
+model SettlementRecord {
+  id              String           @id
+  institutionId   String
+  period          String
+  gmvCents        Int
+  serviceFeeCents Int
+  status          SettlementStatus
+  settledAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  institution     Institution      @relation(fields: [institutionId], references: [id])
+
+  @@unique([institutionId, period])
+}
+
+model Question {
+  id            String      @id
+  institutionId String
+  studentName   String
+  content       String
+  askedAt       DateTime    @default(now())
+  replied       Boolean     @default(false)
+  replyContent  String?
+  repliedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  institution   Institution @relation(fields: [institutionId], references: [id])
+}
+
+model SystemConfig {
+  key             String   @id
+  priceLimitCents Int
+  minAge          Int
+  maxAge          Int
+  zhimaEnabled    Boolean
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

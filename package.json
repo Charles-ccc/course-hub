@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev:api": "turbo run dev --filter=api",
+    "dev:web-admin": "turbo run dev --filter=web-admin",
+    "dev:web-institution": "turbo run dev --filter=web-institution",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test"
