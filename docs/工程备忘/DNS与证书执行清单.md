@@ -3,7 +3,7 @@
 ## 1. 目标域名
 
 1. admin.happymaa.cn -> 管理后台
-2. institution.happymaa.cn -> 机构门户
+2. insitution.happymaa.cn -> 机构门户
 3. staff.happymaa.cn -> 业务员 H5
 4. api.happymaa.cn -> 后端 API
 5. static.happymaa.cn -> COS 静态资源（已存在）
@@ -23,7 +23,7 @@
 5. 执行解析生效检查：
 
 - dig +short admin.happymaa.cn
-- dig +short institution.happymaa.cn
+- dig +short insitution.happymaa.cn
 - dig +short staff.happymaa.cn
 - dig +short api.happymaa.cn
 
@@ -66,7 +66,7 @@
 1. 浏览器访问：
 
 - https://admin.happymaa.cn
-- https://institution.happymaa.cn
+- https://insitution.happymaa.cn
 - https://staff.happymaa.cn
 - https://api.happymaa.cn/health
 

@@ -4,12 +4,12 @@
 
 ## 1. 目标入口
 
-| 子域名 | 用途 | 部署类型 |
-|---|---|---|
-| admin.happymaa.cn | web-admin 平台运营后台 | 静态 HTML |
-| institution.happymaa.cn | web-institution 机构管理门户 | 静态 HTML |
-| staff.happymaa.cn | h5-staff 业务员工作台 | 静态 HTML |
-| api.happymaa.cn | NestJS 后端 API | Node.js 反向代理 |
+| 子域名                 | 用途                         | 部署类型         |
+| ---------------------- | ---------------------------- | ---------------- |
+| admin.happymaa.cn      | web-admin 平台运营后台       | 静态 HTML        |
+| insitution.happymaa.cn | web-institution 机构管理门户 | 静态 HTML        |
+| staff.happymaa.cn      | h5-staff 业务员工作台        | 静态 HTML        |
+| api.happymaa.cn        | NestJS 后端 API              | Node.js 反向代理 |
 
 说明：static.happymaa.cn 由 COS/CDN 提供，不经本站 Nginx。Adminer 不建议公网长期暴露。
 
@@ -29,7 +29,7 @@ Node.js 服务：127.0.0.1:3000  # NestJS API
 ### 3.1 建静态站点（以 institution 为例，admin/staff 同理）
 
 1. 宝塔面板 -> 网站 -> 添加站点
-2. 域名填写：`institution.happymaa.cn`
+2. 域名填写：`insitution.happymaa.cn`
 3. 根目录：`/www/wwwroot/institution`
 4. PHP 版本：**纯静态**（选"不启用"）
 5. 建站完成后，进入站点设置 -> SSL -> 腾讯云证书（或 Let's Encrypt）申请泛域名证书 `*.happymaa.cn`
@@ -105,7 +105,7 @@ gzip_vary on;
 ```nginx
 server {
   listen 80;
-  server_name admin.happymaa.cn institution.happymaa.cn staff.happymaa.cn api.happymaa.cn;
+  server_name admin.happymaa.cn insitution.happymaa.cn staff.happymaa.cn api.happymaa.cn;
   return 301 https://$host$request_uri;
 }
 ```
@@ -177,12 +177,12 @@ server {
 }
 ```
 
-### 4.5 institution.happymaa.cn
+### 4.5 insitution.happymaa.cn
 
 ```nginx
 server {
   listen 443 ssl http2;
-  server_name institution.happymaa.cn;
+  server_name insitution.happymaa.cn;
 
   ssl_certificate     /www/server/panel/vhost/cert/happymaa.cn/fullchain.pem;
   ssl_certificate_key /www/server/panel/vhost/cert/happymaa.cn/privkey.pem;
@@ -338,15 +338,15 @@ npm install -g pm2
 module.exports = {
   apps: [
     {
-      name: 'happymaa-api',
-      script: 'dist/main.js',
-      instances: 1,           // 轻量服务器单核，保持 1 实例
-      exec_mode: 'fork',
+      name: "happymaa-api",
+      script: "dist/main.js",
+      instances: 1, // 轻量服务器单核，保持 1 实例
+      exec_mode: "fork",
       autorestart: true,
       watch: false,
-      max_memory_restart: '512M',
+      max_memory_restart: "512M",
       env_production: {
-        NODE_ENV: 'production',
+        NODE_ENV: "production",
         PORT: 3000,
       },
     },
@@ -417,7 +417,7 @@ ssh root@124.220.78.20 "pm2 restart happymaa-api"
 [ ] systemctl reload nginx 或宝塔面板重载成功
 [ ] http://admin.happymaa.cn -> 301 跳转 https
 [ ] https://admin.happymaa.cn -> 200 正常
-[ ] https://institution.happymaa.cn -> 200 正常
+[ ] https://insitution.happymaa.cn -> 200 正常
 [ ] https://staff.happymaa.cn -> 200 正常
 [ ] https://api.happymaa.cn/health -> 200 正常
 [ ] curl -I https://admin.happymaa.cn 响应头含 Strict-Transport-Security
