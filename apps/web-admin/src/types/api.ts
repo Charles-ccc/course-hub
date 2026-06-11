@@ -45,7 +45,10 @@ export interface AdminCourseDto {
   institutionId: string;
   institutionName: string;
   name: string;
+  description: string;
+  instructorInfo: string;
   priceCents: number;
+  periodCount: number;
   status: CourseStatus;
   auditStatus: CourseAuditStatus;
   createdAt: string;

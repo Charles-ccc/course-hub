@@ -44,8 +44,11 @@ export interface Course {
   id: string;
   institutionId: string;
   name: string;
+  description: string;
+  instructorInfo: string;
   institutionName: string;
   priceCents: number;
+  periodCount: number;
   status: CourseStatus;
   auditStatus: CourseAuditStatus;
   createdAt: string;

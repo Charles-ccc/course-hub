@@ -9,6 +9,7 @@ import {
   Tabs,
   Tag,
   message,
+  Space,
 } from "antd";
 import type { TabsProps } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -26,12 +27,25 @@ const tabItems: TabsProps["items"] = [
   { key: "SUSPENDED", label: "已暂停" },
 ];
 
+type FormMode = "create" | "edit";
+
+interface FormValues {
+  name: string;
+  socialCreditCode: string;
+  depositBalanceCents: number;
+}
+
 export const InstitutionsPage = (): ReactElement => {
   const [tab, setTab] = useState<Institution["status"] | "ALL">("ALL");
   const [approving, setApproving] = useState<Institution | null>(null);
   const [suspending, setSuspending] = useState<Institution | null>(null);
+  const [formMode, setFormMode] = useState<FormMode | null>(null);
+  const [editingInstitution, setEditingInstitution] =
+    useState<Institution | null>(null);
+  const [deleting, setDeleting] = useState<Institution | null>(null);
   const [approveForm] = Form.useForm<{ settlementRate: number }>();
   const [suspendForm] = Form.useForm<{ reason: string }>();
+  const [form] = Form.useForm<FormValues>();
   const queryClient = useQueryClient();
 
   const institutionsQuery = useQuery({
@@ -54,6 +68,47 @@ export const InstitutionsPage = (): ReactElement => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin-institutions"] });
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (payload: {
+      name: string;
+      socialCreditCode: string;
+      depositBalanceCents?: number;
+    }) => adminApi.createInstitution(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-institutions"] });
+      message.success("机构创建成功");
+      setFormMode(null);
+      form.resetFields();
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: {
+      id: string;
+      data: {
+        name?: string;
+        socialCreditCode?: string;
+        depositBalanceCents?: number;
+      };
+    }) => adminApi.updateInstitution(payload.id, payload.data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-institutions"] });
+      message.success("机构编辑成功");
+      setFormMode(null);
+      setEditingInstitution(null);
+      form.resetFields();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminApi.deleteInstitution(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-institutions"] });
+      message.success("机构已删除");
+      setDeleting(null);
     },
   });
 
@@ -81,25 +136,76 @@ export const InstitutionsPage = (): ReactElement => {
     {
       title: "操作",
       render: (_, record) => (
-        <>
-          {record.status === "PENDING" ? (
-            <Button type='link' onClick={() => setApproving(record)}>
+        <Space>
+          {(record.status === "PENDING" || record.status === "ACTIVE") && (
+            <Button
+              type='link'
+              size='small'
+              onClick={() => {
+                setEditingInstitution(record);
+                setFormMode("edit");
+                form.setFieldsValue({
+                  name: record.name,
+                  socialCreditCode: record.socialCreditCode,
+                  depositBalanceCents: centsToYuan(
+                    record.depositBalanceCents,
+                  ) as unknown as number,
+                });
+              }}
+            >
+              编辑
+            </Button>
+          )}
+          {record.status === "PENDING" && (
+            <Button
+              type='link'
+              size='small'
+              danger
+              onClick={() => setDeleting(record)}
+            >
+              删除
+            </Button>
+          )}
+          {record.status === "PENDING" && (
+            <Button
+              type='link'
+              size='small'
+              onClick={() => setApproving(record)}
+            >
               审核通过
             </Button>
-          ) : null}
-          {record.status === "ACTIVE" ? (
-            <Button type='link' danger onClick={() => setSuspending(record)}>
+          )}
+          {record.status === "ACTIVE" && (
+            <Button
+              type='link'
+              danger
+              size='small'
+              onClick={() => setSuspending(record)}
+            >
               暂停
             </Button>
-          ) : null}
-        </>
+          )}
+        </Space>
       ),
     },
   ];
 
   return (
     <div className='page-stack'>
-      <Card title='机构管理'>
+      <Card
+        title='机构管理'
+        extra={
+          <Button
+            type='primary'
+            onClick={() => {
+              setFormMode("create");
+              form.resetFields();
+            }}
+          >
+            新增机构
+          </Button>
+        }
+      >
         <Tabs
           activeKey={tab}
           items={tabItems}
@@ -112,6 +218,106 @@ export const InstitutionsPage = (): ReactElement => {
           loading={institutionsQuery.isLoading}
         />
       </Card>
+
+      <Modal
+        title={formMode === "create" ? "新增机构" : "编辑机构"}
+        open={formMode !== null}
+        onCancel={() => {
+          setFormMode(null);
+          setEditingInstitution(null);
+          form.resetFields();
+        }}
+        onOk={() => form.submit()}
+        confirmLoading={createMutation.isPending || updateMutation.isPending}
+        destroyOnHidden
+      >
+        <Form
+          form={form}
+          layout='vertical'
+          onFinish={async (values) => {
+            if (formMode === "create") {
+              await createMutation.mutateAsync({
+                name: values.name,
+                socialCreditCode: values.socialCreditCode,
+                depositBalanceCents: values.depositBalanceCents
+                  ? Math.round(values.depositBalanceCents * 100)
+                  : 0,
+              });
+            } else if (formMode === "edit" && editingInstitution) {
+              await updateMutation.mutateAsync({
+                id: editingInstitution.id,
+                data: {
+                  name: values.name,
+                  socialCreditCode: values.socialCreditCode,
+                  depositBalanceCents: values.depositBalanceCents
+                    ? Math.round(values.depositBalanceCents * 100)
+                    : 0,
+                },
+              });
+            }
+          }}
+        >
+          <Form.Item
+            name='name'
+            label='机构名称'
+            rules={[{ required: true, message: "请输入机构名称" }]}
+          >
+            <Input placeholder='请输入机构名称' maxLength={100} />
+          </Form.Item>
+          <Form.Item
+            name='socialCreditCode'
+            label='统一社会信用代码'
+            rules={[
+              { required: true, message: "请输入统一社会信用代码" },
+              {
+                pattern: /^\d{18}$/,
+                message: "统一社会信用代码必须为 18 位数字",
+              },
+            ]}
+          >
+            <Input placeholder='请输入 18 位统一社会信用代码' maxLength={18} />
+          </Form.Item>
+          <Form.Item
+            name='depositBalanceCents'
+            label='保证金（元）'
+            tooltip={
+              editingInstitution?.status === "ACTIVE" &&
+              institutionsQuery.data?.some(
+                (i) => i.id === editingInstitution.id,
+              )
+                ? "已结算的机构保证金不可修改"
+                : undefined
+            }
+          >
+            <InputNumber
+              min={0}
+              precision={2}
+              style={{ width: "100%" }}
+              disabled={
+                formMode === "edit" && editingInstitution?.status === "ACTIVE"
+              }
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title='确认删除'
+        open={!!deleting}
+        onCancel={() => setDeleting(null)}
+        onOk={() => {
+          if (deleting) {
+            deleteMutation.mutate(deleting.id);
+          }
+        }}
+        confirmLoading={deleteMutation.isPending}
+        okButtonProps={{ danger: true }}
+      >
+        <p>删除后该机构的所有关联数据（如草稿课程）将被删除，且无法恢复。</p>
+        <p>
+          确定要删除机构 <strong>{deleting?.name}</strong> 吗？
+        </p>
+      </Modal>
 
       <Modal
         title='审核通过机构'
@@ -156,6 +362,9 @@ export const InstitutionsPage = (): ReactElement => {
               style={{ width: "100%" }}
             />
           </Form.Item>
+          <div style={{ color: "#ff7a45", marginTop: "12px" }}>
+            费率设定后无法通过界面修改，请谨慎填写。
+          </div>
         </Form>
       </Modal>
 
@@ -194,6 +403,9 @@ export const InstitutionsPage = (): ReactElement => {
           >
             <Input.TextArea rows={4} placeholder='请输入暂停原因' />
           </Form.Item>
+          <div style={{ color: "#ff7a45", marginTop: "12px" }}>
+            暂停后该机构课程将对学员不可见，无法新建订单；已有进行中的订单不受影响。
+          </div>
         </Form>
       </Modal>
     </div>

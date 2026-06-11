@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -16,13 +17,17 @@ import { AdminLoginReqDto, type LoginRespDto } from "./dto/admin-auth.dto";
 import type { DashboardHealthDto } from "./dto/dashboard.dto";
 import {
   AdminCourseQueryDto,
+  CreateCourseReqDto,
   RejectCourseReqDto,
+  UpdateCourseReqDto,
   type AdminCourseDto,
 } from "./dto/course.dto";
 import {
   AdminInstitutionQueryDto,
   ApproveInstitutionReqDto,
+  CreateInstitutionReqDto,
   SuspendInstitutionReqDto,
+  UpdateInstitutionReqDto,
   type InstitutionDto,
 } from "./dto/institution.dto";
 import {
@@ -76,6 +81,35 @@ export class AdminController {
 
   @UseGuards(SimpleAuthGuard)
   @RequireRole("PLATFORM_ADMIN")
+  @Post("institutions")
+  async createInstitution(
+    @Body() body: CreateInstitutionReqDto,
+  ): Promise<{ success: true }> {
+    await this.adminService.createInstitution(body);
+    return { success: true };
+  }
+
+  @UseGuards(SimpleAuthGuard)
+  @RequireRole("PLATFORM_ADMIN")
+  @Put("institutions/:id")
+  async updateInstitution(
+    @Param("id") id: string,
+    @Body() body: UpdateInstitutionReqDto,
+  ): Promise<{ success: true }> {
+    await this.adminService.updateInstitution(id, body);
+    return { success: true };
+  }
+
+  @UseGuards(SimpleAuthGuard)
+  @RequireRole("PLATFORM_ADMIN")
+  @Delete("institutions/:id")
+  async deleteInstitution(@Param("id") id: string): Promise<{ success: true }> {
+    await this.adminService.deleteInstitution(id);
+    return { success: true };
+  }
+
+  @UseGuards(SimpleAuthGuard)
+  @RequireRole("PLATFORM_ADMIN")
   @Post("institutions/:id/approve")
   async approveInstitution(
     @Param("id") id: string,
@@ -101,6 +135,35 @@ export class AdminController {
   @Get("courses")
   getCourses(@Query() query: AdminCourseQueryDto): Promise<AdminCourseDto[]> {
     return this.adminService.getCourses(query);
+  }
+
+  @UseGuards(SimpleAuthGuard)
+  @RequireRole("PLATFORM_ADMIN")
+  @Post("courses")
+  async createCourse(
+    @Body() body: CreateCourseReqDto,
+  ): Promise<{ success: true }> {
+    await this.adminService.createCourse(body);
+    return { success: true };
+  }
+
+  @UseGuards(SimpleAuthGuard)
+  @RequireRole("PLATFORM_ADMIN")
+  @Put("courses/:id")
+  async updateCourse(
+    @Param("id") id: string,
+    @Body() body: UpdateCourseReqDto,
+  ): Promise<{ success: true }> {
+    await this.adminService.updateCourse(id, body);
+    return { success: true };
+  }
+
+  @UseGuards(SimpleAuthGuard)
+  @RequireRole("PLATFORM_ADMIN")
+  @Delete("courses/:id")
+  async deleteCourse(@Param("id") id: string): Promise<{ success: true }> {
+    await this.adminService.deleteCourse(id);
+    return { success: true };
   }
 
   @UseGuards(SimpleAuthGuard)

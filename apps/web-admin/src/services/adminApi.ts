@@ -147,6 +147,53 @@ export const adminApi = {
     }
   },
 
+  async createInstitution(payload: {
+    name: string;
+    socialCreditCode: string;
+    depositBalanceCents?: number;
+  }): Promise<void> {
+    try {
+      if (useMock) {
+        // TODO: Add mock
+        return;
+      }
+      await httpClient.post("/admin/institutions", payload);
+    } catch (error) {
+      throw toApiBusinessError(error);
+    }
+  },
+
+  async updateInstitution(
+    id: string,
+    payload: {
+      name?: string;
+      socialCreditCode?: string;
+      depositBalanceCents?: number;
+    },
+  ): Promise<void> {
+    try {
+      if (useMock) {
+        // TODO: Add mock
+        return;
+      }
+      await httpClient.put(`/admin/institutions/${id}`, payload);
+    } catch (error) {
+      throw toApiBusinessError(error);
+    }
+  },
+
+  async deleteInstitution(id: string): Promise<void> {
+    try {
+      if (useMock) {
+        // TODO: Add mock
+        return;
+      }
+      await httpClient.delete(`/admin/institutions/${id}`);
+    } catch (error) {
+      throw toApiBusinessError(error);
+    }
+  },
+
   async getCourses(tab: "APPROVED" | "PENDING_REVIEW"): Promise<AdminCourse[]> {
     try {
       if (useMock) {
@@ -193,6 +240,58 @@ export const adminApi = {
         return;
       }
       await httpClient.post(`/admin/courses/${id}/offline`);
+    } catch (error) {
+      throw toApiBusinessError(error);
+    }
+  },
+
+  async createCourse(payload: {
+    institutionId: string;
+    name: string;
+    description: string;
+    instructorInfo: string;
+    priceCents: number;
+    periodCount: number;
+  }): Promise<void> {
+    try {
+      if (useMock) {
+        // TODO: Add mock
+        return;
+      }
+      await httpClient.post("/admin/courses", payload);
+    } catch (error) {
+      throw toApiBusinessError(error);
+    }
+  },
+
+  async updateCourse(
+    id: string,
+    payload: {
+      name?: string;
+      description?: string;
+      instructorInfo?: string;
+      priceCents?: number;
+      periodCount?: number;
+    },
+  ): Promise<void> {
+    try {
+      if (useMock) {
+        // TODO: Add mock
+        return;
+      }
+      await httpClient.put(`/admin/courses/${id}`, payload);
+    } catch (error) {
+      throw toApiBusinessError(error);
+    }
+  },
+
+  async deleteCourse(id: string): Promise<void> {
+    try {
+      if (useMock) {
+        // TODO: Add mock
+        return;
+      }
+      await httpClient.delete(`/admin/courses/${id}`);
     } catch (error) {
       throw toApiBusinessError(error);
     }

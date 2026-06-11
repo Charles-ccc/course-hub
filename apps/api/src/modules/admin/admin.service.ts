@@ -159,6 +159,97 @@ export class AdminService {
     }));
   }
 
+  async createInstitution(payload: {
+    name: string;
+    socialCreditCode: string;
+    depositBalanceCents?: number;
+  }): Promise<void> {
+    await this.prisma.institution.create({
+      data: {
+        id: `inst-${Date.now()}`,
+        name: payload.name,
+        socialCreditCode: payload.socialCreditCode,
+        depositBalanceCents: payload.depositBalanceCents ?? 0,
+        settlementRate: "0",
+        status: "PENDING",
+        cumulativeGmvCents: 0,
+        cumulativeServiceFeeCents: 0,
+      },
+    });
+  }
+
+  async updateInstitution(
+    id: string,
+    payload: {
+      name?: string;
+      socialCreditCode?: string;
+      depositBalanceCents?: number;
+    },
+  ): Promise<void> {
+    const institution = await this.prisma.institution.findUnique({
+      where: { id },
+    });
+
+    if (!institution) {
+      throw new NotFoundException("Institution not found");
+    }
+
+    if (institution.status !== "PENDING" && institution.status !== "ACTIVE") {
+      throw new ApiBusinessException(
+        40005,
+        "仅 PENDING 和 ACTIVE 状态的机构可编辑",
+        400,
+      );
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (payload.name !== undefined) updateData.name = payload.name;
+    if (payload.socialCreditCode !== undefined)
+      updateData.socialCreditCode = payload.socialCreditCode;
+
+    // 已结算的机构不能修改保证金
+    if (payload.depositBalanceCents !== undefined) {
+      const hasSettlement = await this.prisma.settlementRecord.count({
+        where: { institutionId: id },
+      });
+      if (hasSettlement === 0) {
+        updateData.depositBalanceCents = payload.depositBalanceCents;
+      }
+    }
+
+    await this.prisma.institution.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
+  async deleteInstitution(id: string): Promise<void> {
+    const institution = await this.prisma.institution.findUnique({
+      where: { id },
+    });
+
+    if (!institution) {
+      throw new NotFoundException("Institution not found");
+    }
+
+    if (institution.status !== "PENDING") {
+      throw new ApiBusinessException(40006, "仅 PENDING 状态的机构可删除", 400);
+    }
+
+    // 删除关联的草稿课程
+    await this.prisma.course.deleteMany({
+      where: {
+        institutionId: id,
+        auditStatus: "PENDING_REVIEW",
+      },
+    });
+
+    // 删除机构
+    await this.prisma.institution.delete({
+      where: { id },
+    });
+  }
+
   async approveInstitution(
     id: string,
     payload: ApproveInstitutionReqDto,
@@ -196,11 +287,104 @@ export class AdminService {
       institutionId: item.institutionId,
       institutionName: item.institution.name,
       name: item.name,
+      description: item.description,
+      instructorInfo: item.instructorInfo,
       priceCents: item.priceCents,
+      periodCount: item.periodCount,
       status: item.status,
       auditStatus: item.auditStatus,
       createdAt: item.createdAt.toISOString(),
     }));
+  }
+
+  async createCourse(payload: {
+    institutionId: string;
+    name: string;
+    description: string;
+    instructorInfo: string;
+    priceCents: number;
+    periodCount: number;
+  }): Promise<void> {
+    await this.ensureInstitutionExists(payload.institutionId);
+
+    await this.prisma.course.create({
+      data: {
+        id: `course-${Date.now()}`,
+        institutionId: payload.institutionId,
+        name: payload.name,
+        description: payload.description,
+        instructorInfo: payload.instructorInfo,
+        priceCents: payload.priceCents,
+        periodCount: payload.periodCount,
+        status: "OFFLINE",
+        auditStatus: "PENDING_REVIEW",
+      },
+    });
+  }
+
+  async updateCourse(
+    id: string,
+    payload: {
+      name?: string;
+      description?: string;
+      instructorInfo?: string;
+      priceCents?: number;
+      periodCount?: number;
+    },
+  ): Promise<void> {
+    const course = await this.prisma.course.findUnique({
+      where: { id },
+    });
+
+    if (!course) {
+      throw new NotFoundException("Course not found");
+    }
+
+    if (course.auditStatus !== "PENDING_REVIEW") {
+      throw new ApiBusinessException(
+        40007,
+        "仅 PENDING_REVIEW 状态的课程可编辑",
+        400,
+      );
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (payload.name !== undefined) updateData.name = payload.name;
+    if (payload.description !== undefined)
+      updateData.description = payload.description;
+    if (payload.instructorInfo !== undefined)
+      updateData.instructorInfo = payload.instructorInfo;
+    if (payload.priceCents !== undefined)
+      updateData.priceCents = payload.priceCents;
+    if (payload.periodCount !== undefined)
+      updateData.periodCount = payload.periodCount;
+
+    await this.prisma.course.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
+  async deleteCourse(id: string): Promise<void> {
+    const course = await this.prisma.course.findUnique({
+      where: { id },
+    });
+
+    if (!course) {
+      throw new NotFoundException("Course not found");
+    }
+
+    if (course.auditStatus !== "PENDING_REVIEW") {
+      throw new ApiBusinessException(
+        40008,
+        "仅 PENDING_REVIEW 状态的课程可删除",
+        400,
+      );
+    }
+
+    await this.prisma.course.delete({
+      where: { id },
+    });
   }
 
   async approveCourse(id: string): Promise<void> {
