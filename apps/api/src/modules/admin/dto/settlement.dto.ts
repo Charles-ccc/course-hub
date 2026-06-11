@@ -14,8 +14,8 @@ export class SettlementQueryDto {
 
 export interface SettlementRecordDto {
   id: string;
-  institutionId: string;
-  institutionName: string;
+  insitutionId: string;
+  insitutionName: string;
   period: string;
   gmvCents: number;
   serviceFeeCents: number;

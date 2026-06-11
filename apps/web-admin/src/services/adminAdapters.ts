@@ -3,7 +3,7 @@ import type {
   AuthSession,
   GmvReport,
   HealthMetrics,
-  Institution,
+  Insitution,
   OverdueMonitor,
   Salesman,
   SettlementRecord,
@@ -14,7 +14,7 @@ import type {
   DashboardHealthDto,
   GmvReportDto,
   LoginResponseDto,
-  InstitutionDto,
+  InsitutionDto,
   OverdueMonitorDto,
   SalesmanDto,
   SettlementRecordDto,
@@ -38,7 +38,7 @@ export const adaptHealthMetrics = (dto: DashboardHealthDto): HealthMetrics => ({
   warningMetrics: dto.warningMetrics,
 });
 
-export const adaptInstitution = (dto: InstitutionDto): Institution => ({
+export const adaptInsitution = (dto: InsitutionDto): Insitution => ({
   id: dto.id,
   name: dto.name,
   socialCreditCode: dto.socialCreditCode,
@@ -51,8 +51,8 @@ export const adaptInstitution = (dto: InstitutionDto): Institution => ({
 
 export const adaptCourse = (dto: AdminCourseDto): AdminCourse => ({
   id: dto.id,
-  institutionId: dto.institutionId,
-  institutionName: dto.institutionName,
+  insitutionId: dto.insitutionId,
+  insitutionName: dto.insitutionName,
   name: dto.name,
   description: dto.description,
   instructorInfo: dto.instructorInfo,
@@ -65,7 +65,7 @@ export const adaptCourse = (dto: AdminCourseDto): AdminCourse => ({
 
 export const adaptSalesman = (dto: SalesmanDto): Salesman => ({
   id: dto.id,
-  institutionId: dto.institutionId,
+  insitutionId: dto.insitutionId,
   name: dto.name,
   phone: dto.phone,
   contractType: dto.contractType,
@@ -93,8 +93,8 @@ export const adaptSettlement = (
   dto: SettlementRecordDto,
 ): SettlementRecord => ({
   id: dto.id,
-  institutionId: dto.institutionId,
-  institutionName: dto.institutionName,
+  insitutionId: dto.insitutionId,
+  insitutionName: dto.insitutionName,
   period: dto.period,
   gmvCents: dto.gmvCents,
   serviceFeeCents: dto.serviceFeeCents,

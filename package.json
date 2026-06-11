@@ -6,7 +6,7 @@
     "dev:api": "turbo run dev --filter=api",
     "dev:api:local": "DATABASE_URL='mysql://wangke:wangke123@127.0.0.1:3306/wangke' JWT_ACCESS_SECRET='dev-access-secret' JWT_REFRESH_SECRET='dev-refresh-secret' pnpm --dir apps/api dev",
     "dev:web-admin": "turbo run dev --filter=web-admin",
-    "dev:web-institution": "turbo run dev --filter=web-institution",
+    "dev:web-insitution": "turbo run dev --filter=web-insitution",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test"

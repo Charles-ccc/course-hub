@@ -1,6 +1,6 @@
 export type Role = "PLATFORM_ADMIN";
 
-export type InstitutionStatus = "PENDING" | "ACTIVE" | "SUSPENDED" | "EXITED";
+export type InsitutionStatus = "PENDING" | "ACTIVE" | "SUSPENDED" | "EXITED";
 
 export type CourseStatus = "ONLINE" | "OFFLINE";
 
@@ -29,7 +29,7 @@ export interface HealthMetrics {
   warningMetrics: Array<"REPAYMENT_RATE" | "OVERDUE_RATE" | "REFUND_RATE">;
 }
 
-export interface Institution {
+export interface Insitution {
   id: string;
   name: string;
   socialCreditCode: string;
@@ -37,16 +37,16 @@ export interface Institution {
   depositBalanceCents: number;
   cumulativeGmvCents: number;
   cumulativeServiceFeeCents: number;
-  status: InstitutionStatus;
+  status: InsitutionStatus;
 }
 
 export interface Course {
   id: string;
-  institutionId: string;
+  insitutionId: string;
   name: string;
   description: string;
   instructorInfo: string;
-  institutionName: string;
+  insitutionName: string;
   priceCents: number;
   periodCount: number;
   status: CourseStatus;
@@ -58,7 +58,7 @@ export type AdminCourse = Course;
 
 export interface Salesman {
   id: string;
-  institutionId: string;
+  insitutionId: string;
   name: string;
   phone: string;
   contractType: ContractType;
@@ -68,8 +68,8 @@ export interface Salesman {
 }
 
 export interface GmvReportItem {
-  institutionId: string;
-  institutionName: string;
+  insitutionId: string;
+  insitutionName: string;
   gmvCents: number;
   serviceFeeCents: number;
 }
@@ -89,8 +89,8 @@ export interface OverdueMonitor {
 
 export interface SettlementRecord {
   id: string;
-  institutionId: string;
-  institutionName: string;
+  insitutionId: string;
+  insitutionName: string;
   period: string;
   gmvCents: number;
   serviceFeeCents: number;

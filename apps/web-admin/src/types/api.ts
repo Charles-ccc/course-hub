@@ -3,7 +3,7 @@ import type {
   ContractType,
   CourseAuditStatus,
   CourseStatus,
-  InstitutionStatus,
+  InsitutionStatus,
   Role,
   SalesmanStatus,
   SettlementStatus,
@@ -29,7 +29,7 @@ export interface DashboardHealthDto {
   warningMetrics: Array<"REPAYMENT_RATE" | "OVERDUE_RATE" | "REFUND_RATE">;
 }
 
-export interface InstitutionDto {
+export interface InsitutionDto {
   id: string;
   name: string;
   socialCreditCode: string;
@@ -37,13 +37,13 @@ export interface InstitutionDto {
   depositBalanceCents: number;
   cumulativeGmvCents: number;
   cumulativeServiceFeeCents: number;
-  status: InstitutionStatus;
+  status: InsitutionStatus;
 }
 
 export interface AdminCourseDto {
   id: string;
-  institutionId: string;
-  institutionName: string;
+  insitutionId: string;
+  insitutionName: string;
   name: string;
   description: string;
   instructorInfo: string;
@@ -56,7 +56,7 @@ export interface AdminCourseDto {
 
 export interface SalesmanDto {
   id: string;
-  institutionId: string;
+  insitutionId: string;
   name: string;
   phone: string;
   contractType: ContractType;
@@ -70,8 +70,8 @@ export interface GmvReportDto {
   totalGmvCents: number;
   totalServiceFeeCents: number;
   items: Array<{
-    institutionId: string;
-    institutionName: string;
+    insitutionId: string;
+    insitutionName: string;
     gmvCents: number;
     serviceFeeCents: number;
   }>;
@@ -85,8 +85,8 @@ export interface OverdueMonitorDto {
 
 export interface SettlementRecordDto {
   id: string;
-  institutionId: string;
-  institutionName: string;
+  insitutionId: string;
+  insitutionName: string;
   period: string;
   gmvCents: number;
   serviceFeeCents: number;
@@ -101,7 +101,7 @@ export interface SystemConfigDto {
   zhimaEnabled: boolean;
 }
 
-export type InstitutionsPageDto = PageResult<InstitutionDto>;
+export type InsitutionsPageDto = PageResult<InsitutionDto>;
 export type CoursesPageDto = PageResult<AdminCourseDto>;
 export type SalesmenPageDto = PageResult<SalesmanDto>;
 export type SettlementsPageDto = PageResult<SettlementRecordDto>;

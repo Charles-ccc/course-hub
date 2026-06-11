@@ -1,7 +1,7 @@
 import type {
   ContractType,
   CourseAuditStatus,
-  InstitutionStatus,
+  InsitutionStatus,
   SalesmanStatus,
   SettlementStatus,
 } from "../types/domain";
@@ -14,7 +14,7 @@ import {
 
 export { centsToYuan, formatDate, formatDateTime, maskName };
 
-export const institutionStatusLabel: Record<InstitutionStatus, string> = {
+export const insitutionStatusLabel: Record<InsitutionStatus, string> = {
   PENDING: "待审核",
   ACTIVE: "运营中",
   SUSPENDED: "已暂停",

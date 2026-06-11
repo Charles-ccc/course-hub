@@ -13,7 +13,7 @@ export const ReportsPage = (): ReactElement => {
   });
 
   const columns: ColumnsType<GmvReportItem> = [
-    { title: "机构名称", dataIndex: "institutionName" },
+    { title: "机构名称", dataIndex: "insitutionName" },
     {
       title: "GMV（元）",
       dataIndex: "gmvCents",
@@ -66,7 +66,7 @@ export const ReportsPage = (): ReactElement => {
       </Row>
       <Card title={`机构 GMV 排名 ${reportsQuery.data?.gmv.month ?? ""}`}>
         <Table<GmvReportItem>
-          rowKey='institutionId'
+          rowKey='insitutionId'
           dataSource={reportsQuery.data?.gmv.items ?? []}
           columns={columns}
           loading={reportsQuery.isLoading}

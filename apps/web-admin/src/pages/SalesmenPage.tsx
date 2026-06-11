@@ -18,7 +18,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../services/adminApi";
 import type {
   ContractType,
-  Institution,
+  Insitution,
   Salesman,
   SalesmanStatus,
 } from "../types/domain";
@@ -29,7 +29,7 @@ import {
 } from "../utils/format";
 
 interface SalesmanForm {
-  institutionId: string;
+  insitutionId: string;
   username: string;
   password: string;
   name: string;
@@ -53,9 +53,9 @@ export const SalesmenPage = (): ReactElement => {
     queryKey: ["admin-salesmen", tab],
     queryFn: () => adminApi.getSalesmen(tab),
   });
-  const institutionsQuery = useQuery({
-    queryKey: ["admin-institutions", "active-options"],
-    queryFn: () => adminApi.getInstitutions("ACTIVE"),
+  const insitutionsQuery = useQuery({
+    queryKey: ["admin-insitutions", "active-options"],
+    queryFn: () => adminApi.getInsitutions("ACTIVE"),
   });
 
   const createMutation = useMutation({
@@ -157,13 +157,13 @@ export const SalesmenPage = (): ReactElement => {
           onFinish={(values) => createMutation.mutate(values)}
         >
           <Form.Item
-            name='institutionId'
+            name='insitutionId'
             label='所属机构'
             rules={[{ required: true, message: "请选择机构" }]}
           >
             <Select
-              options={(institutionsQuery.data ?? []).map(
-                (item: Institution) => ({
+              options={(insitutionsQuery.data ?? []).map(
+                (item: Insitution) => ({
                   label: item.name,
                   value: item.id,
                 }),

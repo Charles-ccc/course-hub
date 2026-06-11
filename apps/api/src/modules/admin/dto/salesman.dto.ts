@@ -11,7 +11,7 @@ export class AdminSalesmanQueryDto {
 
 export class CreateSalesmanReqDto {
   @IsString()
-  institutionId!: string;
+  insitutionId!: string;
 
   @IsString()
   @Length(3, 32)
@@ -36,7 +36,7 @@ export class CreateSalesmanReqDto {
 
 export interface SalesmanDto {
   id: string;
-  institutionId: string;
+  insitutionId: string;
   name: string;
   phone: string;
   contractType: ContractType;

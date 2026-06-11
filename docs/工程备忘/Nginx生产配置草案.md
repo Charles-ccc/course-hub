@@ -7,7 +7,7 @@
 | 子域名                 | 用途                         | 部署类型         |
 | ---------------------- | ---------------------------- | ---------------- |
 | admin.happymaa.cn      | web-admin 平台运营后台       | 静态 HTML        |
-| insitution.happymaa.cn | web-institution 机构管理门户 | 静态 HTML        |
+| insitution.happymaa.cn | web-insitution 机构管理门户 | 静态 HTML        |
 | staff.happymaa.cn      | h5-staff 业务员工作台        | 静态 HTML        |
 | api.happymaa.cn        | NestJS 后端 API              | Node.js 反向代理 |
 
@@ -17,7 +17,7 @@
 
 ```
 /www/wwwroot/admin/          # web-admin 静态文件（dist/）
-/www/wwwroot/institution/    # web-institution 静态文件（dist/）
+/www/wwwroot/insitution/    # web-insitution 静态文件（dist/）
 /www/wwwroot/staff/          # h5-staff 静态文件（dist/）
 Node.js 服务：127.0.0.1:3000  # NestJS API
 ```
@@ -26,11 +26,11 @@ Node.js 服务：127.0.0.1:3000  # NestJS API
 
 ## 3. 宝塔面板建站操作步骤
 
-### 3.1 建静态站点（以 institution 为例，admin/staff 同理）
+### 3.1 建静态站点（以 insitution 为例，admin/staff 同理）
 
 1. 宝塔面板 -> 网站 -> 添加站点
 2. 域名填写：`insitution.happymaa.cn`
-3. 根目录：`/www/wwwroot/institution`
+3. 根目录：`/www/wwwroot/insitution`
 4. PHP 版本：**纯静态**（选"不启用"）
 5. 建站完成后，进入站点设置 -> SSL -> 腾讯云证书（或 Let's Encrypt）申请泛域名证书 `*.happymaa.cn`
 
@@ -199,11 +199,11 @@ server {
   add_header X-Frame-Options SAMEORIGIN always;
   add_header Referrer-Policy strict-origin-when-cross-origin always;
 
-  root /www/wwwroot/institution;
+  root /www/wwwroot/insitution;
   index index.html;
 
-  access_log /www/wwwlogs/institution.access.log main_json;
-  error_log  /www/wwwlogs/institution.error.log warn;
+  access_log /www/wwwlogs/insitution.access.log main_json;
+  error_log  /www/wwwlogs/insitution.error.log warn;
 
   location / {
     try_files $uri $uri/ /index.html;
@@ -378,7 +378,7 @@ pm2 startup
 
 ```bash
 # 在本地项目根目录执行
-pnpm --filter web-institution build   # 产出 apps/web-institution/dist/
+pnpm --filter web-insitution build   # 产出 apps/web-insitution/dist/
 pnpm --filter web-admin build         # 产出 apps/web-admin/dist/
 pnpm --filter h5-staff build          # 产出 apps/h5-staff/dist/
 pnpm --filter api build               # 产出 apps/api/dist/
@@ -388,7 +388,7 @@ pnpm --filter api build               # 产出 apps/api/dist/
 
 ```bash
 # 替换 <your-ssh-key> 和服务器用户名
-scp -r apps/web-institution/dist/* root@124.220.78.20:/www/wwwroot/institution/
+scp -r apps/web-insitution/dist/* root@124.220.78.20:/www/wwwroot/insitution/
 scp -r apps/web-admin/dist/*       root@124.220.78.20:/www/wwwroot/admin/
 scp -r apps/h5-staff/dist/*        root@124.220.78.20:/www/wwwroot/staff/
 ```

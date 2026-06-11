@@ -23,13 +23,13 @@ import {
   type AdminCourseDto,
 } from "./dto/course.dto";
 import {
-  AdminInstitutionQueryDto,
-  ApproveInstitutionReqDto,
-  CreateInstitutionReqDto,
-  SuspendInstitutionReqDto,
-  UpdateInstitutionReqDto,
-  type InstitutionDto,
-} from "./dto/institution.dto";
+  AdminInsitutionQueryDto,
+  ApproveInsitutionReqDto,
+  CreateInsitutionReqDto,
+  SuspendInsitutionReqDto,
+  UpdateInsitutionReqDto,
+  type InsitutionDto,
+} from "./dto/insitution.dto";
 import {
   GmvReportQueryDto,
   type GmvReportDto,
@@ -72,61 +72,61 @@ export class AdminController {
 
   @UseGuards(SimpleAuthGuard)
   @RequireRole("PLATFORM_ADMIN")
-  @Get("institutions")
-  getInstitutions(
-    @Query() query: AdminInstitutionQueryDto,
-  ): Promise<InstitutionDto[]> {
-    return this.adminService.getInstitutions(query.status);
+  @Get("insitutions")
+  getInsitutions(
+    @Query() query: AdminInsitutionQueryDto,
+  ): Promise<InsitutionDto[]> {
+    return this.adminService.getInsitutions(query.status);
   }
 
   @UseGuards(SimpleAuthGuard)
   @RequireRole("PLATFORM_ADMIN")
-  @Post("institutions")
-  async createInstitution(
-    @Body() body: CreateInstitutionReqDto,
+  @Post("insitutions")
+  async createInsitution(
+    @Body() body: CreateInsitutionReqDto,
   ): Promise<{ success: true }> {
-    await this.adminService.createInstitution(body);
+    await this.adminService.createInsitution(body);
     return { success: true };
   }
 
   @UseGuards(SimpleAuthGuard)
   @RequireRole("PLATFORM_ADMIN")
-  @Put("institutions/:id")
-  async updateInstitution(
+  @Put("insitutions/:id")
+  async updateInsitution(
     @Param("id") id: string,
-    @Body() body: UpdateInstitutionReqDto,
+    @Body() body: UpdateInsitutionReqDto,
   ): Promise<{ success: true }> {
-    await this.adminService.updateInstitution(id, body);
+    await this.adminService.updateInsitution(id, body);
     return { success: true };
   }
 
   @UseGuards(SimpleAuthGuard)
   @RequireRole("PLATFORM_ADMIN")
-  @Delete("institutions/:id")
-  async deleteInstitution(@Param("id") id: string): Promise<{ success: true }> {
-    await this.adminService.deleteInstitution(id);
+  @Delete("insitutions/:id")
+  async deleteInsitution(@Param("id") id: string): Promise<{ success: true }> {
+    await this.adminService.deleteInsitution(id);
     return { success: true };
   }
 
   @UseGuards(SimpleAuthGuard)
   @RequireRole("PLATFORM_ADMIN")
-  @Post("institutions/:id/approve")
-  async approveInstitution(
+  @Post("insitutions/:id/approve")
+  async approveInsitution(
     @Param("id") id: string,
-    @Body() body: ApproveInstitutionReqDto,
+    @Body() body: ApproveInsitutionReqDto,
   ): Promise<{ success: true }> {
-    await this.adminService.approveInstitution(id, body);
+    await this.adminService.approveInsitution(id, body);
     return { success: true };
   }
 
   @UseGuards(SimpleAuthGuard)
   @RequireRole("PLATFORM_ADMIN")
-  @Post("institutions/:id/suspend")
-  async suspendInstitution(
+  @Post("insitutions/:id/suspend")
+  async suspendInsitution(
     @Param("id") id: string,
-    @Body() body: SuspendInstitutionReqDto,
+    @Body() body: SuspendInsitutionReqDto,
   ): Promise<{ success: true }> {
-    await this.adminService.suspendInstitution(id, body);
+    await this.adminService.suspendInsitution(id, body);
     return { success: true };
   }
 

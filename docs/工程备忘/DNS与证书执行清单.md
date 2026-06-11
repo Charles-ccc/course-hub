@@ -15,7 +15,7 @@
 3. 新增 A 记录：
 
 - 主机记录：admin，记录值：124.220.78.20，TTL：600
-- 主机记录：institution，记录值：124.220.78.20，TTL：600
+- 主机记录：insitution，记录值：124.220.78.20，TTL：600
 - 主机记录：staff，记录值：124.220.78.20，TTL：600
 - 主机记录：api，记录值：124.220.78.20，TTL：600
 
@@ -31,7 +31,7 @@
 
 ## 3. 证书申请步骤（腾讯云 SSL 证书）
 
-推荐：申请一个泛域名证书 \*.happymaa.cn（覆盖 admin/institution/staff/api）。
+推荐：申请一个泛域名证书 \*.happymaa.cn（覆盖 admin/insitution/staff/api）。
 
 1. 腾讯云 SSL 证书服务 -> 申请免费或付费证书。
 2. 证书域名填写 \*.happymaa.cn（或分别申请单域名证书）。

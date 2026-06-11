@@ -21,7 +21,7 @@ export const SettlementsPage = (): ReactElement => {
   });
 
   const columns: ColumnsType<SettlementRecord> = [
-    { title: "机构名称", dataIndex: "institutionName" },
+    { title: "机构名称", dataIndex: "insitutionName" },
     { title: "结算周期", dataIndex: "period" },
     {
       title: "本期 GMV（元）",
@@ -52,7 +52,7 @@ export const SettlementsPage = (): ReactElement => {
             onClick={() =>
               Modal.confirm({
                 title: "执行结算",
-                content: `确认对 ${record.institutionName} ${record.period} 执行结算吗？该操作不可撤销。`,
+                content: `确认对 ${record.insitutionName} ${record.period} 执行结算吗？该操作不可撤销。`,
                 onOk: async () => {
                   await executeMutation.mutateAsync(record.id);
                   message.success("结算已执行");

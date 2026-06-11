@@ -18,6 +18,6 @@ export class AuthController {
 
   @Post("refresh")
   refresh(@Body() body: RefreshTokenReqDto): Promise<LoginRespDto> {
-    return this.authService.refreshInstitutionToken(body.refreshToken);
+    return this.authService.refreshInsitutionToken(body.refreshToken);
   }
 }

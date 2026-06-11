@@ -20,7 +20,7 @@ type RefreshTokenPayload = {
 type TokenPairInput = {
   userId: string;
   role: AppRole;
-  refreshOwner: { adminUserId?: string; institutionUserId?: string };
+  refreshOwner: { adminUserId?: string; insitutionUserId?: string };
 };
 
 type RefreshTokenRecord = {
@@ -128,7 +128,7 @@ export class TokenService {
     const refreshOwner =
       role === "PLATFORM_ADMIN"
         ? { adminUserId: payload.sub }
-        : { institutionUserId: payload.sub };
+        : { insitutionUserId: payload.sub };
 
     const nextPair = await this.issueTokenPair({
       userId: payload.sub,

@@ -6,9 +6,9 @@ import { Spin } from "antd";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { PublicRoute, ProtectedRoute } from "./components/RouteGuards";
 import { AppLayout } from "./layouts/AppLayout";
-const InstitutionsPage = lazy(() =>
-  import("./pages/InstitutionsPage").then((module) => ({
-    default: module.InstitutionsPage,
+const InsitutionsPage = lazy(() =>
+  import("./pages/InsitutionsPage").then((module) => ({
+    default: module.InsitutionsPage,
   })),
 );
 const SalesmenPage = lazy(() =>
@@ -77,8 +77,8 @@ export const router = createBrowserRouter([
           { path: "/", element: <Navigate to='/dashboard' replace /> },
           { path: "/dashboard", element: withSuspense(<DashboardPage />) },
           {
-            path: "/institutions",
-            element: withSuspense(<InstitutionsPage />),
+            path: "/insitutions",
+            element: withSuspense(<InsitutionsPage />),
           },
           { path: "/courses", element: withSuspense(<CoursesPage />) },
           { path: "/salesmen", element: withSuspense(<SalesmenPage />) },

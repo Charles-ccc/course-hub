@@ -8,7 +8,7 @@ const { Header, Sider, Content } = Layout;
 
 const menuItems = [
   { key: "/dashboard", label: <Link to='/dashboard'>运营概览</Link> },
-  { key: "/institutions", label: <Link to='/institutions'>机构管理</Link> },
+  { key: "/insitutions", label: <Link to='/insitutions'>机构管理</Link> },
   { key: "/courses", label: <Link to='/courses'>课程管理</Link> },
   { key: "/salesmen", label: <Link to='/salesmen'>业务员管理</Link> },
   { key: "/reports", label: <Link to='/reports'>数据报表</Link> },

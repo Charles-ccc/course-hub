@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
   const adminPasswordHash = await hash("admin123", 10);
-  const institutionPasswordHash = await hash("123456", 10);
+  const insitutionPasswordHash = await hash("123456", 10);
   const salesmanPasswordHash = await hash("123456", 10);
 
   await prisma.installment.deleteMany();
@@ -15,8 +15,8 @@ async function main(): Promise<void> {
   await prisma.settlementRecord.deleteMany();
   await prisma.salesman.deleteMany();
   await prisma.course.deleteMany();
-  await prisma.institutionUser.deleteMany();
-  await prisma.institution.deleteMany();
+  await prisma.insitutionUser.deleteMany();
+  await prisma.insitution.deleteMany();
   await prisma.adminUser.deleteMany();
   await prisma.systemConfig.deleteMany();
 
@@ -30,7 +30,7 @@ async function main(): Promise<void> {
     },
   });
 
-  await prisma.institution.createMany({
+  await prisma.insitution.createMany({
     data: [
       {
         id: "org-1001",
@@ -55,14 +55,14 @@ async function main(): Promise<void> {
     ],
   });
 
-  await prisma.institutionUser.create({
+  await prisma.insitutionUser.create({
     data: {
-      id: "institution-user-1",
+      id: "insitution-user-1",
       phone: "13800138000",
       displayName: "欢乐学示例机构",
-      passwordHash: institutionPasswordHash,
-      role: "INSTITUTION_ADMIN",
-      institutionId: "org-1001",
+      passwordHash: insitutionPasswordHash,
+      role: "INSITUTION_ADMIN",
+      insitutionId: "org-1001",
     },
   });
 
@@ -70,7 +70,7 @@ async function main(): Promise<void> {
     data: [
       {
         id: "course-1",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         name: "英语冲刺提升班",
         description: "适合中学阶段的英语能力提升课程。",
         instructorInfo: "王老师，10年教学经验",
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
       },
       {
         id: "course-2",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         name: "数学系统强化班",
         description: "覆盖函数、几何、代数等核心知识点。",
         instructorInfo: "李老师，省级竞赛教练",
@@ -92,7 +92,7 @@ async function main(): Promise<void> {
       },
       {
         id: "course-3",
-        institutionId: "org-1002",
+        insitutionId: "org-1002",
         name: "物理拔高专题班",
         description: "高频考点专项冲刺。",
         instructorInfo: "张老师，重点中学教研组长",
@@ -107,7 +107,7 @@ async function main(): Promise<void> {
   await prisma.salesman.create({
     data: {
       id: "sales-1",
-      institutionId: "org-1001",
+      insitutionId: "org-1001",
       username: "sales01",
       passwordHash: salesmanPasswordHash,
       name: "陈晓东",
@@ -123,7 +123,7 @@ async function main(): Promise<void> {
     data: [
       {
         id: "order-1001",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         courseId: "course-1",
         studentName: "林同学",
         courseName: "英语冲刺提升班",
@@ -133,7 +133,7 @@ async function main(): Promise<void> {
       },
       {
         id: "order-1002",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         courseId: "course-2",
         studentName: "张同学",
         courseName: "数学系统强化班",
@@ -144,7 +144,7 @@ async function main(): Promise<void> {
       },
       {
         id: "order-1003",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         courseId: "course-1",
         studentName: "周同学",
         courseName: "英语冲刺提升班",
@@ -154,7 +154,7 @@ async function main(): Promise<void> {
       },
       {
         id: "order-1004",
-        institutionId: "org-1002",
+        insitutionId: "org-1002",
         courseId: "course-3",
         studentName: "吴同学",
         courseName: "物理拔高专题班",
@@ -203,7 +203,7 @@ async function main(): Promise<void> {
     data: [
       {
         id: "set-2026-05-org-1001",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         period: "2026-05",
         gmvCents: 1020000,
         serviceFeeCents: 86700,
@@ -211,7 +211,7 @@ async function main(): Promise<void> {
       },
       {
         id: "set-2026-04-org-1001",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         period: "2026-04",
         gmvCents: 880000,
         serviceFeeCents: 74800,
@@ -220,7 +220,7 @@ async function main(): Promise<void> {
       },
       {
         id: "set-2026-05-org-1002",
-        institutionId: "org-1002",
+        insitutionId: "org-1002",
         period: "2026-05",
         gmvCents: 720000,
         serviceFeeCents: 56160,
@@ -233,14 +233,14 @@ async function main(): Promise<void> {
     data: [
       {
         id: "qa-1",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         studentName: "林同学",
         content: "课程是否支持补课回放？",
         replied: false,
       },
       {
         id: "qa-2",
-        institutionId: "org-1001",
+        insitutionId: "org-1001",
         studentName: "张同学",
         content: "每周几节课？",
         replied: true,

@@ -17,16 +17,16 @@ export class AuthService {
     password: string,
     clientType: string,
   ): Promise<LoginRespDto> {
-    if (clientType !== "INSTITUTION_WEB") {
+    if (clientType !== "INSITUTION_WEB") {
       throw new UnauthorizedException("当前仅开放机构端登录");
     }
 
-    const user = await this.prisma.institutionUser.findUnique({
+    const user = await this.prisma.insitutionUser.findUnique({
       where: { phone },
-      include: { institution: true },
+      include: { insitution: true },
     });
 
-    if (!user || user.institution.status !== "ACTIVE") {
+    if (!user || user.insitution.status !== "ACTIVE") {
       throw new ApiBusinessException(40001, "手机号或密码错误", 401);
     }
 
@@ -37,44 +37,44 @@ export class AuthService {
 
     const tokenPair = await this.tokenService.issueTokenPair({
       userId: user.id,
-      role: "INSTITUTION_ADMIN",
-      refreshOwner: { institutionUserId: user.id },
+      role: "INSITUTION_ADMIN",
+      refreshOwner: { insitutionUserId: user.id },
     });
 
     return {
       accessToken: tokenPair.accessToken,
       refreshToken: tokenPair.refreshToken,
       expiresIn: tokenPair.expiresIn,
-      role: "INSTITUTION_ADMIN",
+      role: "INSITUTION_ADMIN",
       userId: user.id,
       displayName: user.displayName,
-      orgId: user.institutionId,
-      orgName: user.institution.name,
+      orgId: user.insitutionId,
+      orgName: user.insitution.name,
     };
   }
 
-  async refreshInstitutionToken(refreshToken: string): Promise<LoginRespDto> {
+  async refreshInsitutionToken(refreshToken: string): Promise<LoginRespDto> {
     const refreshed = await this.tokenService.refreshAccessToken(
       refreshToken,
-      "INSTITUTION_ADMIN",
+      "INSITUTION_ADMIN",
     );
-    const user = await this.prisma.institutionUser.findUnique({
+    const user = await this.prisma.insitutionUser.findUnique({
       where: { id: refreshed.user.subject },
-      include: { institution: true },
+      include: { insitution: true },
     });
     if (!user) {
-      throw new UnauthorizedException("Institution user not found");
+      throw new UnauthorizedException("Insitution user not found");
     }
 
     return {
       accessToken: refreshed.accessToken,
       refreshToken: refreshed.refreshToken,
       expiresIn: refreshed.expiresIn,
-      role: "INSTITUTION_ADMIN",
+      role: "INSITUTION_ADMIN",
       userId: user.id,
       displayName: user.displayName,
-      orgId: user.institutionId,
-      orgName: user.institution.name,
+      orgId: user.insitutionId,
+      orgName: user.insitution.name,
     };
   }
 }

@@ -7,8 +7,8 @@ export class GmvReportQueryDto {
 }
 
 export interface GmvReportItemDto {
-  institutionId: string;
-  institutionName: string;
+  insitutionId: string;
+  insitutionName: string;
   gmvCents: number;
   serviceFeeCents: number;
 }

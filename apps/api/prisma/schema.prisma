@@ -11,15 +11,15 @@ enum AdminRole {
   PLATFORM_ADMIN
 }
 
-enum InstitutionStatus {
+enum InsitutionStatus {
   PENDING
   ACTIVE
   SUSPENDED
   EXITED
 }
 
-enum InstitutionUserRole {
-  INSTITUTION_ADMIN
+enum InsitutionUserRole {
+  INSITUTION_ADMIN
 }
 
 enum CourseStatus {
@@ -81,7 +81,7 @@ model AdminUser {
   refreshTokens RefreshToken[]
 }
 
-model Institution {
+model Insitution {
   id                        String              @id
   name                      String
   socialCreditCode          String              @unique
@@ -89,10 +89,10 @@ model Institution {
   depositBalanceCents       Int
   cumulativeGmvCents        Int
   cumulativeServiceFeeCents Int
-  status                    InstitutionStatus
+  status                    InsitutionStatus
   createdAt                 DateTime            @default(now())
   updatedAt                 DateTime            @updatedAt
-  users                     InstitutionUser[]
+  users                     InsitutionUser[]
   courses                   Course[]
   salesmen                  Salesman[]
   orders                    Order[]
@@ -100,16 +100,16 @@ model Institution {
   questions                 Question[]
 }
 
-model InstitutionUser {
+model InsitutionUser {
   id           String              @id
   phone        String              @unique
   displayName  String
   passwordHash String
-  role         InstitutionUserRole @default(INSTITUTION_ADMIN)
-  institutionId String
+  role         InsitutionUserRole @default(INSITUTION_ADMIN)
+  insitutionId String
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
-  institution  Institution         @relation(fields: [institutionId], references: [id])
+  insitution  Insitution         @relation(fields: [insitutionId], references: [id])
   refreshTokens RefreshToken[]
 }
 
@@ -124,16 +124,16 @@ model RefreshToken {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   adminUserId        String?
-  institutionUserId  String?
+  insitutionUserId  String?
   adminUser          AdminUser?         @relation(fields: [adminUserId], references: [id])
-  institutionUser    InstitutionUser?   @relation(fields: [institutionUserId], references: [id])
+  insitutionUser    InsitutionUser?   @relation(fields: [insitutionUserId], references: [id])
 
   @@index([userId, role, status])
 }
 
 model Course {
   id             String            @id
-  institutionId  String
+  insitutionId  String
   name           String
   description    String
   instructorInfo String
@@ -143,13 +143,13 @@ model Course {
   auditStatus    CourseAuditStatus @default(APPROVED)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
-  institution    Institution       @relation(fields: [institutionId], references: [id])
+  insitution    Insitution       @relation(fields: [insitutionId], references: [id])
   orders         Order[]
 }
 
 model Salesman {
   id                        String        @id
-  institutionId             String
+  insitutionId             String
   username                  String        @unique
   passwordHash              String
   name                      String
@@ -160,12 +160,12 @@ model Salesman {
   cumulativeCommissionCents Int           @default(0)
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
-  institution               Institution   @relation(fields: [institutionId], references: [id])
+  insitution               Insitution   @relation(fields: [insitutionId], references: [id])
 }
 
 model Order {
   id               String      @id
-  institutionId    String
+  insitutionId    String
   courseId         String?
   studentName      String
   courseName       String
@@ -175,7 +175,7 @@ model Order {
   coolingOffEndAt  DateTime?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
-  institution      Institution @relation(fields: [institutionId], references: [id])
+  insitution      Insitution @relation(fields: [insitutionId], references: [id])
   course           Course?     @relation(fields: [courseId], references: [id])
   installments     Installment[]
 }
@@ -198,7 +198,7 @@ model Installment {
 
 model SettlementRecord {
   id              String           @id
-  institutionId   String
+  insitutionId   String
   period          String
   gmvCents        Int
   serviceFeeCents Int
@@ -206,14 +206,14 @@ model SettlementRecord {
   settledAt       DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  institution     Institution      @relation(fields: [institutionId], references: [id])
+  insitution     Insitution      @relation(fields: [insitutionId], references: [id])
 
-  @@unique([institutionId, period])
+  @@unique([insitutionId, period])
 }
 
 model Question {
   id            String      @id
-  institutionId String
+  insitutionId String
   studentName   String
   content       String
   askedAt       DateTime    @default(now())
@@ -222,7 +222,7 @@ model Question {
   repliedAt     DateTime?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  institution   Institution @relation(fields: [institutionId], references: [id])
+  insitution   Insitution @relation(fields: [insitutionId], references: [id])
 }
 
 model SystemConfig {

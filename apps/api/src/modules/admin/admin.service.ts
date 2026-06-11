@@ -8,11 +8,11 @@ import type {
   CourseAuditStatus,
 } from "./dto/course.dto";
 import type {
-  ApproveInstitutionReqDto,
-  InstitutionDto,
-  InstitutionStatus,
-  SuspendInstitutionReqDto,
-} from "./dto/institution.dto";
+  ApproveInsitutionReqDto,
+  InsitutionDto,
+  InsitutionStatus,
+  SuspendInsitutionReqDto,
+} from "./dto/insitution.dto";
 import type {
   GmvReportDto,
   GmvReportQueryDto,
@@ -141,13 +141,13 @@ export class AdminService {
     };
   }
 
-  async getInstitutions(status?: InstitutionStatus): Promise<InstitutionDto[]> {
-    const institutions = await this.prisma.institution.findMany({
+  async getInsitutions(status?: InsitutionStatus): Promise<InsitutionDto[]> {
+    const insitutions = await this.prisma.insitution.findMany({
       where: status ? { status } : undefined,
       orderBy: { createdAt: "desc" },
     });
 
-    return institutions.map((item) => ({
+    return insitutions.map((item) => ({
       id: item.id,
       name: item.name,
       socialCreditCode: item.socialCreditCode,
@@ -159,12 +159,12 @@ export class AdminService {
     }));
   }
 
-  async createInstitution(payload: {
+  async createInsitution(payload: {
     name: string;
     socialCreditCode: string;
     depositBalanceCents?: number;
   }): Promise<void> {
-    await this.prisma.institution.create({
+    await this.prisma.insitution.create({
       data: {
         id: `inst-${Date.now()}`,
         name: payload.name,
@@ -178,7 +178,7 @@ export class AdminService {
     });
   }
 
-  async updateInstitution(
+  async updateInsitution(
     id: string,
     payload: {
       name?: string;
@@ -186,15 +186,15 @@ export class AdminService {
       depositBalanceCents?: number;
     },
   ): Promise<void> {
-    const institution = await this.prisma.institution.findUnique({
+    const insitution = await this.prisma.insitution.findUnique({
       where: { id },
     });
 
-    if (!institution) {
-      throw new NotFoundException("Institution not found");
+    if (!insitution) {
+      throw new NotFoundException("Insitution not found");
     }
 
-    if (institution.status !== "PENDING" && institution.status !== "ACTIVE") {
+    if (insitution.status !== "PENDING" && insitution.status !== "ACTIVE") {
       throw new ApiBusinessException(
         40005,
         "仅 PENDING 和 ACTIVE 状态的机构可编辑",
@@ -210,63 +210,63 @@ export class AdminService {
     // 已结算的机构不能修改保证金
     if (payload.depositBalanceCents !== undefined) {
       const hasSettlement = await this.prisma.settlementRecord.count({
-        where: { institutionId: id },
+        where: { insitutionId: id },
       });
       if (hasSettlement === 0) {
         updateData.depositBalanceCents = payload.depositBalanceCents;
       }
     }
 
-    await this.prisma.institution.update({
+    await this.prisma.insitution.update({
       where: { id },
       data: updateData,
     });
   }
 
-  async deleteInstitution(id: string): Promise<void> {
-    const institution = await this.prisma.institution.findUnique({
+  async deleteInsitution(id: string): Promise<void> {
+    const insitution = await this.prisma.insitution.findUnique({
       where: { id },
     });
 
-    if (!institution) {
-      throw new NotFoundException("Institution not found");
+    if (!insitution) {
+      throw new NotFoundException("Insitution not found");
     }
 
-    if (institution.status !== "PENDING") {
+    if (insitution.status !== "PENDING") {
       throw new ApiBusinessException(40006, "仅 PENDING 状态的机构可删除", 400);
     }
 
     // 删除关联的草稿课程
     await this.prisma.course.deleteMany({
       where: {
-        institutionId: id,
+        insitutionId: id,
         auditStatus: "PENDING_REVIEW",
       },
     });
 
     // 删除机构
-    await this.prisma.institution.delete({
+    await this.prisma.insitution.delete({
       where: { id },
     });
   }
 
-  async approveInstitution(
+  async approveInsitution(
     id: string,
-    payload: ApproveInstitutionReqDto,
+    payload: ApproveInsitutionReqDto,
   ): Promise<void> {
-    await this.ensureInstitutionExists(id);
-    await this.prisma.institution.update({
+    await this.ensureInsitutionExists(id);
+    await this.prisma.insitution.update({
       where: { id },
       data: { settlementRate: payload.settlementRate, status: "ACTIVE" },
     });
   }
 
-  async suspendInstitution(
+  async suspendInsitution(
     id: string,
-    _payload: SuspendInstitutionReqDto,
+    _payload: SuspendInsitutionReqDto,
   ): Promise<void> {
-    await this.ensureInstitutionExists(id);
-    await this.prisma.institution.update({
+    await this.ensureInsitutionExists(id);
+    await this.prisma.insitution.update({
       where: { id },
       data: { status: "SUSPENDED" },
     });
@@ -276,16 +276,16 @@ export class AdminService {
     const courses = await this.prisma.course.findMany({
       where: {
         auditStatus: query.auditStatus,
-        institutionId: query.institutionId,
+        insitutionId: query.insitutionId,
       },
-      include: { institution: true },
+      include: { insitution: true },
       orderBy: { createdAt: "desc" },
     });
 
     return courses.map((item) => ({
       id: item.id,
-      institutionId: item.institutionId,
-      institutionName: item.institution.name,
+      insitutionId: item.insitutionId,
+      insitutionName: item.insitution.name,
       name: item.name,
       description: item.description,
       instructorInfo: item.instructorInfo,
@@ -298,19 +298,19 @@ export class AdminService {
   }
 
   async createCourse(payload: {
-    institutionId: string;
+    insitutionId: string;
     name: string;
     description: string;
     instructorInfo: string;
     priceCents: number;
     periodCount: number;
   }): Promise<void> {
-    await this.ensureInstitutionExists(payload.institutionId);
+    await this.ensureInsitutionExists(payload.insitutionId);
 
     await this.prisma.course.create({
       data: {
         id: `course-${Date.now()}`,
-        institutionId: payload.institutionId,
+        insitutionId: payload.insitutionId,
         name: payload.name,
         description: payload.description,
         instructorInfo: payload.instructorInfo,
@@ -411,7 +411,7 @@ export class AdminService {
 
     return salesmen.map((item) => ({
       id: item.id,
-      institutionId: item.institutionId,
+      insitutionId: item.insitutionId,
       name: item.name,
       phone: item.phone,
       contractType: item.contractType,
@@ -422,12 +422,12 @@ export class AdminService {
   }
 
   async createSalesman(payload: CreateSalesmanReqDto): Promise<void> {
-    await this.ensureInstitutionExists(payload.institutionId);
+    await this.ensureInsitutionExists(payload.insitutionId);
 
     await this.prisma.salesman.create({
       data: {
         id: `sales-${Date.now()}`,
-        institutionId: payload.institutionId,
+        insitutionId: payload.insitutionId,
         username: payload.username,
         passwordHash: await hash(payload.password, 10),
         name: payload.name,
@@ -450,8 +450,8 @@ export class AdminService {
     const defaultMonth = query.month ?? new Date().toISOString().slice(0, 7);
     const settlements = await this.prisma.settlementRecord.findMany({
       where: { period: defaultMonth },
-      include: { institution: true },
-      orderBy: { institutionId: "asc" },
+      include: { insitution: true },
+      orderBy: { insitutionId: "asc" },
     });
 
     return {
@@ -462,8 +462,8 @@ export class AdminService {
         0,
       ),
       items: settlements.map((item) => ({
-        institutionId: item.institutionId,
-        institutionName: item.institution.name,
+        insitutionId: item.insitutionId,
+        insitutionName: item.insitution.name,
         gmvCents: item.gmvCents,
         serviceFeeCents: item.serviceFeeCents,
       })),
@@ -492,14 +492,14 @@ export class AdminService {
         period: query.period,
         status: query.status,
       },
-      include: { institution: true },
-      orderBy: [{ period: "desc" }, { institutionId: "asc" }],
+      include: { insitution: true },
+      orderBy: [{ period: "desc" }, { insitutionId: "asc" }],
     });
 
     return settlements.map((item) => ({
       id: item.id,
-      institutionId: item.institutionId,
-      institutionName: item.institution.name,
+      insitutionId: item.insitutionId,
+      insitutionName: item.insitution.name,
       period: item.period,
       gmvCents: item.gmvCents,
       serviceFeeCents: item.serviceFeeCents,
@@ -521,8 +521,8 @@ export class AdminService {
         where: { id },
         data: { status: "SETTLED", settledAt: new Date() },
       }),
-      this.prisma.institution.update({
-        where: { id: settlement.institutionId },
+      this.prisma.insitution.update({
+        where: { id: settlement.insitutionId },
         data: {
           depositBalanceCents: {
             increment: settlement.gmvCents - settlement.serviceFeeCents,
@@ -562,12 +562,12 @@ export class AdminService {
     });
   }
 
-  private async ensureInstitutionExists(id: string): Promise<void> {
-    const institution = await this.prisma.institution.findUnique({
+  private async ensureInsitutionExists(id: string): Promise<void> {
+    const insitution = await this.prisma.insitution.findUnique({
       where: { id },
     });
-    if (!institution) {
-      throw new NotFoundException("Institution not found");
+    if (!insitution) {
+      throw new NotFoundException("Insitution not found");
     }
   }
 

@@ -18,12 +18,12 @@ export class AdminCourseQueryDto {
 
   @IsOptional()
   @IsString()
-  institutionId?: string;
+  insitutionId?: string;
 }
 
 export class CreateCourseReqDto {
   @IsString()
-  institutionId!: string;
+  insitutionId!: string;
 
   @IsString()
   @Length(1, 100)
@@ -85,8 +85,8 @@ export class RejectCourseReqDto {
 
 export interface AdminCourseDto {
   id: string;
-  institutionId: string;
-  institutionName: string;
+  insitutionId: string;
+  insitutionName: string;
   name: string;
   description: string;
   instructorInfo: string;

@@ -5,7 +5,7 @@ import type {
   ContractType,
   GmvReport,
   HealthMetrics,
-  Institution,
+  Insitution,
   OverdueMonitor,
   Salesman,
   SalesmanStatus,
@@ -16,7 +16,7 @@ import type {
   AdminCourseDto,
   DashboardHealthDto,
   GmvReportDto,
-  InstitutionDto,
+  InsitutionDto,
   LoginResponseDto,
   OverdueMonitorDto,
   SalesmanDto,
@@ -28,7 +28,7 @@ import {
   adaptCourse,
   adaptGmvReport,
   adaptHealthMetrics,
-  adaptInstitution,
+  adaptInsitution,
   adaptLoginResponse,
   adaptOverdueMonitor,
   adaptSalesman,
@@ -38,18 +38,18 @@ import {
 import { httpClient } from "./http";
 import {
   mockApproveCourse,
-  mockApproveInstitution,
+  mockApproveInsitution,
   mockCourses,
   mockDashboardHealth,
   mockExecuteSettlement,
   mockGmvReport,
-  mockInstitutions,
+  mockInsitutions,
   mockLogin,
   mockOverdueMonitor,
   mockRejectCourse,
   mockSalesmen,
   mockSettlements,
-  mockSuspendInstitution,
+  mockSuspendInsitution,
   mockSystemConfig,
   mockUpdateSystemConfig,
   mockCreateSalesman,
@@ -94,31 +94,31 @@ export const adminApi = {
     }
   },
 
-  async getInstitutions(
-    status?: Institution["status"] | "ALL",
-  ): Promise<Institution[]> {
+  async getInsitutions(
+    status?: Insitution["status"] | "ALL",
+  ): Promise<Insitution[]> {
     try {
       if (useMock) {
-        return (await mockInstitutions(status)).map(adaptInstitution);
+        return (await mockInsitutions(status)).map(adaptInsitution);
       }
-      const response = await httpClient.get<ApiSuccess<InstitutionDto[]>>(
-        "/admin/institutions",
+      const response = await httpClient.get<ApiSuccess<InsitutionDto[]>>(
+        "/admin/insitutions",
         { params: status && status !== "ALL" ? { status } : undefined },
       );
-      return unwrap(response.data).map(adaptInstitution);
+      return unwrap(response.data).map(adaptInsitution);
     } catch (error) {
       throw toApiBusinessError(error);
     }
   },
 
-  async approveInstitution(id: string, settlementRate: number): Promise<void> {
-    return adminApi.updateInstitutionStatus(id, {
+  async approveInsitution(id: string, settlementRate: number): Promise<void> {
+    return adminApi.updateInsitutionStatus(id, {
       type: "approve",
       settlementRate,
     });
   },
 
-  async updateInstitutionStatus(
+  async updateInsitutionStatus(
     id: string,
     payload:
       | { type: "approve"; settlementRate: number }
@@ -127,18 +127,18 @@ export const adminApi = {
     try {
       if (useMock) {
         if (payload.type === "approve") {
-          await mockApproveInstitution(id, payload.settlementRate);
+          await mockApproveInsitution(id, payload.settlementRate);
         } else {
-          await mockSuspendInstitution(id, payload.reason);
+          await mockSuspendInsitution(id, payload.reason);
         }
         return;
       }
       if (payload.type === "approve") {
-        await httpClient.post(`/admin/institutions/${id}/approve`, {
+        await httpClient.post(`/admin/insitutions/${id}/approve`, {
           settlementRate: payload.settlementRate,
         });
       } else {
-        await httpClient.post(`/admin/institutions/${id}/suspend`, {
+        await httpClient.post(`/admin/insitutions/${id}/suspend`, {
           reason: payload.reason,
         });
       }
@@ -147,7 +147,7 @@ export const adminApi = {
     }
   },
 
-  async createInstitution(payload: {
+  async createInsitution(payload: {
     name: string;
     socialCreditCode: string;
     depositBalanceCents?: number;
@@ -157,13 +157,13 @@ export const adminApi = {
         // TODO: Add mock
         return;
       }
-      await httpClient.post("/admin/institutions", payload);
+      await httpClient.post("/admin/insitutions", payload);
     } catch (error) {
       throw toApiBusinessError(error);
     }
   },
 
-  async updateInstitution(
+  async updateInsitution(
     id: string,
     payload: {
       name?: string;
@@ -176,19 +176,19 @@ export const adminApi = {
         // TODO: Add mock
         return;
       }
-      await httpClient.put(`/admin/institutions/${id}`, payload);
+      await httpClient.put(`/admin/insitutions/${id}`, payload);
     } catch (error) {
       throw toApiBusinessError(error);
     }
   },
 
-  async deleteInstitution(id: string): Promise<void> {
+  async deleteInsitution(id: string): Promise<void> {
     try {
       if (useMock) {
         // TODO: Add mock
         return;
       }
-      await httpClient.delete(`/admin/institutions/${id}`);
+      await httpClient.delete(`/admin/insitutions/${id}`);
     } catch (error) {
       throw toApiBusinessError(error);
     }
@@ -246,7 +246,7 @@ export const adminApi = {
   },
 
   async createCourse(payload: {
-    institutionId: string;
+    insitutionId: string;
     name: string;
     description: string;
     instructorInfo: string;
@@ -313,7 +313,7 @@ export const adminApi = {
   },
 
   async createSalesman(payload: {
-    institutionId: string;
+    insitutionId: string;
     username: string;
     password: string;
     name: string;

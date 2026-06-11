@@ -9,15 +9,15 @@ export class PhoneLoginReqDto {
   @Length(6, 64)
   password!: string;
 
-  @IsIn(["INSTITUTION_WEB", "STAFF_H5", "STUDENT_MP", "ADMIN_WEB"])
-  clientType!: "INSTITUTION_WEB" | "STAFF_H5" | "STUDENT_MP" | "ADMIN_WEB";
+  @IsIn(["INSITUTION_WEB", "STAFF_H5", "STUDENT_MP", "ADMIN_WEB"])
+  clientType!: "INSITUTION_WEB" | "STAFF_H5" | "STUDENT_MP" | "ADMIN_WEB";
 }
 
 export interface LoginRespDto {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  role: "INSTITUTION_ADMIN";
+  role: "INSITUTION_ADMIN";
   userId: string;
   displayName: string;
   orgId: string;

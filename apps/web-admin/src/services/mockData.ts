@@ -3,7 +3,7 @@ import type {
   AdminCourseDto,
   DashboardHealthDto,
   GmvReportDto,
-  InstitutionDto,
+  InsitutionDto,
   LoginResponseDto,
   OverdueMonitorDto,
   SalesmanDto,
@@ -11,7 +11,7 @@ import type {
   SystemConfigDto,
 } from "../types/api";
 
-let institutionsMock: InstitutionDto[] = [
+let insitutionsMock: InsitutionDto[] = [
   {
     id: "org-1001",
     name: "欢乐学广州校区",
@@ -47,20 +47,26 @@ let institutionsMock: InstitutionDto[] = [
 let coursesMock: AdminCourseDto[] = [
   {
     id: "course-1001",
-    institutionId: "org-1001",
-    institutionName: "欢乐学广州校区",
+    insitutionId: "org-1001",
+    insitutionName: "欢乐学广州校区",
     name: "中考英语冲刺班",
+    description: "针对中考英语题型进行专项强化训练",
+    instructorInfo: "李老师，10年中学英语教学经验",
     priceCents: 128000,
+    periodCount: 12,
     status: "ONLINE",
     auditStatus: "APPROVED",
     createdAt: dayjs().subtract(20, "day").toISOString(),
   },
   {
     id: "course-1002",
-    institutionId: "org-1002",
-    institutionName: "欢乐学深圳校区",
+    insitutionId: "org-1002",
+    insitutionName: "欢乐学深圳校区",
     name: "初中数学提分营",
+    description: "覆盖代数与几何核心考点，提升解题速度",
+    instructorInfo: "王老师，8年中学数学教学经验",
     priceCents: 98000,
+    periodCount: 10,
     status: "OFFLINE",
     auditStatus: "PENDING_REVIEW",
     createdAt: dayjs().subtract(2, "day").toISOString(),
@@ -70,7 +76,7 @@ let coursesMock: AdminCourseDto[] = [
 let salesmenMock: SalesmanDto[] = [
   {
     id: "sales-1001",
-    institutionId: "org-1001",
+    insitutionId: "org-1001",
     name: "李明",
     phone: "13800000001",
     contractType: "EMPLOYEE",
@@ -80,7 +86,7 @@ let salesmenMock: SalesmanDto[] = [
   },
   {
     id: "sales-1002",
-    institutionId: "org-1003",
+    insitutionId: "org-1003",
     name: "张倩",
     phone: "13800000002",
     contractType: "AGENT",
@@ -93,8 +99,8 @@ let salesmenMock: SalesmanDto[] = [
 let settlementsMock: SettlementRecordDto[] = [
   {
     id: "set-1001",
-    institutionId: "org-1001",
-    institutionName: "欢乐学广州校区",
+    insitutionId: "org-1001",
+    insitutionName: "欢乐学广州校区",
     period: "2026-05",
     gmvCents: 1280000,
     serviceFeeCents: 108800,
@@ -102,8 +108,8 @@ let settlementsMock: SettlementRecordDto[] = [
   },
   {
     id: "set-1002",
-    institutionId: "org-1003",
-    institutionName: "欢乐学佛山校区",
+    insitutionId: "org-1003",
+    insitutionName: "欢乐学佛山校区",
     period: "2026-04",
     gmvCents: 990000,
     serviceFeeCents: 91080,
@@ -137,7 +143,7 @@ export const mockLogin = async (payload: {
 };
 
 export const mockDashboardHealth = async (): Promise<DashboardHealthDto> => ({
-  totalGmvCents: institutionsMock.reduce(
+  totalGmvCents: insitutionsMock.reduce(
     (sum, item) => sum + item.cumulativeGmvCents,
     0,
   ),
@@ -149,28 +155,28 @@ export const mockDashboardHealth = async (): Promise<DashboardHealthDto> => ({
   warningMetrics: [],
 });
 
-export const mockInstitutions = async (
-  status?: InstitutionDto["status"] | "ALL",
-): Promise<InstitutionDto[]> =>
+export const mockInsitutions = async (
+  status?: InsitutionDto["status"] | "ALL",
+): Promise<InsitutionDto[]> =>
   status && status !== "ALL"
-    ? institutionsMock.filter((item) => item.status === status)
-    : institutionsMock;
+    ? insitutionsMock.filter((item) => item.status === status)
+    : insitutionsMock;
 
-export const mockApproveInstitution = async (
+export const mockApproveInsitution = async (
   id: string,
   settlementRate: number,
 ): Promise<void> => {
-  institutionsMock = institutionsMock.map((item) =>
+  insitutionsMock = insitutionsMock.map((item) =>
     item.id === id ? { ...item, settlementRate, status: "ACTIVE" } : item,
   );
 };
 
-export const mockSuspendInstitution = async (
+export const mockSuspendInsitution = async (
   id: string,
   reason: string,
 ): Promise<void> => {
   void reason;
-  institutionsMock = institutionsMock.map((item) =>
+  insitutionsMock = insitutionsMock.map((item) =>
     item.id === id ? { ...item, status: "SUSPENDED" } : item,
   );
 };
@@ -214,7 +220,7 @@ export const mockSalesmen = async (
     : salesmenMock;
 
 export const mockCreateSalesman = async (payload: {
-  institutionId: string;
+  insitutionId: string;
   username: string;
   password: string;
   name: string;
@@ -226,7 +232,7 @@ export const mockCreateSalesman = async (payload: {
   salesmenMock = [
     {
       id: `sales-${Date.now()}`,
-      institutionId: payload.institutionId,
+      insitutionId: payload.insitutionId,
       name: payload.name,
       phone: payload.phone,
       contractType: payload.contractType,
@@ -248,9 +254,9 @@ export const mockGmvReport = async (): Promise<GmvReportDto> => ({
   month: dayjs().format("YYYY-MM"),
   totalGmvCents: 3650000,
   totalServiceFeeCents: 299880,
-  items: institutionsMock.map((item) => ({
-    institutionId: item.id,
-    institutionName: item.name,
+  items: insitutionsMock.map((item) => ({
+    insitutionId: item.id,
+    insitutionName: item.name,
     gmvCents: Math.floor(item.cumulativeGmvCents / 12),
     serviceFeeCents: Math.floor(item.cumulativeServiceFeeCents / 12),
   })),

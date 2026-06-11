@@ -18,13 +18,13 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../services/adminApi";
-import type { AdminCourse, Institution } from "../types/domain";
+import type { AdminCourse, Insitution } from "../types/domain";
 import { centsToYuan, courseAuditStatusLabel } from "../utils/format";
 
 type FormMode = "create" | "edit";
 
 interface FormValues {
-  institutionId: string;
+  insitutionId: string;
   name: string;
   description: string;
   instructorInfo: string;
@@ -39,7 +39,6 @@ export const CoursesPage = (): ReactElement => {
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editingCourse, setEditingCourse] = useState<AdminCourse | null>(null);
   const [deleting, setDeleting] = useState<AdminCourse | null>(null);
-  const [rejectForm] = Form.useForm<{ reason: string }>();
   const [form] = Form.useForm<FormValues>();
   const queryClient = useQueryClient();
 
@@ -48,9 +47,9 @@ export const CoursesPage = (): ReactElement => {
     queryFn: () => adminApi.getCourses(tab),
   });
 
-  const institutionsQuery = useQuery({
-    queryKey: ["admin-institutions-active"],
-    queryFn: () => adminApi.getInstitutions("ACTIVE"),
+  const insitutionsQuery = useQuery({
+    queryKey: ["admin-insitutions-active"],
+    queryFn: () => adminApi.getInsitutions("ACTIVE"),
   });
 
   const actionMutation = useMutation({
@@ -74,7 +73,7 @@ export const CoursesPage = (): ReactElement => {
 
   const createMutation = useMutation({
     mutationFn: (payload: {
-      institutionId: string;
+      insitutionId: string;
       name: string;
       description: string;
       instructorInfo: string;
@@ -136,7 +135,7 @@ export const CoursesPage = (): ReactElement => {
 
   const columns: ColumnsType<AdminCourse> = [
     { title: "课程名称", dataIndex: "name" },
-    { title: "所属机构", dataIndex: "institutionName" },
+    { title: "所属机构", dataIndex: "insitutionName" },
     {
       title: "课程总价（元）",
       dataIndex: "priceCents",
@@ -265,7 +264,7 @@ export const CoursesPage = (): ReactElement => {
           onFinish={async (values) => {
             if (formMode === "create") {
               await createMutation.mutateAsync({
-                institutionId: values.institutionId,
+                insitutionId: values.insitutionId,
                 name: values.name,
                 description: values.description,
                 instructorInfo: values.instructorInfo,
@@ -288,14 +287,14 @@ export const CoursesPage = (): ReactElement => {
         >
           {formMode === "create" && (
             <Form.Item
-              name='institutionId'
+              name='insitutionId'
               label='所属机构'
               rules={[{ required: true, message: "请选择所属机构" }]}
             >
               <Select
                 placeholder='请选择所属机构'
                 options={
-                  institutionsQuery.data?.map((inst: Institution) => ({
+                  insitutionsQuery.data?.map((inst: Insitution) => ({
                     label: inst.name,
                     value: inst.id,
                   })) ?? []

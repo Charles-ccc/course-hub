@@ -31,7 +31,7 @@
 
 ## 多端协同要求
 
-覆盖端：web-admin、web-institution、h5-staff、mp-student。
+覆盖端：web-admin、web-insitution、h5-staff、mp-student。
 
 1. 优先抽象四端共享领域接口，减少重复与分叉。
 2. 端侧专属接口必须在文档中显式标注调用方。
