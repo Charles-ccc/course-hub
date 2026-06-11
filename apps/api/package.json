@@ -10,6 +10,7 @@
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\"",
     "db:generate": "prisma generate",
+    "db:rename:insitution": "prisma db execute --schema prisma/schema.prisma --file prisma/rename-to-insitution.sql",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts"
   },
