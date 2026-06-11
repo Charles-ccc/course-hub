@@ -4,12 +4,12 @@
 
 ## 1. 目标入口
 
-| 子域名                 | 用途                         | 部署类型         |
-| ---------------------- | ---------------------------- | ---------------- |
-| admin.happymaa.cn      | web-admin 平台运营后台       | 静态 HTML        |
+| 子域名                 | 用途                        | 部署类型         |
+| ---------------------- | --------------------------- | ---------------- |
+| admin.happymaa.cn      | web-admin 平台运营后台      | 静态 HTML        |
 | insitution.happymaa.cn | web-insitution 机构管理门户 | 静态 HTML        |
-| staff.happymaa.cn      | h5-staff 业务员工作台        | 静态 HTML        |
-| api.happymaa.cn        | NestJS 后端 API              | Node.js 反向代理 |
+| staff.happymaa.cn      | h5-staff 业务员工作台       | 静态 HTML        |
+| api.happymaa.cn        | NestJS 后端 API             | Node.js 反向代理 |
 
 说明：static.happymaa.cn 由 COS/CDN 提供，不经本站 Nginx。Adminer 不建议公网长期暴露。
 
@@ -372,40 +372,66 @@ pm2 save
 pm2 startup
 ```
 
-## 6. 本地构建与上传步骤
+## 6. 服务器端部署步骤
 
-### 6.1 本地打包
+当前部署策略：所有代码（API + web-admin + web-insitution）集中部署在 `/www/wwwroot/wangke-supermarket`。
+
+### 6.1 登录服务器并进入项目目录
 
 ```bash
-# 在本地项目根目录执行
-pnpm --filter web-insitution build   # 产出 apps/web-insitution/dist/
-pnpm --filter web-admin build         # 产出 apps/web-admin/dist/
-pnpm --filter h5-staff build          # 产出 apps/h5-staff/dist/
+ssh root@124.220.78.20
+cd /www/wwwroot/wangke-supermarket
+```
+
+### 6.2 更新代码并构建
+
+```bash
+# 更新代码
+git pull origin main
+
+# 安装依赖
+pnpm install --frozen-lockfile
+
+# 数据库变更（如有 schema 变更）
+pnpm --filter api db:push
+
+# 构建三端应用
 pnpm --filter api build               # 产出 apps/api/dist/
+pnpm --filter web-admin build         # 产出 apps/web-admin/dist/
+pnpm --filter web-insitution build    # 产出 apps/web-insitution/dist/
 ```
 
-### 6.2 上传静态资源（scp 方式）
+### 6.3 同步前端静态资源到 Nginx 目录
 
 ```bash
-# 替换 <your-ssh-key> 和服务器用户名
-scp -r apps/web-insitution/dist/* root@124.220.78.20:/www/wwwroot/insitution/
-scp -r apps/web-admin/dist/*       root@124.220.78.20:/www/wwwroot/admin/
-scp -r apps/h5-staff/dist/*        root@124.220.78.20:/www/wwwroot/staff/
+# 覆盖 web-admin（管理后台）
+rsync -av --delete apps/web-admin/dist/ /www/wwwroot/admin/
+
+# 覆盖 web-insitution（机构门户）
+rsync -av --delete apps/web-insitution/dist/ /www/wwwroot/insitution/
 ```
 
-### 6.3 上传 API 服务
+### 6.4 重启 API 服务
 
 ```bash
-# 上传编译产物与依赖
-scp -r apps/api/dist               root@124.220.78.20:/www/wwwroot/api/
-scp    apps/api/package.json       root@124.220.78.20:/www/wwwroot/api/
-scp    apps/api/ecosystem.config.js root@124.220.78.20:/www/wwwroot/api/
+# 重启 PM2 中的 API 进程
+pm2 restart wangke-api
 
-# 在服务器上安装生产依赖
-ssh root@124.220.78.20 "cd /www/wwwroot/api && npm install --production"
+# 查看日志
+pm2 logs wangke-api --lines 50
+```
 
-# 重启 API 服务
-ssh root@124.220.78.20 "pm2 restart happymaa-api"
+### 6.5 验证部署
+
+```bash
+# 检查 Nginx 语法
+nginx -t
+
+# 重载 Nginx
+systemctl reload nginx
+
+# 检查健康状态（本地测试）
+curl http://127.0.0.1:3000/health
 ```
 
 ## 7. 部署验收清单
@@ -427,10 +453,32 @@ ssh root@124.220.78.20 "pm2 restart happymaa-api"
 
 ## 8. 回滚预案
 
-1. 静态资源回滚：保留上一版 `dist/` 压缩包，重新 scp 上传并 reload nginx。
-2. API 回滚：`pm2 stop happymaa-api` -> 替换 `dist/` -> `pm2 start`。
-3. Nginx 配置回滚：宝塔面板保留配置历史版本，或手动备份 `happymaa.conf.bak`。
-4. 证书问题：宝塔 SSL 管理界面恢复旧证书，reload nginx。
+1. 快速回滚代码版本：
+
+   ```bash
+   cd /www/wwwroot/wangke-supermarket
+   git log --oneline -10        # 查看最近提交
+   git reset --hard <commit-id> # 回到指定版本
+   pnpm install && pnpm --filter api build
+   rsync -av --delete apps/web-admin/dist/ /www/wwwroot/admin/
+   rsync -av --delete apps/web-insitution/dist/ /www/wwwroot/insitution/
+   pm2 restart wangke-api
+   ```
+
+2. API 进程回滚：
+
+   ```bash
+   pm2 stop wangke-api
+   git reset --hard <previous-commit>
+   pnpm --filter api build
+   pm2 start wangke-api
+   ```
+
+3. Nginx 配置回滚：
+   - 宝塔面板保留配置历史版本，或手动备份 `happymaa.conf.bak`。
+   - `systemctl reload nginx` 后验证。
+
+4. 证书问题：宝塔 SSL 管理界面恢复旧证书，`systemctl reload nginx`。
 
 ## 9. 安全注意事项
 
@@ -445,3 +493,4 @@ ssh root@124.220.78.20 "pm2 restart happymaa-api"
 
 - 2026-06-09：建立初版草案，覆盖四个入口的基础 Nginx 配置与部署步骤。
 - 2026-06-09：完善版 —— 补充宝塔面板操作指引、TLS 安全参数、Gzip 压缩、静态资源缓存、API 限流、健康检查端点、PM2 部署配置、本地构建上传命令、完整验收清单。
+- 2026-06-11：部署流程更新 —— 改为服务器内统一仓库部署方案（`/www/wwwroot/wangke-supermarket`），支持 git pull + 本地构建 + 同步部署。所有代码更新仅需服务器内执行 git pull、构建、重启服务。
