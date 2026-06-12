@@ -11,8 +11,11 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
-const baseURL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1";
+const defaultBaseURL = import.meta.env.DEV
+  ? "http://localhost:3000/api/v1"
+  : "https://api.happymaa.cn/api/v1";
+
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? defaultBaseURL;
 
 export const httpClient = axios.create({
   baseURL,
