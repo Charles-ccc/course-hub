@@ -43,6 +43,12 @@ enum ContractType {
   AGENT
 }
 
+enum RealnameStatus {
+  UNVERIFIED
+  VERIFIED
+  REJECTED
+}
+
 enum OrderStatus {
   CREATED
   COOLING_OFF
@@ -70,6 +76,18 @@ enum RefreshTokenStatus {
   REVOKED
 }
 
+enum CommissionType {
+  CLOSING
+  PERFORMANCE
+}
+
+enum CommissionStatus {
+  PENDING
+  SETTLED
+  HELD
+  CLAWED_BACK
+}
+
 model AdminUser {
   id           String    @id
   username     String    @unique
@@ -95,6 +113,7 @@ model Insitution {
   users                     InsitutionUser[]
   courses                   Course[]
   salesmen                  Salesman[]
+  students                  Student[]
   orders                    Order[]
   settlements               SettlementRecord[]
   questions                 Question[]
@@ -125,8 +144,10 @@ model RefreshToken {
   updatedAt          DateTime           @updatedAt
   adminUserId        String?
   insitutionUserId  String?
+  salesmanId         String?
   adminUser          AdminUser?         @relation(fields: [adminUserId], references: [id])
   insitutionUser    InsitutionUser?   @relation(fields: [insitutionUserId], references: [id])
+  salesman           Salesman?         @relation(fields: [salesmanId], references: [id])
 
   @@index([userId, role, status])
 }
@@ -155,17 +176,40 @@ model Salesman {
   name                      String
   phone                     String        @unique
   contractType              ContractType
+  groupName                 String?
   status                    SalesmanStatus
   studentCount              Int           @default(0)
   cumulativeCommissionCents Int           @default(0)
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
   insitution               Insitution   @relation(fields: [insitutionId], references: [id])
+  students                  Student[]
+  commissions               Commission[]
+  refreshTokens             RefreshToken[]
+}
+
+model Student {
+  id               String         @id
+  insitutionId    String
+  boundSalesmanId  String?
+  name             String?
+  phone            String         @unique
+  realnameStatus   RealnameStatus @default(UNVERIFIED)
+  boundAt          DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  insitution      Insitution    @relation(fields: [insitutionId], references: [id])
+  boundSalesman    Salesman?      @relation(fields: [boundSalesmanId], references: [id])
+  orders           Order[]
+
+  @@index([insitutionId])
+  @@index([boundSalesmanId])
 }
 
 model Order {
   id               String      @id
   insitutionId    String
+  studentId        String?
   courseId         String?
   studentName      String
   courseName       String
@@ -176,8 +220,29 @@ model Order {
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
   insitution      Insitution @relation(fields: [insitutionId], references: [id])
+  student          Student?    @relation(fields: [studentId], references: [id])
   course           Course?     @relation(fields: [courseId], references: [id])
   installments     Installment[]
+  commissions      Commission[]
+}
+
+model Commission {
+  id          String           @id
+  staffId     String
+  orderId     String?
+  type        CommissionType
+  periodNo    Int?
+  status      CommissionStatus
+  amountCents Int
+  studentName String
+  courseName  String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  staff       Salesman         @relation(fields: [staffId], references: [id])
+  order       Order?           @relation(fields: [orderId], references: [id])
+
+  @@index([staffId, status])
+  @@index([createdAt])
 }
 
 model Installment {
@@ -233,4 +298,26 @@ model SystemConfig {
   zhimaEnabled    Boolean
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model ApiAuditLog {
+  id           String   @id
+  requestId    String
+  method       String
+  path         String
+  ip           String
+  userAgent    String
+  status       Int
+  latencyMs    Int
+  success      Boolean
+  userId       String?
+  role         String?
+  errorName    String?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([requestId])
+  @@index([path, createdAt])
+  @@index([userId, createdAt])
 }

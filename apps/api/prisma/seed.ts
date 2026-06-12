@@ -8,11 +8,13 @@ async function main(): Promise<void> {
   const insitutionPasswordHash = await hash("123456", 10);
   const salesmanPasswordHash = await hash("123456", 10);
 
+  await prisma.commission.deleteMany();
   await prisma.installment.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.order.deleteMany();
   await prisma.question.deleteMany();
   await prisma.settlementRecord.deleteMany();
+  await prisma.student.deleteMany();
   await prisma.salesman.deleteMany();
   await prisma.course.deleteMany();
   await prisma.insitutionUser.deleteMany();
@@ -113,10 +115,43 @@ async function main(): Promise<void> {
       name: "陈晓东",
       phone: "13800138001",
       contractType: "EMPLOYEE",
+      groupName: "华东增长组",
       status: "ACTIVE",
       studentCount: 32,
       cumulativeCommissionCents: 860000,
     },
+  });
+
+  await prisma.student.createMany({
+    data: [
+      {
+        id: "stu-1001",
+        insitutionId: "org-1001",
+        boundSalesmanId: "sales-1",
+        name: "林同学",
+        phone: "13800138021",
+        realnameStatus: "VERIFIED",
+        boundAt: new Date(),
+      },
+      {
+        id: "stu-1002",
+        insitutionId: "org-1001",
+        boundSalesmanId: "sales-1",
+        name: "张同学",
+        phone: "13800138022",
+        realnameStatus: "VERIFIED",
+        boundAt: new Date(),
+      },
+      {
+        id: "stu-1003",
+        insitutionId: "org-1001",
+        boundSalesmanId: "sales-1",
+        name: "周同学",
+        phone: "13800138023",
+        realnameStatus: "UNVERIFIED",
+        boundAt: new Date(),
+      },
+    ],
   });
 
   await prisma.order.createMany({
@@ -124,6 +159,7 @@ async function main(): Promise<void> {
       {
         id: "order-1001",
         insitutionId: "org-1001",
+        studentId: "stu-1001",
         courseId: "course-1",
         studentName: "林同学",
         courseName: "英语冲刺提升班",
@@ -134,6 +170,7 @@ async function main(): Promise<void> {
       {
         id: "order-1002",
         insitutionId: "org-1001",
+        studentId: "stu-1002",
         courseId: "course-2",
         studentName: "张同学",
         courseName: "数学系统强化班",
@@ -145,6 +182,7 @@ async function main(): Promise<void> {
       {
         id: "order-1003",
         insitutionId: "org-1001",
+        studentId: "stu-1003",
         courseId: "course-1",
         studentName: "周同学",
         courseName: "英语冲刺提升班",
@@ -155,6 +193,7 @@ async function main(): Promise<void> {
       {
         id: "order-1004",
         insitutionId: "org-1002",
+        studentId: null,
         courseId: "course-3",
         studentName: "吴同学",
         courseName: "物理拔高专题班",
@@ -258,6 +297,54 @@ async function main(): Promise<void> {
       maxAge: 18,
       zhimaEnabled: true,
     },
+  });
+
+  await prisma.commission.createMany({
+    data: [
+      {
+        id: "comm-1",
+        staffId: "sales-1",
+        orderId: "order-1001",
+        type: "CLOSING",
+        status: "SETTLED",
+        amountCents: 12000,
+        studentName: "林同学",
+        courseName: "英语冲刺提升班",
+      },
+      {
+        id: "comm-2",
+        staffId: "sales-1",
+        orderId: "order-1002",
+        type: "PERFORMANCE",
+        periodNo: 2,
+        status: "PENDING",
+        amountCents: 3600,
+        studentName: "张同学",
+        courseName: "数学系统强化班",
+      },
+      {
+        id: "comm-3",
+        staffId: "sales-1",
+        orderId: "order-1003",
+        type: "PERFORMANCE",
+        periodNo: 3,
+        status: "HELD",
+        amountCents: 2800,
+        studentName: "周同学",
+        courseName: "英语冲刺提升班",
+      },
+      {
+        id: "comm-4",
+        staffId: "sales-1",
+        orderId: "order-1003",
+        type: "PERFORMANCE",
+        periodNo: 1,
+        status: "CLAWED_BACK",
+        amountCents: 1200,
+        studentName: "周同学",
+        courseName: "英语冲刺提升班",
+      },
+    ],
   });
 }
 

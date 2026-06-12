@@ -20,7 +20,11 @@ type RefreshTokenPayload = {
 type TokenPairInput = {
   userId: string;
   role: AppRole;
-  refreshOwner: { adminUserId?: string; insitutionUserId?: string };
+  refreshOwner: {
+    adminUserId?: string;
+    insitutionUserId?: string;
+    salesmanId?: string;
+  };
 };
 
 type RefreshTokenRecord = {
@@ -128,7 +132,9 @@ export class TokenService {
     const refreshOwner =
       role === "PLATFORM_ADMIN"
         ? { adminUserId: payload.sub }
-        : { insitutionUserId: payload.sub };
+        : role === "INSITUTION_ADMIN"
+          ? { insitutionUserId: payload.sub }
+          : { salesmanId: payload.sub };
 
     const nextPair = await this.issueTokenPair({
       userId: payload.sub,
@@ -144,6 +150,16 @@ export class TokenService {
         subject: payload.sub,
       },
     };
+  }
+
+  async refreshAccessTokenByToken(refreshToken: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    user: AuthenticatedUser;
+  }> {
+    const payload = await this.verifyRefreshToken(refreshToken);
+    return this.refreshAccessToken(refreshToken, payload.role);
   }
 
   async verifyAccessToken(token: string): Promise<AuthenticatedUser> {

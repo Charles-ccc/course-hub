@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS `ApiAuditLog` (
+  `id` VARCHAR(191) NOT NULL,
+  `requestId` VARCHAR(191) NOT NULL,
+  `method` VARCHAR(16) NOT NULL,
+  `path` VARCHAR(512) NOT NULL,
+  `ip` VARCHAR(64) NOT NULL,
+  `userAgent` VARCHAR(512) NOT NULL,
+  `status` INTEGER NOT NULL,
+  `latencyMs` INTEGER NOT NULL,
+  `success` BOOLEAN NOT NULL,
+  `userId` VARCHAR(191) NULL,
+  `role` VARCHAR(64) NULL,
+  `errorName` VARCHAR(191) NULL,
+  `errorMessage` VARCHAR(1024) NULL,
+  `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  INDEX `ApiAuditLog_createdAt_idx` (`createdAt`),
+  INDEX `ApiAuditLog_requestId_idx` (`requestId`),
+  INDEX `ApiAuditLog_path_createdAt_idx` (`path`, `createdAt`),
+  INDEX `ApiAuditLog_userId_createdAt_idx` (`userId`, `createdAt`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

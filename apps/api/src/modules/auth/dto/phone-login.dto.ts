@@ -13,13 +13,23 @@ export class PhoneLoginReqDto {
   clientType!: "INSITUTION_WEB" | "STAFF_H5" | "STUDENT_MP" | "ADMIN_WEB";
 }
 
+export interface StaffProfileDto {
+  name: string;
+  phone: string;
+  staffId: string;
+  contractType: "EMPLOYEE" | "AGENT";
+  groupName?: string;
+}
+
 export interface LoginRespDto {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  role: "INSITUTION_ADMIN";
+  role: "INSITUTION_ADMIN" | "STAFF";
   userId: string;
   displayName: string;
-  orgId: string;
-  orgName: string;
+  orgId?: string;
+  orgName?: string;
+  staffId?: string;
+  staffProfile?: StaffProfileDto;
 }
