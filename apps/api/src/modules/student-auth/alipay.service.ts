@@ -67,13 +67,11 @@ export class AlipayService {
       return this.devOpenId;
     }
 
-    // With camelcase:true, Alipay's user_id comes back as userId
-    const openId = (result as Record<string, unknown>).userId as
-      | string
-      | undefined;
+    const response = result as Record<string, unknown>;
+    const openId = (response.openId ?? response.userId) as string | undefined;
     if (!openId) {
       throw new Error(
-        `Alipay oauth token response missing userId: ${JSON.stringify(result)}`,
+        `Alipay oauth token response missing openId: ${JSON.stringify(result)}`,
       );
     }
 
