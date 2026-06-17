@@ -1,10 +1,20 @@
 {
+  "format": 2,
+  "compileOptions": {
+    "component2": true
+  },
   "miniprogramRoot": "./",
   "compileType": "mini",
-  "appid": "2021006157643188",
-  "compileOptions": {
-    "component2": true,
-    "enableNodeModuleBabelTransform": false
-  },
-  "uploadExclude": ["node_modules/**", "src/**", "dist/**"]
+  "unknownConfig": {
+    "appid": "2021006157643188",
+    "compileOptions": {
+      "component2": true,
+      "enableNodeModuleBabelTransform": false
+    },
+    "uploadExclude": [
+      "node_modules/**",
+      "src/**",
+      "dist/**"
+    ]
+  }
 }
