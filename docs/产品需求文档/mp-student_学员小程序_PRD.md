@@ -264,20 +264,23 @@
 
 ---
 
-## 4.8 实名认证（支付宝人脸核身）
+## 4.8 实名认证（支付宝开放认证）
 
-> 全程依托支付宝蚂蚁人脸认证能力，直接完成"姓名 + 身份证 + 活体人脸"三要素核验，无需用户手动填写任何表单。
+> 依托支付宝「支付宝身份验证」能力（`alipay.user.certify.open.*`），完成真实姓名 + 身份证 + 活体人脸三要素核验，无需用户手动填写任何表单。
 
 验收条件：
 
 1. 实名认证页展示说明文案：**需要完成实名认证才能购课，认证信息由支付宝安全核验**，以及「开始认证」按钮。
-2. 点击「开始认证」，后端调用支付宝人脸核身初始化接口（`datadigital.fincloud.generalsaas.face.verification.initialize`）获取 `certifyId`，返回给前端。
-3. 前端调用 `my.startFaceVerify({ certifyId })`，唤起支付宝人脸核身流程（用户在支付宝内完成活体检测 + 身份证比对）。
-4. 核身完成后，前端通知后端调用查询接口（`datadigital.fincloud.generalsaas.face.verification.query`）确认结果：
-   - **核身通过**：后端将 `realnameStatus` 设为 `VERIFIED`，同时从结果中记录脱敏的姓名和身份证后四位；前端 toast 提示：**实名认证完成**，1.5 秒后跳转首页 Tab
-   - **核身不通过**：提示：**认证未通过，请重新尝试**，提供「重新认证」按钮
-   - **用户中途取消**：提示：**认证已取消**，按钮恢复可点击
-5. 若后端判定年龄不满 18 周岁（通过核身结果中的身份证信息判断），返回错误码 40001（UNDERAGE_USER），页面展示：**未满 18 周岁，暂不可报名分期课程**，按钮保持禁用。
+2. 点击「开始认证」，前端请求后端接口（`POST /users/realname/initialize`），后端依次调用：
+   - `alipay.user.certify.open.initialize` → 创建认证流程，获取 `certifyId`
+   - `alipay.user.certify.open.certify` → 启动认证，获取 `certifyUrl`
+   - 将 `certifyUrl` 返回前端
+3. 前端拿到 `certifyUrl` 后，通过 `my.ap.navigateToAlipayPage` 或 WebView 组件跳转到支付宝认证页面，用户在支付宝内完成活体检测 + 身份证比对。
+4. 认证完成后，支付宝回调或用户返回小程序，前端调用后端（`POST /users/realname/confirm { certifyId }`），后端调用 `alipay.user.certify.open.query` 查询结果：
+   - **认证通过**：`realnameStatus` 设为 `VERIFIED`，记录脱敏姓名和身份证后四位；前端 toast：**实名认证完成**，1.5 秒后跳转首页 Tab
+   - **认证未通过**：提示：**认证未通过，请重新尝试**，提供「重新认证」按钮
+   - **用户取消**：提示：**认证已取消**，按钮恢复可点击
+5. 若后端从认证结果中判定年龄不满 18 周岁，返回错误码 40001（UNDERAGE_USER），页面展示：**未满 18 周岁，暂不可报名分期课程**，按钮保持禁用。
 6. 实名认证通过后，个人中心展示「✓ 已实名」标识，该入口不再作为待完成提醒。
 7. 已认证用户再次进入实名页时，展示已认证状态，不可重复提交。
 

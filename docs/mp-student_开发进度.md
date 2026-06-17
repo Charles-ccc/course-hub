@@ -53,21 +53,20 @@
 ## 模块 3：实名认证
 
 ### 后端
-- [ ] `POST /users/realname/initialize`（调用支付宝 face.verification.initialize，返回 certifyId）
-- [ ] `POST /users/realname/verify`（调用支付宝 face.verification.query 查询结果，写入 RealnameRecord）
-- [ ] 年龄判断：核身结果含身份证信息，后端解析判定是否未成年并拦截
+- [ ] `POST /users/realname/initialize`：调用 `alipay.user.certify.open.initialize` → `alipay.user.certify.open.certify`，返回 `{ certifyId, certifyUrl }`
+- [ ] `POST /users/realname/confirm`：调用 `alipay.user.certify.open.query`，通过后写入 RealnameRecord，年龄不足拦截
 
 ### 前端
 - [ ] 实名认证页：展示说明文案 + 「开始认证」按钮
-- [ ] 点击后请求 initialize 获得 certifyId，调用 `my.startFaceVerify({ certifyId })`
-- [ ] 核身完成回调 → 调用 verify 接口确认结果
+- [ ] 点击后请求 initialize，拿到 `certifyUrl`，通过 `my.ap.navigateToAlipayPage` 或 WebView 跳转
+- [ ] 用户完成（或取消）返回后，调用 confirm 接口确认结果
 - [ ] 三种状态处理：通过（跳首页）/ 未通过（重新认证按钮）/ 用户取消（恢复按钮）
 
 ### 测试卡点
-- [ ] 点击「开始认证」唤起支付宝人脸核身流程
-- [ ] 核身通过后跳转首页，个人中心展示「✓ 已实名」
-- [ ] 未成年人核身通过但年龄不满 18 岁，展示拦截提示
-- [ ] 核身失败展示提示，「重新认证」按钮可用
+- [ ] 点击「开始认证」跳转至支付宝认证页面
+- [ ] 认证通过后跳转首页，个人中心展示「✓ 已实名」
+- [ ] 未成年人认证通过但年龄不满 18 岁，展示拦截提示
+- [ ] 认证失败展示提示，「重新认证」按钮可用
 - [ ] 已认证用户再次进入实名页展示已认证状态，不可重复提交
 
 ---
@@ -165,18 +164,18 @@
 ## 模块 9：电子签约（支付宝生物核身确认）
 
 ### 后端
-- [ ] DB 迁移：新增 SignRecord 表（记录 certifyId + 签约时间戳，作为本人操作凭证）
-- [ ] `POST /orders/:orderId/sign/initialize`（调用 face.verification.initialize，返回 certifyId）
-- [ ] `POST /orders/:orderId/sign/confirm`（调用 face.verification.query 查询核身结果，通过后激活订单 + 生成 Installment）
+- [ ] DB 迁移：新增 SignRecord 表（certifyId + signedAt）
+- [ ] `POST /orders/:orderId/sign/initialize`：调用 `alipay.user.certify.open.initialize` → `alipay.user.certify.open.certify`，返回 `{ certifyId, certifyUrl }`
+- [ ] `POST /orders/:orderId/sign/confirm`：调用 `alipay.user.certify.open.query`，通过后激活订单 + 生成 Installment
 
 ### 前端
-- [ ] 订单详情页「签约授权」按钮：调用 initialize 获得 certifyId，调用 `my.startFaceVerify()`
-- [ ] 核身完成后调用 confirm，成功后刷新订单状态
+- [ ] 订单详情页「签约授权」按钮：调用 initialize，拿到 `certifyUrl`，跳转支付宝认证页
+- [ ] 用户完成返回后调用 confirm，刷新订单状态
 
 ### 测试卡点
-- [ ] 点击「签约授权」唤起支付宝人脸核身流程
-- [ ] 核身通过后订单状态变为 ACTIVE，签约按钮消失，「去学习」出现
-- [ ] 核身失败展示错误提示，可再次发起
+- [ ] 点击「签约授权」跳转至支付宝认证页面
+- [ ] 认证通过后订单状态变为 ACTIVE，签约按钮消失，「去学习」出现
+- [ ] 认证失败展示错误提示，可再次发起
 
 ---
 
@@ -202,16 +201,16 @@
 
 ### 后端
 - [ ] DB 迁移：新增 CheckinRecord 表
-- [ ] `POST /learning/checkin/initialize`（调用 face.verification.initialize，返回 certifyId）
-- [ ] `POST /learning/checkin/confirm`（查询核身结果，通过后写 CheckinRecord + 激励记录，替换 501）
+- [ ] `POST /learning/checkin/initialize`：调用 `datadigital.fincloud.generalsaas.face.certify.initialize` → `face.certify.verify`，返回 `{ certifyId, certifyUrl }`
+- [ ] `POST /learning/checkin/confirm`：调用 `datadigital.fincloud.generalsaas.face.certify.query`，通过后写 CheckinRecord + 激励抵扣记录
 - [ ] 打卡激励抵扣 Installment 逻辑
 
 ### 前端
 - [ ] 学习中心页：展示「开始打卡」按钮（取消占位注释）
-- [ ] 调用 initialize → `my.startFaceVerify()` → confirm
-- [ ] 打卡结果展示（成功 + 激励金额 / 失败 / 次数超限）
+- [ ] 调用 initialize，拿到 `certifyUrl`，跳转支付宝人脸核身页
+- [ ] 用户完成返回后调用 confirm，展示结果（成功 + 激励金额 / 失败 / 次数超限）
 
 ### 测试卡点
-- [ ] 点击「开始打卡」唤起支付宝人脸核身
+- [ ] 点击「开始打卡」跳转至支付宝人脸核身页面
 - [ ] 打卡成功展示激励金额，订单详情可见抵扣记录
 - [ ] 单期次打卡超限后提示「今日打卡次数已用完」

@@ -357,9 +357,12 @@ Error:
   40008 PHONE_DECRYPT_FAILED  (支付宝加密数据解密失败)
 ```
 
+> **手机号获取方式**：前端调用 `my.getPhoneNumber()`（JSAPI，直接 JS 调用，非按钮组件），
+> 支付宝弹出授权确认后回调中拿到加密手机号数据（`response` 字段），传给后端解密。
+>
 > 后端逻辑：
-> 1. `authCode` 换 `openId` + `sessionKey`
-> 2. 用 `sessionKey` + `encryptedData` + `iv` 解密得到手机号（支付宝标准 AES 解密）
+> 1. `authCode` 换 `openId` + `sessionKey`（调用 `alipay.system.oauth.token`）
+> 2. 用 `sessionKey` 解密 `response` 得到手机号（支付宝标准 AES 解密）
 > 3. 通过 `orgCode` 查找 OrgCode，取 `insitutionId` 和 `salesmanId` 填充 Student
 > 4. 创建 Student，写入 openId + phone + insitutionId + salesmanId
 > 5. 签发 JWT 返回
@@ -390,37 +393,44 @@ Response 200: { accessToken: string, refreshToken: string }
 
 ## 4.2 用户模块（后端：user module，新增）
 
-### 4.2.1 实名认证初始化（获取 certifyId）
+### 4.2.1 实名认证初始化（获取 certifyUrl）
 
 ```
 POST /users/realname/initialize
 Auth: 必须登录
 
-Response 200: { certifyId: string }
+Response 200: { certifyId: string, certifyUrl: string }
 
 Error:
   40302 ALREADY_VERIFIED    (已完成实名，禁止重复提交)
   50000 ALIPAY_API_ERROR    (支付宝接口调用失败)
 ```
 
-> 后端调用支付宝 `datadigital.fincloud.generalsaas.face.verification.initialize` 初始化核身，返回 `certifyId` 给前端；前端用 `certifyId` 调用 `my.startFaceVerify()`。
+> 后端依次调用：
+> 1. `alipay.user.certify.open.initialize` → 创建认证流程，获得 `certifyId`
+> 2. `alipay.user.certify.open.certify` → 启动认证流程，获得 `certifyUrl`
+>
+> 前端拿到 `certifyUrl` 后，通过 `my.ap.navigateToAlipayPage` 或 WebView 跳转至支付宝认证页。
+> `certifyId` 同时返回，用于后续结果查询。
 
 ### 4.2.2 实名认证结果确认
 
 ```
-POST /users/realname/verify
+POST /users/realname/confirm
 Auth: 必须登录
 Body: { certifyId: string }
 
 Response 200: { success: true, realnameVerified: true }
 
 Error:
-  40001 UNDERAGE_USER            (核身结果中年龄不满 18 周岁)
-  40301 REALNAME_VERIFY_FAILED   (核身未通过)
+  40001 UNDERAGE_USER            (认证结果中年龄不满 18 周岁)
+  40301 REALNAME_VERIFY_FAILED   (认证未通过)
   40302 ALREADY_VERIFIED         (已完成实名)
 ```
 
-> 后端调用 `datadigital.fincloud.generalsaas.face.verification.query` 查询核身结果；通过后写入 RealnameRecord（certifyId + 脱敏姓名 + 身份证后四位），更新 Student.realnameStatus = VERIFIED。不存储原始姓名和身份证号。
+> 后端调用 `alipay.user.certify.open.query { certifyId }` 查询认证结果；
+> 通过后写入 RealnameRecord（certifyId + 脱敏姓名 + 身份证后四位），更新 Student.realnameStatus = VERIFIED。
+> 不存储原始姓名和完整身份证号。
 
 ---
 
@@ -599,45 +609,70 @@ InstallmentItem:
 }
 ```
 
-### 4.4.4 电子签约（Iter 1 路径预留，Iter 2 实现）
+### 4.4.4 签约初始化（获取 certifyUrl）
 
 ```
-POST /orders/:orderId/sign/fadadada
+POST /orders/:orderId/sign/initialize
 Auth: 必须登录，且为本人订单
 
-Iter 1 Response: 501 { message: "签约功能即将上线" }
-Iter 2 Response 200:
+模块 1-8 Response: 501 { message: "签约功能即将上线" }
+模块 9 Response 200:
 {
-  signUrl: string,    // 法大大 H5 签约页 URL
-  signRecordId: string
+  certifyId: string,
+  certifyUrl: string    // 支付宝开放认证页 URL，前端跳转
 }
 ```
 
-### 4.4.5 签约回调（Iter 2，法大大服务端回调）
+> 后端调用 `alipay.user.certify.open.initialize`（bizNo 传入 orderId）→ 再调用 `alipay.user.certify.open.certify` → 返回 `certifyUrl`。
+> 前端通过 `my.ap.navigateToAlipayPage` 或 WebView 跳转到该页，用户完成人脸核身作为"本人确认签约"。
+
+### 4.4.5 签约确认（核查结果并激活订单）
 
 ```
-POST /orders/sign/fadadada/callback
-Auth: 法大大签名验证（X-Fadadada-Signature header）
-Body: 法大大标准回调体（orderId, status, signedAt 等）
+POST /orders/:orderId/sign/confirm
+Auth: 必须登录，且为本人订单
+Body: { certifyId: string }
 
-Response 200: { received: true }
+Response 200: { success: true, orderStatus: "ACTIVE" }
 
-副作用：签约成功后将订单状态更新为 ACTIVE，生成 Installment 分期记录
+Error:
+  40501 SIGN_VERIFY_FAILED   (核身未通过，无法签约)
+  40502 ORDER_NOT_FOUND
 ```
+
+> 后端调用 `alipay.user.certify.open.query { certifyId }` 查询结果；
+> 通过后写入 SignRecord（certifyId + signedAt），订单状态更新为 ACTIVE，生成 Installment 分期记录。
 
 ---
 
 ## 4.5 学习模块（后端：student/learning module）
 
-### 4.5.1 人脸打卡（Iter 3 路径预留，Iter 1/2 返回 501）
+### 4.5.1 人脸打卡初始化（模块 11 实现）
 
 ```
-POST /learning/checkin
+POST /learning/checkin/initialize
 Auth: 必须登录
-Body: { orderId: string, coursePeriod: number, faceToken: string }
+Body: { orderId: string, coursePeriod: number }
 
-Iter 1/2 Response: 501 { message: "打卡功能即将上线" }
-Iter 3 Response 200:
+模块 1-10 Response: 501 { message: "打卡功能即将上线" }
+模块 11 Response 200:
+{
+  certifyId: string,
+  certifyUrl: string    // 支付宝人脸核身页 URL
+}
+```
+
+> 后端调用 `datadigital.fincloud.generalsaas.face.certify.initialize` 初始化打卡核身流程，再调用 `datadigital.fincloud.generalsaas.face.certify.verify` 启动认证，返回 `certifyUrl`（前端跳转）。
+
+### 4.5.2 人脸打卡确认（模块 11 实现）
+
+```
+POST /learning/checkin/confirm
+Auth: 必须登录
+Body: { orderId: string, coursePeriod: number, certifyId: string }
+
+模块 1-10 Response: 501 { message: "打卡功能即将上线" }
+模块 11 Response 200:
 {
   verifyResult: "PASS" | "FAIL",
   rewardCents: number
@@ -648,6 +683,9 @@ Error:
   42002 FACE_VERIFY_FAILED       (人脸比对不通过)
   42003 ORDER_NOT_ACTIVE         (订单非 ACTIVE 状态)
 ```
+
+> 后端调用 `datadigital.fincloud.generalsaas.face.certify.query { certifyId }` 查询结果；
+> 通过后写入 CheckinRecord，按配置发放学费抵扣激励。
 
 ---
 
