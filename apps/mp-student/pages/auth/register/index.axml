@@ -1,3 +1,49 @@
-<view class="page-container">
-  <view class="placeholder-text">注册页（模块 2 实现）</view>
+<view class="page">
+  <view class="header">
+    <view class="title">填写注册信息</view>
+    <view class="subtitle">请输入招生老师提供的机构码</view>
+  </view>
+
+  <view class="form-section">
+    <view class="input-group">
+      <input
+        class="org-input"
+        placeholder="请输入机构码"
+        value="{{ orgCode }}"
+        onInput="onOrgCodeInput"
+        maxLength="20"
+      />
+      <button
+        class="validate-btn {{ validating ? 'loading' : '' }}"
+        onTap="onValidate"
+        disabled="{{ validating }}"
+      >{{ validating ? '查询中...' : '查询机构' }}</button>
+    </view>
+
+    <view a:if="{{ orgInfo }}" class="org-card">
+      <view class="org-card-title">机构信息</view>
+      <view class="org-card-row">
+        <text class="org-label">机构名称</text>
+        <text class="org-value">{{ orgInfo.orgName }}</text>
+      </view>
+      <view a:if="{{ orgInfo.salesmanName }}" class="org-card-row">
+        <text class="org-label">招生老师</text>
+        <text class="org-value">{{ orgInfo.salesmanName }}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <button
+      a:if="{{ orgInfo }}"
+      class="register-btn {{ registering ? 'loading' : '' }}"
+      open-type="getAuthorize"
+      scope="phoneNumber"
+      onGetAuthorize="onGetAuthorize"
+      onError="onAuthError"
+      disabled="{{ registering }}"
+    >{{ registering ? '注册中...' : '授权手机号并注册' }}</button>
+
+    <view a:if="{{ !orgInfo }}" class="tip-text">请先查询机构码，验证通过后授权手机号注册</view>
+  </view>
 </view>

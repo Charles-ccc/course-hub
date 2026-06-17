@@ -38,7 +38,7 @@ export class RequestAuditInterceptor implements NestInterceptor {
     const method = request.method;
     const path = request.originalUrl ?? "";
     const ip = this.getClientIp(request);
-    const userAgent = this.getHeader(request, "user-agent") ?? "unknown";
+    const userAgent = (this.getHeader(request, "user-agent") ?? "unknown").slice(0, 191);
 
     return next.handle().pipe(
       tap(() => {

@@ -1,9 +1,37 @@
-import { IsString, IsNotEmpty } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional } from "class-validator";
 
 export class AlipayLoginReqDto {
   @IsString()
   @IsNotEmpty()
   authCode!: string;
+}
+
+export class AlipayRegisterReqDto {
+  @IsString()
+  @IsNotEmpty()
+  authCode!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  encryptedData!: string;
+
+  @IsString()
+  @IsOptional()
+  iv?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  orgCode!: string;
+}
+
+export class OrgCodeValidateReqDto {
+  @IsString()
+  @IsNotEmpty()
+  authCode!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  orgCode!: string;
 }
 
 export class RefreshReqDto {
@@ -24,3 +52,8 @@ export type AlipayLoginRespDto =
       phone: string;
       realnameStatus: string;
     };
+
+export type OrgCodeValidateRespDto = {
+  orgName: string;
+  salesmanName: string | null;
+};

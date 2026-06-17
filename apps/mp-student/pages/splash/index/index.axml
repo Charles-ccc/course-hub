@@ -1,0 +1,11 @@
+<view class="splash">
+  <view class="logo-area">
+    <view class="logo-circle">学</view>
+    <view class="app-name">欢乐学</view>
+  </view>
+  <view class="loading-area">
+    <view class="dot dot1" />
+    <view class="dot dot2" />
+    <view class="dot dot3" />
+  </view>
+</view>

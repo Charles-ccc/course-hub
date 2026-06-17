@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { createDecipheriv } from "node:crypto";
 import { AlipaySdk } from "alipay-sdk";
 
 @Injectable()
@@ -8,6 +9,7 @@ export class AlipayService {
   private readonly isProduction = process.env.NODE_ENV === "production";
   private readonly devOpenId =
     process.env.ALIPAY_DEV_OPEN_ID ?? "2088000000000001";
+  private readonly devPhone = process.env.ALIPAY_DEV_PHONE ?? "13800138000";
 
   constructor() {
     const appId = process.env.ALIPAY_APP_ID;
@@ -76,5 +78,72 @@ export class AlipayService {
     }
 
     return openId;
+  }
+
+  decryptPhone(encryptedData: string, iv?: string): string {
+    // 尝试直接 JSON 解析（开放平台未开启「接口内容加密」时，response 是明文 JSON）
+    try {
+      const plain = JSON.parse(encryptedData) as Record<string, unknown>;
+      const phone = (plain.mobile ?? plain.phoneNumber ?? plain.mobileNo) as
+        | string
+        | undefined;
+      if (phone) {
+        this.logger.log(
+          JSON.stringify({ event: "alipay_phone_plain", phone }),
+        );
+        return phone;
+      }
+    } catch {
+      // 不是明文 JSON，走 AES 解密
+    }
+
+    const aesKeyBase64 = process.env.ALIPAY_AES_KEY;
+
+    if (!aesKeyBase64) {
+      if (!this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({
+            event: "alipay_phone_decrypt_mocked",
+            reason: "ALIPAY_AES_KEY not set",
+            phone: this.devPhone,
+          }),
+        );
+        return this.devPhone;
+      }
+      throw new Error("ALIPAY_AES_KEY is required in production");
+    }
+
+    try {
+      const key = Buffer.from(aesKeyBase64, "base64");
+      const ivBuf = iv
+        ? Buffer.from(iv, "base64")
+        : Buffer.alloc(16, 0);
+      const decipher = createDecipheriv("aes-128-cbc", key, ivBuf);
+      let decrypted = decipher.update(encryptedData, "base64", "utf8");
+      decrypted += decipher.final("utf8");
+      this.logger.log(
+        JSON.stringify({ event: "alipay_phone_decrypted_raw", decrypted }),
+      );
+      const data = JSON.parse(decrypted) as Record<string, unknown>;
+      const phone = (data.mobile ?? data.phoneNumber ?? data.mobileNo) as
+        | string
+        | undefined;
+      if (!phone) {
+        throw new Error(`Phone field missing in decrypted data: ${decrypted}`);
+      }
+      return phone;
+    } catch (err) {
+      if (!this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({
+            event: "alipay_phone_decrypt_mocked",
+            reason: "decryption_failed",
+            phone: this.devPhone,
+          }),
+        );
+        return this.devPhone;
+      }
+      throw err;
+    }
   }
 }

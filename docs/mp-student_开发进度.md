@@ -33,26 +33,26 @@
 
 ### 后端
 
-- [ ] `POST /auth/alipay/login`（authCode 换 openId，已注册返回 token，未注册返回 needRegister）
-- [ ] `POST /auth/alipay/register`（authCode + encryptedData + iv 解密手机号 + orgCode 注册）
-- [ ] `POST /auth/org-code/validate`（机构码校验，含冻结逻辑；按 openId 计冻结次数）
-- [ ] `POST /auth/refresh`（Token 刷新）
+- [x] `POST /auth/alipay/login`（authCode 换 openId，已注册返回 token，未注册返回 needRegister）
+- [x] `POST /auth/alipay/register`（authCode + encryptedData + iv 解密手机号 + orgCode 注册）
+- [x] `POST /auth/org-code/validate`（机构码校验，含冻结逻辑；按 openId 计冻结次数）
+- [x] `POST /auth/student/refresh`（Token 刷新，路由与前端 request.js 一致）
 
 ### 前端
 
-- [ ] `app.js` onLaunch：调用 `my.login()` → `POST /auth/alipay/login`，已注册跳首页，未注册跳引导页
-- [ ] 引导页（仅「立即注册」一个入口）
-- [ ] 注册页：机构码输入 + 校验卡片 + 「授权手机号并注册」按钮（支付宝原生授权组件）
-- [ ] 机构码校验卡片组件（展示机构名 + 业务员名）
+- [x] `app.js` onLaunch：调用 `my.login()` → `POST /auth/alipay/login`，已注册跳首页，未注册跳引导页
+- [x] 引导页（仅「立即注册」一个入口）
+- [x] 注册页：机构码输入 + 校验卡片 + 「授权手机号并注册」按钮（支付宝原生授权组件）
+- [x] 机构码校验卡片组件（展示机构名 + 业务员名）
 
 ### 测试卡点
 
-- [ ] 已注册用户打开小程序，无任何弹框直接进入首页（静默登录）
-- [ ] 未注册用户打开小程序，展示注册引导页
-- [ ] 输入无效机构码展示正确错误提示，同一账号失败 5 次后冻结 30 分钟
-- [ ] 点击「授权手机号」→ 支付宝弹出授权确认 → 注册成功跳实名认证页
-- [ ] 拒绝授权时提示需要授权才能注册，按钮保持可点击
-- [ ] Access token 过期后自动刷新，请求无感重试
+- [x] 已注册用户打开小程序，无任何弹框直接进入首页（静默登录）
+- [x] 未注册用户打开小程序，展示注册引导页
+- [x] 输入无效机构码展示正确错误提示，同一账号失败 5 次后冻结 30 分钟
+- [x] 点击「授权手机号」→ 支付宝弹出授权确认 → 注册成功跳实名认证页
+- [x] 拒绝授权时提示需要授权才能注册，按钮保持可点击
+- [x] Access token 过期后自动刷新，请求无感重试
 
 ---
 
