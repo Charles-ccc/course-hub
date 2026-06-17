@@ -9,6 +9,10 @@ dist
 coverage
 dist/
 build/
+# Local secrets
+ccc.pem
+# Alipay mini IDE
+apps/mp-student/.mini-ide/
 # Taro
 apps/mp-student/dist/
 # Prisma

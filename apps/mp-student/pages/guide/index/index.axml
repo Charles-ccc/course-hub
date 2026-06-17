@@ -1,0 +1,4 @@
+<view class="page-container">
+  <view class="welcome-title">欢迎来到欢乐学</view>
+  <button class="register-btn" onTap="goRegister">立即注册</button>
+</view>

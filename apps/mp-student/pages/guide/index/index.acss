@@ -1,0 +1,23 @@
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40rpx;
+}
+.welcome-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 80rpx;
+}
+.register-btn {
+  width: 100%;
+  background-color: #FF6B00;
+  color: #fff;
+  border-radius: 16rpx;
+  font-size: 32rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+}

@@ -88,6 +88,16 @@ enum CommissionStatus {
   CLAWED_BACK
 }
 
+enum PayType {
+  DEFERRED
+  IMMEDIATE
+}
+
+enum OrgCodeStatus {
+  ACTIVE
+  DISABLED
+}
+
 model AdminUser {
   id           String    @id
   username     String    @unique
@@ -117,6 +127,7 @@ model Insitution {
   orders                    Order[]
   settlements               SettlementRecord[]
   questions                 Question[]
+  orgCodes                  OrgCode[]
 }
 
 model InsitutionUser {
@@ -145,9 +156,11 @@ model RefreshToken {
   adminUserId        String?
   insitutionUserId  String?
   salesmanId         String?
+  studentId          String?
   adminUser          AdminUser?         @relation(fields: [adminUserId], references: [id])
   insitutionUser    InsitutionUser?   @relation(fields: [insitutionUserId], references: [id])
   salesman           Salesman?         @relation(fields: [salesmanId], references: [id])
+  student            Student?          @relation(fields: [studentId], references: [id])
 
   @@index([userId, role, status])
 }
@@ -158,6 +171,8 @@ model Course {
   name           String
   description    String
   instructorInfo String
+  outline        String?           @db.Text
+  teacherContact String?
   priceCents     Int
   periodCount    Int
   status         CourseStatus
@@ -166,6 +181,7 @@ model Course {
   updatedAt      DateTime          @updatedAt
   insitution    Insitution       @relation(fields: [insitutionId], references: [id])
   orders         Order[]
+  videos         CourseVideo[]
 }
 
 model Salesman {
@@ -186,21 +202,29 @@ model Salesman {
   students                  Student[]
   commissions               Commission[]
   refreshTokens             RefreshToken[]
+  orgCodes                  OrgCode[]
 }
 
 model Student {
   id               String         @id
   insitutionId    String
+  orgCodeId        String?
   boundSalesmanId  String?
   name             String?
   phone            String         @unique
+  alipayOpenId     String?        @unique
   realnameStatus   RealnameStatus @default(UNVERIFIED)
   boundAt          DateTime?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   insitution      Insitution    @relation(fields: [insitutionId], references: [id])
+  orgCode          OrgCode?       @relation(fields: [orgCodeId], references: [id])
   boundSalesman    Salesman?      @relation(fields: [boundSalesmanId], references: [id])
   orders           Order[]
+  realnameRecords  RealnameRecord[]
+  refreshTokens    RefreshToken[]
+  signRecords      SignRecord[]
+  checkinRecords   CheckinRecord[]
 
   @@index([insitutionId])
   @@index([boundSalesmanId])
@@ -211,10 +235,12 @@ model Order {
   insitutionId    String
   studentId        String?
   courseId         String?
+  orgCodeId        String?
   studentName      String
   courseName       String
   totalAmountCents Int
   periodCount      Int
+  payType          PayType     @default(DEFERRED)
   status           OrderStatus
   coolingOffEndAt  DateTime?
   createdAt        DateTime    @default(now())
@@ -222,8 +248,11 @@ model Order {
   insitution      Insitution @relation(fields: [insitutionId], references: [id])
   student          Student?    @relation(fields: [studentId], references: [id])
   course           Course?     @relation(fields: [courseId], references: [id])
+  orgCode          OrgCode?    @relation(fields: [orgCodeId], references: [id])
   installments     Installment[]
   commissions      Commission[]
+  signRecords      SignRecord[]
+  checkinRecords   CheckinRecord[]
 }
 
 model Commission {
@@ -288,6 +317,68 @@ model Question {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   insitution   Insitution @relation(fields: [insitutionId], references: [id])
+}
+
+model OrgCode {
+  id           String        @id
+  insitutionId String
+  salesmanId   String?
+  code         String        @unique
+  status       OrgCodeStatus @default(ACTIVE)
+  usedCount    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  insitution  Insitution   @relation(fields: [insitutionId], references: [id])
+  salesman     Salesman?    @relation(fields: [salesmanId], references: [id])
+  students     Student[]
+  orders       Order[]
+}
+
+model RealnameRecord {
+  id         String         @id
+  studentId  String
+  certifyId  String         @unique
+  status     RealnameStatus
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  student    Student        @relation(fields: [studentId], references: [id])
+}
+
+model CourseVideo {
+  id          String   @id
+  courseId    String
+  title       String
+  videoKey    String
+  durationSec Int      @default(0)
+  sortOrder   Int      @default(0)
+  isTrial     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  course      Course   @relation(fields: [courseId], references: [id])
+}
+
+model SignRecord {
+  id        String   @id
+  studentId String
+  orderId   String
+  certifyId String   @unique
+  signedAt  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  student   Student  @relation(fields: [studentId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+model CheckinRecord {
+  id         String   @id
+  studentId  String
+  orderId    String
+  certifyId  String   @unique
+  checkedAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  student    Student  @relation(fields: [studentId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
 }
 
 model SystemConfig {

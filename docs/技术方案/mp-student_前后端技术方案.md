@@ -43,7 +43,7 @@ src/modules/
 └── user/               ← 新增实名认证接口
 ```
 
-> **学员端认证扩展策略：** `PhoneLoginReqDto.clientType` 已预留 `'STUDENT_MP'` 枚举值。`studentAuth.service.ts` 为新增，在 `POST /auth/phone/login` 的 switch 中新增 `STUDENT_MP` 分支调用 `studentAuthService.loginByPassword()`。其余学员专用端点（注册、支付宝授权等）在 `StudentAuthController` 中添加，与现有 `AuthController` 共享 `@Controller('auth')` 前缀，路由路径不冲突。
+> **学员端认证策略：** 学员登录完全依赖支付宝 authCode，无密码体系。`StudentAuthController` 为新增，与现有 `AuthController` 共享 `@Controller('auth')` 前缀，路由路径不冲突。核心端点：`POST /auth/alipay/login`、`POST /auth/alipay/register`、`POST /auth/refresh`。
 
 ## 2.2 Guard 与权限设计
 
@@ -209,7 +209,7 @@ model Order {
 
 ## 3.2 Iter 2 新增
 
-### 3.2.1 SignRecord 表（法大大签约记录）
+### 3.2.1 SignRecord 表（支付宝核身签约记录）
 
 ```prisma
 enum SignStatus {
@@ -219,15 +219,14 @@ enum SignStatus {
 }
 
 model SignRecord {
-  id           String     @id
-  orderId      String     @unique
-  fadadaSignId String?              // 法大大签约流水号
-  signUrl      String?    @db.Text  // 法大大 H5 签约链接
-  status       SignStatus @default(PENDING)
-  signedAt     DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  order        Order      @relation(fields: [orderId], references: [id])
+  id          String     @id
+  orderId     String     @unique
+  certifyId   String                // 支付宝开放认证流水号
+  status      SignStatus @default(PENDING)
+  signedAt    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  order       Order      @relation(fields: [orderId], references: [id])
 }
 ```
 
@@ -241,9 +240,9 @@ model CheckinRecord {
   orderId       String
   studentId     String
   coursePeriod  Int
-  faceToken     String
-  verifyResult  String   // PASS | FAIL
-  rewardCents   Int      @default(0)   // 本次激励金额（分）
+  certifyId     String               // 支付宝人脸核身流水号
+  verifyResult  String               // PASS | FAIL
+  rewardCents   Int      @default(0) // 本次激励金额（分）
   createdAt     DateTime @default(now())
   order         Order    @relation(fields: [orderId], references: [id])
 
@@ -270,7 +269,7 @@ model CheckinRecord {
 | 迭代  | 行为                                                                                                                                |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Iter1 | `POST /orders` 创建后 status = `CREATED`（无论 payType）。`IMMEDIATE` 订单**不创建 Installment 记录**，机构后台人工审核激活。       |
-| Iter2 | `DEFERRED` 订单：法大大签约回调成功后，status 更新为 `ACTIVE`，生成 Installment 记录。                                              |
+| Iter2 | `DEFERRED` 订单：支付宝核身签约确认（`/sign/confirm`）成功后，status 更新为 `ACTIVE`，生成 Installment 记录。                        |
 | Iter3 | `IMMEDIATE` 订单：支付宝支付成功回调后，status 更新为 `ACTIVE`，生成单条 Installment（periodNo=1, dueDate=today, status=PENDING）。 |
 
 > Iter1 学员端订单详情中 `CREATED` 状态下的签约按钮（占位）是目前唯一的操作入口，`installments` 数组在此状态下返回空数组。
@@ -729,9 +728,7 @@ apps/mp-student/
 {
   "pages": [
     "pages/guide/index",
-    "pages/auth/login/index",
     "pages/auth/register/index",
-    "pages/auth/reset-password/index",
     "pages/auth/realname/index",
     "pages/index/index",
     "pages/course/detail/index",
@@ -800,7 +797,7 @@ apps/mp-student/
 2. 注入 `Authorization: Bearer <accessToken>`
 3. 统一解析 `{ code, message, data }` 响应体
 4. 命中 401 时调用 `/auth/refresh`，刷新成功后重放原请求
-5. 刷新失败则清理本地会话并跳转登录页
+5. 刷新失败则清理本地会话并跳转引导页
 
 示例：
 
@@ -858,22 +855,19 @@ export function request({ url, method = "GET", data = null, needAuth = true }) {
 1. `mp_student_access_token`
 2. `mp_student_refresh_token`
 3. `mp_student_profile`
-4. `registeredPhone`
-5. `referrerStaffId`
-6. `referrerStudentId`
+4. `referrerStaffId`
+5. `referrerStudentId`
 
 ## 5.1 目录结构（原生工程）
 
 ```text
 apps/mp-student/
-├── app.js                      # onLaunch 归因捕获、静默登录入口
+├── app.js                      # onLaunch 归因捕获、支付宝静默登录入口
 ├── app.json                    # 路由和 TabBar
 ├── pages/
-│   ├── guide/index.*           # 引导页
-│   ├── auth/login/index.*      # 登录页
-│   ├── auth/register/index.*   # 注册页
-│   ├── auth/reset-password/*   # 找回密码
-│   ├── auth/realname/*         # 实名认证
+│   ├── guide/index.*           # 引导页（未注册时展示）
+│   ├── auth/register/index.*   # 注册页（机构码 + 手机号授权）
+│   ├── auth/realname/*         # 实名认证（支付宝开放认证跳转）
 │   ├── index/index.*           # 课程列表首页
 │   ├── course/detail/*         # 课程详情
 │   ├── order/confirm/*         # 下单确认
@@ -882,7 +876,6 @@ apps/mp-student/
 │   ├── learning/index/*        # 学习中心
 │   └── profile/index/*         # 个人中心
 ├── components/
-│   ├── sms-code-input/
 │   ├── org-code-card/
 │   ├── course-card/
 │   └── installment-list/
@@ -923,8 +916,8 @@ apps/mp-student/
 ## 5.4 人脸打卡预留入口（Iter 3）
 
 1. Iter 1/2 不展示入口
-2. Iter 3 在学习页展示“开始人脸验证”按钮
-3. 调用 `my.startFaceVerify` 后请求 `/learning/checkin`
+2. Iter 3 在学习页展示「开始打卡」按钮
+3. 调用后端 `/learning/checkin/initialize` 拿到 `certifyUrl`，跳转支付宝人脸核身页；完成后调 `/confirm`
 
 ---
 
@@ -942,10 +935,9 @@ apps/mp-student/
 
 | 任务 | 说明 |
 | ---- | ---- |
-| DB 迁移：OrgCode / Student（passwordHash、alipayOpenId）/ RefreshToken（studentId FK）/ RealnameRecord / CourseVideo / Course（outline、teacherContact）/ Order（payType、orgCodeId）表变更一次性跑完 | Prisma migrate |
+| DB 迁移：OrgCode / Student（alipayOpenId、phone）/ RefreshToken（studentId FK）/ RealnameRecord / CourseVideo / Course（outline、teacherContact）/ Order（payType、orgCodeId）表变更一次性跑完 | Prisma migrate |
 | AppRole 新增 STUDENT，TokenService 扩展 refreshOwner 映射 | common/auth |
 | StudentAuthController 骨架注册（路由占位，接口尚未实现） | student-auth |
-| `POST /auth/sms/send` 接口可用，dev 环境验证码写入日志（不发真实短信） | auth |
 
 ### 前端任务
 
@@ -961,47 +953,40 @@ apps/mp-student/
 ### 测试卡点
 
 - 支付宝 IDE 可正常打开项目，TabBar 三个 Tab 切换无报错
-- 前端调用 `POST /auth/sms/send` 能收到 200，后端日志可见验证码
+- `app.js` onLaunch 静默登录调用 `POST /auth/alipay/login` 返回 200，日志可见 openId
 
 ---
 
 ## 模块 2：注册 & 登录
 
-> 目标：新用户可通过机构码完成注册并自动跳转实名页；老用户可通过三种方式登录；可找回密码。
+> 目标：新用户可通过机构码 + 支付宝手机号授权完成注册并自动跳转实名页；老用户打开小程序静默登录直接进入首页。
 
 ### 后端任务
 
 | 任务 | 模块 |
 | ---- | ---- |
-| `POST /auth/org-code/validate` 机构码校验（含冻结逻辑） | student-auth |
-| `POST /auth/phone/register` 学员手机号注册 | student-auth |
-| `POST /auth/phone/login` 手机号+密码登录 | student-auth |
-| `POST /auth/phone/login-by-code` 手机号+验证码登录 | student-auth |
-| `POST /auth/alipay/login` 支付宝 authCode 登录 | student-auth |
-| `POST /auth/alipay/bind-phone` 首次支付宝登录绑定手机号 | student-auth |
-| `POST /auth/phone/reset-password` 重置密码 | student-auth |
-| `POST /auth/silent-login` 静默登录 | student-auth |
+| `POST /auth/alipay/login` 支付宝 authCode 换 openId，已注册返回 token，未注册返回 `needRegister` | student-auth |
+| `POST /auth/alipay/register` authCode + encryptedData + iv 解密手机号 + orgCode 注册新学员 | student-auth |
+| `POST /auth/org-code/validate` 机构码校验（含冻结逻辑，按 openId 计次） | student-auth |
 | `POST /auth/refresh` Token 刷新 | student-auth |
 
 ### 前端任务
 
 | 任务 | 页面/组件 |
 | ---- | --------- |
-| 引导页（注册 / 登录入口） | pages/guide |
-| 注册页：机构码校验卡片 + 手机号注册表单 | pages/auth/register |
-| 登录页：密码登录 Tab / 验证码登录 Tab / 支付宝登录按钮 | pages/auth/login |
-| 找回密码页 | pages/auth/reset-password |
-| 短信验证码输入组件（60s 倒计时、发送限流提示） | components/sms-code-input |
+| `app.js` onLaunch：调用 `my.login()` → `POST /auth/alipay/login`，已注册跳首页，未注册跳引导页 | app.js |
+| 引导页（仅「立即注册」一个入口） | pages/guide |
+| 注册页：机构码输入 + 校验卡片 + 「授权手机号并注册」按钮（支付宝原生授权组件） | pages/auth/register |
 | 机构码校验卡片组件（展示机构名 + 业务员名） | components/org-code-card |
 
 ### 测试卡点
 
-- 输入无效机构码展示正确错误提示，冻结后输入框禁用
-- 新用户注册成功后自动跳转实名认证页
-- 手机号密码登录、验证码登录均可获得 token 并跳转首页
-- 支付宝首次登录弹出手机号绑定弹框，绑定后正常登录
-- 忘记密码重置后可用新密码登录
-- 刷新 token：access token 过期后自动刷新，请求无感重试
+- 已注册用户打开小程序，无任何弹框直接进入首页（静默登录）
+- 未注册用户打开小程序，展示注册引导页
+- 输入无效机构码展示正确错误提示，同一账号失败 5 次后冻结 30 分钟
+- 点击「授权手机号」→ 支付宝弹出授权确认 → 注册成功跳实名认证页
+- 拒绝授权时提示需要授权才能注册，按钮保持可点击
+- Access token 过期后自动刷新，请求无感重试
 
 ---
 
@@ -1065,7 +1050,7 @@ apps/mp-student/
 | 任务 | 模块 |
 | ---- | ---- |
 | `POST /orders` 创建订单（RealnameGuard 拦截 + UNDERAGE / PRICE_LIMIT 错误处理） | student/order |
-| 电子签约接口占位 `POST /orders/:orderId/sign/fadadada` 返回 501 | student/order |
+| 电子签约接口占位 `POST /orders/:orderId/sign/initialize` 返回 501 | student/order |
 
 ### 前端任务
 
@@ -1152,7 +1137,7 @@ apps/mp-student/
 | 个人中心页（头像首字 / 姓名 / 手机号 / 实名状态徽标） | pages/profile/index |
 | 未实名时「完成实名认证」橙色菜单项，点击跳转实名页 | pages/profile/index |
 | 「我的课程」菜单跳订单列表 | pages/profile/index |
-| 退出登录（清空 token + registeredPhone，跳首页 Tab） | pages/profile/index |
+| 退出登录（清空本地 token，跳首页 Tab，重新触发静默登录） | pages/profile/index |
 | 未登录态展示「去登录」提示 | pages/profile/index |
 
 ### 测试卡点
@@ -1163,30 +1148,30 @@ apps/mp-student/
 
 ---
 
-## 模块 9：电子签约（法大大对接）
+## 模块 9：电子签约（支付宝生物核身确认）
 
-> 目标：CREATED 状态订单的签约按钮接入真实法大大 H5 流程，签约成功后订单变为 ACTIVE。
+> 目标：CREATED 状态订单的签约按钮接入支付宝开放认证流程（`alipay.user.certify.open.*`），核身通过后订单变为 ACTIVE。
 
 ### 后端任务
 
 | 任务 | 模块 |
 | ---- | ---- |
-| DB 迁移：新增 SignRecord 表 | db |
-| `POST /orders/:orderId/sign/fadadada` 生成法大大签约链接（替换 501） | student/order |
-| `POST /orders/sign/fadadada/callback` 法大大回调验签 + 订单激活 + 生成 Installment | student/order |
+| DB 迁移：新增 SignRecord 表（certifyId + signedAt） | db |
+| `POST /orders/:orderId/sign/initialize`：调用 `alipay.user.certify.open.initialize` → `alipay.user.certify.open.certify`，返回 `{ certifyId, certifyUrl }` | student/order |
+| `POST /orders/:orderId/sign/confirm`：调用 `alipay.user.certify.open.query`，通过后激活订单 + 生成 Installment | student/order |
 
 ### 前端任务
 
 | 任务 | 页面 |
 | ---- | ---- |
-| 订单详情页签约按钮：调用签约接口，跳转法大大 H5 WebView | pages/order/detail |
-| 监听签约回调，签约成功后刷新订单状态 | pages/order/detail |
+| 订单详情页「签约授权」按钮：调用 initialize 接口，拿到 `certifyUrl`，通过 `my.ap.navigateToAlipayPage` 跳转支付宝核身页 | pages/order/detail |
+| 用户完成返回后调用 confirm 接口，刷新订单状态 | pages/order/detail |
 
 ### 测试卡点
 
-- 点击「签约授权」按钮跳转法大大 H5 页面
-- 签约成功后订单状态变为 ACTIVE，签约按钮消失，「去学习」按钮出现
-- 签约失败时展示错误提示，可再次发起签约
+- 点击「签约授权」按钮跳转至支付宝核身页面
+- 核身通过后订单状态变为 ACTIVE，签约按钮消失，「去学习」按钮出现
+- 核身失败时展示错误提示，可再次发起
 
 ---
 
@@ -1215,32 +1200,30 @@ apps/mp-student/
 
 ---
 
-## 模块 11：合规升级（法大大实名 + 人脸打卡）
+## 模块 11：人脸打卡激励
 
-> 目标：实名认证升级为法大大四要素核验；学习页开放人脸打卡入口，打卡成功获得学费抵扣激励。
+> 目标：学习页开放人脸打卡入口（`datadigital.fincloud.generalsaas.face.certify.*`），打卡成功获得学费抵扣激励。实名认证已在模块 3 完成，本模块无需再接入任何实名接口。
 
 ### 后端任务
 
 | 任务 | 模块 |
 | ---- | ---- |
-| DB 迁移：新增 CheckinRecord 表 | db |
-| `POST /users/realname` Service 层补充法大大四要素 SDK 调用，新增降级配置项 | user |
-| `POST /learning/checkin` 人脸打卡接口：接收 faceToken、调用支付宝人脸核验、写激励记录（替换 501） | student/learning |
+| DB 迁移：新增 CheckinRecord 表（certifyId + checkedAt） | db |
+| `POST /learning/checkin/initialize`：调用 `datadigital.fincloud.generalsaas.face.certify.initialize` → `face.certify.verify`，返回 `{ certifyId, certifyUrl }` | student/learning |
+| `POST /learning/checkin/confirm`：调用 `datadigital.fincloud.generalsaas.face.certify.query`，通过后写 CheckinRecord + 激励抵扣记录（替换 501） | student/learning |
 | 打卡激励抵扣 Installment 逻辑 | student/learning |
 
 ### 前端任务
 
 | 任务 | 页面 |
 | ---- | ---- |
-| 实名认证页：新增错误码 40301（法大大比对失败）的提示文案 | pages/auth/realname |
-| 学习中心页：展示打卡入口按钮（取消占位注释） | pages/learning/index |
-| 打卡流程：调用 `my.startFaceVerify` 获取 faceToken，POST `/learning/checkin` | pages/learning/index |
-| 打卡结果展示（成功 / 失败 / 次数超限） | pages/learning/index |
+| 学习中心页：展示「开始打卡」按钮（取消占位注释） | pages/learning/index |
+| 调用 initialize 接口，拿到 `certifyUrl`，通过 `my.ap.navigateToAlipayPage` 跳转支付宝人脸核身页 | pages/learning/index |
+| 用户完成返回后调用 confirm 接口，展示打卡结果（成功 + 激励金额 / 失败 / 次数超限） | pages/learning/index |
 
 ### 测试卡点
 
-- 实名认证提交后法大大四要素比对通过，realnameStatus = VERIFIED
-- 法大大服务不可用时降级为自建模式（通过配置项控制）
+- 点击「开始打卡」跳转至支付宝人脸核身页面
 - 打卡成功展示激励金额，再次进入订单详情可见抵扣记录
 - 单期次打卡超限后提示「今日打卡次数已用完」
 
@@ -1259,16 +1242,15 @@ apps/mp-student/
 1. `apps/mp-student/mini.project.json` 存在且 `miniprogramRoot` 正确。
 2. `apps/mp-student/app.json` 路由可在支付宝 IDE 正常识别。
 3. 后端本地可启动并访问 `http://127.0.0.1:3000/api/v1`。
-4. MySQL 与 Redis 容器可用，短信 provider 本地可输出验证码日志。
+4. MySQL 与 Redis 容器可用，后端本地日志可输出 authCode 换取的 openId。
 
 ## 10.3 联调最小闭环
 
-1. 机构码校验：`POST /auth/org-code/validate`。
-2. 短信发送：`POST /auth/sms/send`（可从日志获取验证码）。
-3. 手机注册：`POST /auth/phone/register`。
-4. 支付宝登录：`POST /auth/alipay/login` + `POST /auth/alipay/bind-phone`。
-5. 课程列表：`GET /courses`。
-6. 创建订单：`POST /orders`。
+1. 支付宝静默登录：`POST /auth/alipay/login`（authCode 换 openId，日志可见）。
+2. 机构码校验：`POST /auth/org-code/validate`。
+3. 手机号授权注册：`POST /auth/alipay/register`（encryptedData + iv 解密后写库）。
+4. 课程列表：`GET /courses`。
+5. 创建订单：`POST /orders`。
 
 ## 10.4 验收标准可执行性
 
@@ -1280,17 +1262,15 @@ apps/mp-student/
 
 # 7. 关键安全设计
 
-| 风险点         | 措施                                                        |
-| -------------- | ----------------------------------------------------------- |
-| 密码存储       | bcrypt，cost factor ≥ 10                                    |
-| 短信验证码防刷 | 60s 间隔 + 24h 5次上限 + Redis 计数，后端校验               |
-| 机构码防暴力   | 24h 失败 5 次冻结 30min，记录至 Redis                       |
-| JWT 安全       | access token 有效期 15min，refresh token 7天；revoke 时写库 |
-| 视频防盗链     | 播放地址服务端签名，有效期 1h，不允许前端缓存（Iter 2）     |
-| 法大大回调验签 | 强制校验 HMAC 签名，不可绕过（Iter 2）                      |
-| 实名信息       | 接口层脱敏日志，身份证号只存 hash 用于唯一性校验            |
-| 人脸 faceToken | 仅单次使用，后端接收后立即转发核验，不持久化（Iter 3）      |
-| 接口访问控制   | 所有学员数据接口强制 studentId 范围，禁止越权查询他人订单   |
+| 风险点             | 措施                                                        |
+| ------------------ | ----------------------------------------------------------- |
+| 机构码防暴力       | 24h 失败 5 次冻结 30min，按 openId 计次，记录至 Redis       |
+| JWT 安全           | access token 有效期 15min，refresh token 7天；revoke 时写库 |
+| 支付宝回调验签     | alipay-sdk-nodejs 强制校验支付宝公钥签名，不可绕过          |
+| 视频防盗链         | 播放地址服务端签名，有效期 1h，不允许前端缓存（Iter 2）     |
+| 核身 certifyId     | 后端初始化后立即存库，confirm 时校验所属 studentId，防篡改  |
+| 实名信息           | 接口层脱敏日志，certifyId 关联支付宝核身结果，不本地存身份证号 |
+| 接口访问控制       | 所有学员数据接口强制 studentId 范围，禁止越权查询他人订单   |
 
 ---
 
@@ -1298,8 +1278,8 @@ apps/mp-student/
 
 | 链路         | 埋点/日志                                           | 说明                        |
 | ------------ | --------------------------------------------------- | --------------------------- |
-| 注册转化漏斗 | 进入注册页 → 机构码校验成功 → 获取验证码 → 注册成功 | 前端打点                    |
-| 登录方式分布 | 密码登录 / 验证码登录 / 支付宝登录 各自上报         | 前端打点                    |
+| 注册转化漏斗 | 进入引导页 → 机构码校验成功 → 手机号授权 → 注册成功 | 前端打点                    |
+| 登录方式分布 | 静默登录成功 / 静默登录失败跳注册 各自上报           | 前端打点                    |
 | 错误码频率   | 每个业务错误码上报计数                              | 后端 Interceptor + 监控系统 |
 | 关键操作审计 | 实名认证、创建订单、签约、打卡 写入 AuditLog 表     | 后端                        |
 | 接口延迟监控 | P95 ≤ 500ms 告警                                    | 后端 Prometheus / 日志系统  |

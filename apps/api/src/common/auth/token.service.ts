@@ -24,6 +24,7 @@ type TokenPairInput = {
     adminUserId?: string;
     insitutionUserId?: string;
     salesmanId?: string;
+    studentId?: string;
   };
 };
 
@@ -134,7 +135,9 @@ export class TokenService {
         ? { adminUserId: payload.sub }
         : role === "INSITUTION_ADMIN"
           ? { insitutionUserId: payload.sub }
-          : { salesmanId: payload.sub };
+          : role === "STUDENT"
+            ? { studentId: payload.sub }
+            : { salesmanId: payload.sub };
 
     const nextPair = await this.issueTokenPair({
       userId: payload.sub,

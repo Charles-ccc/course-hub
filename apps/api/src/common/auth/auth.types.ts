@@ -1,4 +1,4 @@
-export type AppRole = "PLATFORM_ADMIN" | "INSITUTION_ADMIN" | "STAFF";
+export type AppRole = "PLATFORM_ADMIN" | "INSITUTION_ADMIN" | "STAFF" | "STUDENT";
 
 export interface AuthenticatedUser {
   token: string;

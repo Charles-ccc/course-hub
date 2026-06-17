@@ -7,22 +7,22 @@
 ## 模块 1：工程骨架 & 网络层
 
 ### 后端
-- [ ] DB 全量迁移（OrgCode / Student / RefreshToken / RealnameRecord / CourseVideo / Course / Order 表变更）
-- [ ] AppRole 新增 STUDENT，TokenService 扩展 refreshOwner 映射
-- [ ] StudentAuthController 骨架注册（路由占位）
-- [ ] `POST /auth/sms/send` 可用，dev 环境验证码写入日志（不发真实短信）
+- [x] DB 全量迁移（OrgCode / Student / RefreshToken / RealnameRecord / CourseVideo / Course / Order 表变更）
+- [x] AppRole 新增 STUDENT，TokenService 扩展 refreshOwner 映射
+- [x] StudentAuthController 骨架注册（路由占位）
+- [x] `POST /auth/alipay/login` 骨架可用，dev 环境日志输出 openId（authCode 换取）
 
 ### 前端
-- [ ] 初始化 `apps/mp-student` 工程（app.js / app.json / app.acss / mini.project.json）
-- [ ] `mini.project.json` 填入 AppID `2021006157643188`
-- [ ] `app.json` 配置 12 个页面路由与 3 Tab TabBar
-- [ ] `services/request.js` 封装（baseURL / Authorization 头 / 统一错误解析 / 401 刷新重试）
-- [ ] `app.js` onLaunch：归因参数捕获 + 静默登录框架
-- [ ] 所有页面创建空白骨架文件，IDE 路由无报错
+- [x] 初始化 `apps/mp-student` 工程（app.js / app.json / app.acss / mini.project.json）
+- [x] `mini.project.json` 填入 AppID `2021006157643188`
+- [x] `app.json` 配置 10 个页面路由与 3 Tab TabBar
+- [x] `services/request.js` 封装（baseURL / Authorization 头 / 统一错误解析 / 401 刷新重试）
+- [x] `app.js` onLaunch：归因参数捕获 + 静默登录框架
+- [x] 所有页面创建空白骨架文件，IDE 路由无报错
 
 ### 测试卡点
 - [ ] 支付宝 IDE 可正常打开，TabBar 三个 Tab 切换无报错
-- [ ] 前端调 `POST /auth/sms/send` 返回 200，后端日志可见验证码
+- [ ] `app.js` onLaunch 静默登录调用 `POST /auth/alipay/login` 返回 200，后端日志可见 openId
 
 ---
 
@@ -93,7 +93,7 @@
 
 ### 后端
 - [ ] `POST /orders`（RealnameGuard 拦截 + UNDERAGE / PRICE_LIMIT 错误处理）
-- [ ] `POST /orders/:orderId/sign/fadadada` → 返回 501（占位）
+- [ ] `POST /orders/:orderId/sign/initialize` → 返回 501（占位）
 
 ### 前端
 - [ ] 下单确认页（课程名 / 付款方式说明 / 确认按钮）
@@ -152,7 +152,7 @@
 - [ ] 个人中心页（头像首字 / 真实姓名 / 手机号 / 实名状态徽标）
 - [ ] 未实名时展示「完成实名认证」橙色菜单项，点击跳转实名页
 - [ ] 「我的课程」菜单项跳转订单列表页
-- [ ] 退出登录（清空 token + registeredPhone，跳首页 Tab）
+- [ ] 退出登录（清空本地 token，跳首页 Tab，重新触发静默登录）
 - [ ] 未登录态展示「去登录」提示，不展示个人信息
 
 ### 测试卡点

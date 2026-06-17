@@ -1,0 +1,39 @@
+{
+  "pages": [
+    "pages/index/index/index",
+    "pages/learning/index/index",
+    "pages/profile/index/index",
+    "pages/guide/index/index",
+    "pages/auth/register/index",
+    "pages/auth/realname/index",
+    "pages/course/detail/index",
+    "pages/order/confirm/index",
+    "pages/order/list/index",
+    "pages/order/detail/index"
+  ],
+  "window": {
+    "defaultTitle": "欢乐学",
+    "titleBarColor": "#FFFFFF",
+    "backgroundColor": "#F5F5F5"
+  },
+  "tabBar": {
+    "textColor": "#999999",
+    "selectedColor": "#FF6B00",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "items": [
+      {
+        "pagePath": "pages/index/index/index",
+        "name": "发现"
+      },
+      {
+        "pagePath": "pages/learning/index/index",
+        "name": "学习"
+      },
+      {
+        "pagePath": "pages/profile/index/index",
+        "name": "我的"
+      }
+    ]
+  }
+}
