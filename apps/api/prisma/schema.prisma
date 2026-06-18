@@ -395,16 +395,16 @@ model ApiAuditLog {
   id           String   @id
   requestId    String
   method       String
-  path         String
+  path         String   @db.VarChar(512)
   ip           String
-  userAgent    String
+  userAgent    String   @db.VarChar(512)
   status       Int
   latencyMs    Int
   success      Boolean
   userId       String?
   role         String?
   errorName    String?
-  errorMessage String?
+  errorMessage String?  @db.VarChar(1024)
   createdAt    DateTime @default(now())
 
   @@index([createdAt])
