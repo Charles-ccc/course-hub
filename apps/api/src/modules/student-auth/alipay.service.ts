@@ -100,17 +100,23 @@ export class AlipayService {
     // outer_order_no: alphanumeric only, no hyphens
     const outerOrderNo = `realname${studentId.replace(/-/g, "")}${Date.now()}`;
 
+    const bizContent = {
+      outer_order_no: outerOrderNo,
+      biz_code: "SMART_FACE",
+      identity_param: {
+        identity_type: "CERT_INFO",
+        cert_type: "IDENTITY_CARD",
+      },
+    };
+    this.logger.log(
+      JSON.stringify({ event: "alipay_certify_init_request", bizContent }),
+    );
+
     let initResult: Record<string, unknown>;
     try {
       initResult = (await this.sdk.exec(
         "alipay.user.certify.open.initialize",
-        {
-          bizContent: {
-            outer_order_no: outerOrderNo,
-            biz_code: "SMART_FACE",
-            identity_param: { identity_type: "CERT_INFO" },
-          },
-        },
+        { bizContent },
       )) as Record<string, unknown>;
     } catch (err) {
       const subCode = (err as Record<string, unknown>)?.subCode as
@@ -126,8 +132,15 @@ export class AlipayService {
         );
         return { certifyId: `dev-cert-${studentId}`, certifyUrl: "" };
       }
+      this.logger.error(
+        JSON.stringify({ event: "alipay_certify_init_error", err }),
+      );
       throw new Error(`certify initialize failed: ${JSON.stringify(err)}`);
     }
+
+    this.logger.log(
+      JSON.stringify({ event: "alipay_certify_init_response", initResult }),
+    );
 
     const subCode = initResult.subCode as string | undefined;
     if (subCode === "isv.illegal-client-ip" && !this.isProduction) {
