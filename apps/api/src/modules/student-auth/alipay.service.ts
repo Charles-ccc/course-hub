@@ -97,7 +97,8 @@ export class AlipayService {
       throw new Error("AlipaySDK not configured");
     }
 
-    const outerOrderNo = `realname-${studentId}-${Date.now()}`;
+    // outer_order_no: alphanumeric only, no hyphens
+    const outerOrderNo = `realname${studentId.replace(/-/g, "")}${Date.now()}`;
 
     let initResult: Record<string, unknown>;
     try {
@@ -105,9 +106,9 @@ export class AlipayService {
         "alipay.user.certify.open.initialize",
         {
           bizContent: {
-            outerOrderNo,
-            bizCode: "SMART_FACE",
-            identityParam: { identityType: "CERT_INFO" },
+            outer_order_no: outerOrderNo,
+            biz_code: "SMART_FACE",
+            identity_param: { identity_type: "CERT_INFO" },
           },
         },
       )) as Record<string, unknown>;
@@ -149,7 +150,7 @@ export class AlipayService {
 
     const certifyResult = await this.sdk.exec(
       "alipay.user.certify.open.certify",
-      { bizContent: { certifyId } },
+      { bizContent: { certify_id: certifyId } },
     );
     const certifyUrl = (certifyResult as Record<string, unknown>)
       .certifyUrl as string;
@@ -182,7 +183,7 @@ export class AlipayService {
     let resp: Record<string, unknown>;
     try {
       resp = (await this.sdk.exec("alipay.user.certify.open.query", {
-        bizContent: { certifyId },
+        bizContent: { certify_id: certifyId },
       })) as Record<string, unknown>;
     } catch (err) {
       const subCode = (err as Record<string, unknown>)?.subCode as
