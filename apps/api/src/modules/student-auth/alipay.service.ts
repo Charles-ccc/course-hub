@@ -103,10 +103,10 @@ export class AlipayService {
     const bizContent = {
       outer_order_no: outerOrderNo,
       biz_code: "SMART_FACE",
-      identity_param: JSON.stringify({
+      identity_param: {
         identity_type: "CERT_INFO",
         cert_type: "IDENTITY_CARD",
-      }),
+      },
     };
     this.logger.log(
       JSON.stringify({ event: "alipay_certify_init_request", bizContent }),
@@ -161,14 +161,8 @@ export class AlipayService {
       );
     }
 
-    const certifyResult = await this.sdk.exec(
-      "alipay.user.certify.open.certify",
-      { bizContent: { certify_id: certifyId } },
-    );
-    const certifyUrl = (certifyResult as Record<string, unknown>)
-      .certifyUrl as string;
-
-    return { certifyId, certifyUrl };
+    // 小程序-生物核身流程：前端用 my.startAPVerify(certifyId)，不需要 certifyUrl
+    return { certifyId, certifyUrl: "" };
   }
 
   async queryCertify(

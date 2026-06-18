@@ -15,13 +15,6 @@ Page({
     this.setData({ status });
   },
 
-  onShow() {
-    // 从支付宝认证页面返回时触发
-    if (this._certifyId && this.data.certifying) {
-      this._doConfirm();
-    }
-  },
-
   onStartCertify() {
     if (this.data.certifying) return;
     this.setData({ certifying: true });
@@ -30,18 +23,16 @@ Page({
       .then((res) => {
         this._certifyId = res.certifyId;
 
-        if (!res.certifyUrl) {
-          // dev 模式：无真实认证 URL，直接调 confirm（SDK 会返回 mock 数据）
-          this._doConfirm();
-          return;
-        }
-
-        // 跳转到支付宝实名认证页，完成后 onShow 回调
-        my.ap.navigateToAlipayPage({
-          url: res.certifyUrl,
-          fail: () => {
-            // 无法跳转时直接 confirm（可能是沙箱限制）
+        // 小程序-生物核身：使用 my.startAPVerify JSAPI
+        my.startAPVerify({
+          certifyId: res.certifyId,
+          success: () => {
             this._doConfirm();
+          },
+          fail: (err) => {
+            this.setData({ certifying: false });
+            const msg = (err && (err.errorMessage || err.error)) || '认证失败，请重试';
+            my.showToast({ content: String(msg), type: 'fail' });
           },
         });
       })
