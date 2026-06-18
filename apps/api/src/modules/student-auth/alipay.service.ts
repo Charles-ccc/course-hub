@@ -103,10 +103,10 @@ export class AlipayService {
     const bizContent = {
       outer_order_no: outerOrderNo,
       biz_code: "SMART_FACE",
-      identity_param: {
+      identity_param: JSON.stringify({
         identity_type: "CERT_INFO",
         cert_type: "IDENTITY_CARD",
-      },
+      }),
     };
     this.logger.log(
       JSON.stringify({ event: "alipay_certify_init_request", bizContent }),
