@@ -87,10 +87,6 @@ Page({
       });
   },
 
-  onSkip() {
-    my.switchTab({ url: '/pages/index/index/index' });
-  },
-
   onGoHome() {
     my.switchTab({ url: '/pages/index/index/index' });
   },

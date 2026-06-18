@@ -24,7 +24,11 @@ Page({
                 phone: res.phone,
                 realnameStatus: res.realnameStatus,
               };
-              my.switchTab({ url: '/pages/index/index/index' });
+              if (res.realnameStatus !== 'VERIFIED') {
+                my.redirectTo({ url: '/pages/auth/realname/index' });
+              } else {
+                my.switchTab({ url: '/pages/index/index/index' });
+              }
             }
           })
           .catch(() => {

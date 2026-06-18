@@ -57,7 +57,6 @@
         loading="{{ certifying }}"
         disabled="{{ certifying }}"
       >{{ status === 'REJECTED' ? '重新认证' : '开始认证' }}</button>
-      <text class="skip-link" onTap="onSkip">暂时跳过，稍后认证</text>
     </view>
   </block>
 

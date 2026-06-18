@@ -169,9 +169,3 @@
 .btn-primary[disabled] {
   opacity: 0.6;
 }
-
-.skip-link {
-  font-size: 28rpx;
-  color: #aaa;
-  text-decoration: underline;
-}
