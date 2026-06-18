@@ -1,14 +1,5 @@
--- Add RealnameRecord table and Student.name column if not present
+-- Create RealnameRecord table for realname certification results
 
--- Add name column to Student (nullable, for realname certification result)
-ALTER TABLE `Student`
-  ADD COLUMN IF NOT EXISTS `name` VARCHAR(191) NULL;
-
--- Add realnameStatus column to Student if not present
-ALTER TABLE `Student`
-  ADD COLUMN IF NOT EXISTS `realnameStatus` ENUM('UNVERIFIED','VERIFIED','REJECTED') NOT NULL DEFAULT 'UNVERIFIED';
-
--- Create RealnameRecord table
 CREATE TABLE IF NOT EXISTS `RealnameRecord` (
   `id`         VARCHAR(191) NOT NULL,
   `studentId`  VARCHAR(191) NOT NULL,
