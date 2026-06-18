@@ -6,7 +6,7 @@
     "dev": "pnpm build && concurrently -k -n TSC,API -c yellow,cyan \"pnpm:dev:build\" \"pnpm:dev:start\"",
     "dev:build": "tsc -w -p tsconfig.build.json --preserveWatchOutput",
     "dev:start": "node --watch dist/main.js",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "rm -f tsconfig.build.tsbuildinfo tsconfig.tsbuildinfo && tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\"",
     "test": "tsx --test src/**/*.test.ts",
@@ -14,6 +14,7 @@
     "db:rename:insitution": "prisma db execute --schema prisma/schema.prisma --file prisma/rename-to-insitution.sql",
     "db:add:staff": "prisma db execute --schema prisma/schema.prisma --file prisma/add-staff.sql",
     "db:add:audit": "prisma db execute --schema prisma/schema.prisma --file prisma/add-audit-log.sql",
+    "db:add:realname": "prisma db execute --schema prisma/schema.prisma --file prisma/add-realname-record.sql",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts"
   },
