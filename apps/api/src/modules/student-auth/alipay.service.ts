@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { createDecipheriv } from "node:crypto";
+import { createDecipheriv, randomUUID } from "node:crypto";
 import { AlipaySdk } from "alipay-sdk";
 
 @Injectable()
@@ -97,8 +97,8 @@ export class AlipayService {
       throw new Error("AlipaySDK not configured");
     }
 
-    // outer_order_no: alphanumeric only, no hyphens
-    const outerOrderNo = `realname${studentId.replace(/-/g, "")}${Date.now()}`;
+    // outer_order_no: alphanumeric only, max 32 chars per Alipay spec
+    const outerOrderNo = randomUUID().replace(/-/g, "");
 
     const bizContent = {
       outer_order_no: outerOrderNo,
