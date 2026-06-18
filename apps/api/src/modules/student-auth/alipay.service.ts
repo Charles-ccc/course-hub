@@ -108,7 +108,6 @@ export class AlipayService {
             outerOrderNo,
             bizCode: "SMART_FACE",
             identityParam: { identityType: "CERT_INFO" },
-            merchantConfig: { returnUrl: "" },
           },
         },
       )) as Record<string, unknown>;
