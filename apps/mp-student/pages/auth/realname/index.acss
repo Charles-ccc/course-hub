@@ -1,2 +1,177 @@
-.page-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-.placeholder-text { color: #999; font-size: 28rpx; }
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 40rpx 80rpx;
+  box-sizing: border-box;
+}
+
+/* 已认证 */
+.verified-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 120rpx;
+}
+.check-circle {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 70rpx;
+  background: #52c41a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+.check-icon {
+  font-size: 72rpx;
+  color: #fff;
+  font-weight: bold;
+}
+.verified-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16rpx;
+}
+.verified-sub {
+  font-size: 28rpx;
+  color: #888;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 60rpx;
+}
+
+/* 未认证头部 */
+.header-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 48rpx;
+}
+.shield-icon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 24rpx;
+  background: #ff6b00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28rpx;
+}
+.shield-text {
+  font-size: 52rpx;
+  color: #fff;
+  font-weight: bold;
+}
+.page-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 12rpx;
+}
+.page-sub {
+  font-size: 28rpx;
+  color: #888;
+  text-align: center;
+}
+
+/* 步骤卡片 */
+.steps-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 8rpx 32rpx;
+  box-sizing: border-box;
+  margin-bottom: 40rpx;
+}
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.step-item:last-child {
+  border-bottom: none;
+}
+.step-no {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  background: #ff6b00;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+  margin-top: 4rpx;
+}
+.step-content {
+  flex: 1;
+}
+.step-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 6rpx;
+}
+.step-desc {
+  font-size: 26rpx;
+  color: #888;
+  display: block;
+}
+
+/* 认证失败提示 */
+.rejected-tip {
+  width: 100%;
+  background: #fff2f0;
+  border: 1rpx solid #ffccc7;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  box-sizing: border-box;
+  margin-bottom: 24rpx;
+}
+.rejected-text {
+  font-size: 28rpx;
+  color: #cf1322;
+}
+
+/* 操作区 */
+.action-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8rpx;
+}
+
+/* 通用按钮 */
+.btn-primary {
+  width: 100%;
+  height: 96rpx;
+  background: #ff6b00;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 36rpx;
+}
+.btn-primary[disabled] {
+  opacity: 0.6;
+}
+
+.skip-link {
+  font-size: 28rpx;
+  color: #aaa;
+  text-decoration: underline;
+}

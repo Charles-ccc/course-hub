@@ -80,6 +80,153 @@ export class AlipayService {
     return openId;
   }
 
+  async initializeCertify(
+    studentId: string,
+  ): Promise<{ certifyId: string; certifyUrl: string }> {
+    if (!this.sdk) {
+      if (!this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({
+            event: "alipay_certify_init_mocked",
+            reason: "sdk_not_configured",
+            studentId,
+          }),
+        );
+        return { certifyId: `dev-cert-${studentId}`, certifyUrl: "" };
+      }
+      throw new Error("AlipaySDK not configured");
+    }
+
+    const outerOrderNo = `realname-${studentId}-${Date.now()}`;
+
+    let initResult: Record<string, unknown>;
+    try {
+      initResult = (await this.sdk.exec(
+        "alipay.user.certify.open.initialize",
+        {
+          bizContent: {
+            outerOrderNo,
+            bizCode: "SMART_FACE",
+            identityParam: { identityType: "CERT_INFO" },
+            merchantConfig: { returnUrl: "" },
+          },
+        },
+      )) as Record<string, unknown>;
+    } catch (err) {
+      const subCode = (err as Record<string, unknown>)?.subCode as
+        | string
+        | undefined;
+      if (subCode === "isv.illegal-client-ip" && !this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({
+            event: "alipay_certify_init_mocked",
+            reason: "illegal_client_ip",
+            studentId,
+          }),
+        );
+        return { certifyId: `dev-cert-${studentId}`, certifyUrl: "" };
+      }
+      throw new Error(`certify initialize failed: ${JSON.stringify(err)}`);
+    }
+
+    const subCode = initResult.subCode as string | undefined;
+    if (subCode === "isv.illegal-client-ip" && !this.isProduction) {
+      this.logger.warn(
+        JSON.stringify({
+          event: "alipay_certify_init_mocked",
+          reason: "illegal_client_ip",
+          studentId,
+        }),
+      );
+      return { certifyId: `dev-cert-${studentId}`, certifyUrl: "" };
+    }
+
+    const certifyId = initResult.certifyId as string | undefined;
+    if (!certifyId) {
+      throw new Error(
+        `certify initialize failed: ${JSON.stringify(initResult)}`,
+      );
+    }
+
+    const certifyResult = await this.sdk.exec(
+      "alipay.user.certify.open.certify",
+      { bizContent: { certifyId } },
+    );
+    const certifyUrl = (certifyResult as Record<string, unknown>)
+      .certifyUrl as string;
+
+    return { certifyId, certifyUrl };
+  }
+
+  async queryCertify(
+    certifyId: string,
+  ): Promise<{ passed: boolean; name?: string; certNo?: string }> {
+    if (!this.sdk) {
+      if (!this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({
+            event: "alipay_certify_query_mocked",
+            reason: "sdk_not_configured",
+            certifyId,
+          }),
+        );
+        // 模拟成功：1990-01-01 出生，年龄 35 ≥ 18
+        return {
+          passed: true,
+          name: "测试用户",
+          certNo: "310101199001010010",
+        };
+      }
+      throw new Error("AlipaySDK not configured");
+    }
+
+    let resp: Record<string, unknown>;
+    try {
+      resp = (await this.sdk.exec("alipay.user.certify.open.query", {
+        bizContent: { certifyId },
+      })) as Record<string, unknown>;
+    } catch (err) {
+      const subCode = (err as Record<string, unknown>)?.subCode as
+        | string
+        | undefined;
+      if (subCode === "isv.illegal-client-ip" && !this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({
+            event: "alipay_certify_query_mocked",
+            reason: "illegal_client_ip",
+            certifyId,
+          }),
+        );
+        return { passed: true, name: "测试用户", certNo: "310101199001010010" };
+      }
+      throw err;
+    }
+
+    if (
+      (resp.subCode as string | undefined) === "isv.illegal-client-ip" &&
+      !this.isProduction
+    ) {
+      return { passed: true, name: "测试用户", certNo: "310101199001010010" };
+    }
+
+    const passed = resp.passed === "T";
+
+    if (!passed) return { passed: false };
+
+    const identityInfoStr = resp.identityInfo as string | undefined;
+    if (!identityInfoStr) return { passed: true };
+
+    try {
+      const info = JSON.parse(identityInfoStr) as {
+        name?: string;
+        cert_no?: string;
+      };
+      return { passed: true, name: info.name, certNo: info.cert_no };
+    } catch {
+      return { passed: true };
+    }
+  }
+
   decryptPhone(encryptedData: string, iv?: string): string {
     // 尝试直接 JSON 解析（开放平台未开启「接口内容加密」时，response 是明文 JSON）
     try {

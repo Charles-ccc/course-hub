@@ -5,6 +5,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { InsitutionModule } from "./modules/insitution/insitution.module";
 import { StaffModule } from "./modules/staff/staff.module";
 import { StudentAuthModule } from "./modules/student-auth/student-auth.module";
+import { StudentModule } from "./modules/student/student.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 @Module({
@@ -15,6 +16,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     InsitutionModule,
     StaffModule,
     StudentAuthModule,
+    StudentModule,
   ],
   providers: [RequestAuditInterceptor],
 })

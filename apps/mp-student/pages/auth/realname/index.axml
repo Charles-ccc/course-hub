@@ -1,3 +1,64 @@
-<view class="page-container">
-  <view class="placeholder-text">实名认证（模块 3 实现）</view>
+<view class="page">
+
+  <!-- 已认证状态 -->
+  <block a:if="{{ status === 'VERIFIED' }}">
+    <view class="verified-box">
+      <view class="check-circle">
+        <text class="check-icon">✓</text>
+      </view>
+      <text class="verified-title">实名认证已完成</text>
+      <text class="verified-sub">您的身份已通过核验，可正常使用全部功能</text>
+      <button class="btn-primary" onTap="onGoHome">进入首页</button>
+    </view>
+  </block>
+
+  <!-- 未认证 / 认证失败状态 -->
+  <block a:else>
+    <view class="header-area">
+      <view class="shield-icon">
+        <text class="shield-text">盾</text>
+      </view>
+      <text class="page-title">实名认证</text>
+      <text class="page-sub">为保障您的学习权益，需完成实名认证</text>
+    </view>
+
+    <view class="steps-card">
+      <view class="step-item">
+        <view class="step-no">1</view>
+        <view class="step-content">
+          <text class="step-title">准备身份证</text>
+          <text class="step-desc">使用本人有效的居民身份证</text>
+        </view>
+      </view>
+      <view class="step-item">
+        <view class="step-no">2</view>
+        <view class="step-content">
+          <text class="step-title">支付宝人脸识别</text>
+          <text class="step-desc">在支付宝完成真人认证，安全可靠</text>
+        </view>
+      </view>
+      <view class="step-item">
+        <view class="step-no">3</view>
+        <view class="step-content">
+          <text class="step-title">认证完成</text>
+          <text class="step-desc">认证通过后即可正常报名和学习</text>
+        </view>
+      </view>
+    </view>
+
+    <view a:if="{{ status === 'REJECTED' }}" class="rejected-tip">
+      <text class="rejected-text">上次认证未通过，请重新提交</text>
+    </view>
+
+    <view class="action-area">
+      <button
+        class="btn-primary"
+        onTap="onStartCertify"
+        loading="{{ certifying }}"
+        disabled="{{ certifying }}"
+      >{{ status === 'REJECTED' ? '重新认证' : '开始认证' }}</button>
+      <text class="skip-link" onTap="onSkip">暂时跳过，稍后认证</text>
+    </view>
+  </block>
+
 </view>
