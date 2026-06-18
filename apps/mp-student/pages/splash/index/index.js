@@ -12,9 +12,11 @@ Page({
           noAuth: true,
         })
           .then((res) => {
-            if (res.needRegister) {
+            if (res.needRegister || res.realnameStatus !== 'VERIFIED') {
+              // 新用户 或 已注册但未完成实名 → 走完整注册流程
               my.redirectTo({ url: '/pages/guide/index/index' });
             } else {
+              // 已注册 + 已认证 → 直接进首页
               saveTokens(res.accessToken, res.refreshToken);
               const app = getApp();
               app.globalData.accessToken = res.accessToken;
@@ -24,11 +26,7 @@ Page({
                 phone: res.phone,
                 realnameStatus: res.realnameStatus,
               };
-              if (res.realnameStatus !== 'VERIFIED') {
-                my.redirectTo({ url: '/pages/auth/realname/index' });
-              } else {
-                my.switchTab({ url: '/pages/index/index/index' });
-              }
+              my.switchTab({ url: '/pages/index/index/index' });
             }
           })
           .catch(() => {
