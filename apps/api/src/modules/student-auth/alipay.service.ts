@@ -102,7 +102,7 @@ export class AlipayService {
 
     const bizContent = {
       outer_order_no: outerOrderNo,
-      biz_code: "SMART_FACE",
+      biz_code: "FACE_ALIPAY_SDK",
     };
     this.logger.log(
       JSON.stringify({ event: "alipay_certify_init_request", bizContent }),
