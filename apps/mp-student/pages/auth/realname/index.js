@@ -4,6 +4,8 @@ Page({
   data: {
     status: 'UNVERIFIED', // UNVERIFIED | VERIFIED | REJECTED
     certifying: false,
+    name: '',
+    idCardNo: '',
   },
 
   _certifyId: null,
@@ -15,25 +17,48 @@ Page({
     this.setData({ status });
   },
 
+  onNameInput(e) {
+    this.setData({ name: (e.detail.value || '').trim() });
+  },
+
+  onIdCardInput(e) {
+    this.setData({ idCardNo: (e.detail.value || '').trim().toUpperCase() });
+  },
+
   onStartCertify() {
     if (this.data.certifying) return;
+
+    const { name, idCardNo } = this.data;
+    if (!name) {
+      my.showToast({ content: '请输入姓名', type: 'fail' });
+      return;
+    }
+    if (!/^\d{17}[\dX]$/.test(idCardNo)) {
+      my.showToast({ content: '请输入正确的18位身份证号', type: 'fail' });
+      return;
+    }
+
     this.setData({ certifying: true });
 
-    request({ url: '/users/realname/initialize', method: 'POST' })
+    request({
+      url: '/users/realname/initialize',
+      method: 'POST',
+      data: { name, idCardNo },
+    })
       .then((res) => {
         this._certifyId = res.certifyId;
+        const certifyUrl = res.certifyUrl || '';
+        this.setData({ certifying: false });
 
-        // 小程序-生物核身：使用 my.startAPVerify JSAPI
-        my.startAPVerify({
-          certifyId: res.certifyId,
-          success: () => {
-            this._doConfirm();
-          },
-          fail: (err) => {
-            this.setData({ certifying: false });
-            const msg = (err && (err.errorMessage || err.error)) || '认证失败，请重试';
-            my.showToast({ content: String(msg), type: 'fail' });
-          },
+        if (!certifyUrl) {
+          my.showToast({ content: '认证地址缺失', type: 'fail' });
+          return;
+        }
+
+        my.navigateTo({
+          url: '/pages/auth/realname-webview/index?url=' +
+            encodeURIComponent(certifyUrl) +
+            '&certifyId=' + encodeURIComponent(res.certifyId),
         });
       })
       .catch((err) => {

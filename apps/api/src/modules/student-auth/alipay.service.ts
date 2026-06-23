@@ -82,6 +82,8 @@ export class AlipayService {
 
   async initializeCertify(
     studentId: string,
+    certName: string,
+    certNo: string,
   ): Promise<{ certifyId: string; certifyUrl: string }> {
     if (!this.sdk) {
       if (!this.isProduction) {
@@ -100,34 +102,33 @@ export class AlipayService {
     // outer_order_no: alphanumeric only, max 32 chars per Alipay spec
     const outerOrderNo = randomUUID().replace(/-/g, "");
 
+    // 「人脸认证」datadigital.fincloud.generalsaas.face.certify.*
+    // 实测可用：对象格式 identity_param + merchant_config
     const bizContent = {
       outer_order_no: outerOrderNo,
-      biz_code: "FACE_ALIPAY_SDK",
+      biz_code: "FACE",
+      identity_param: {
+        identity_type: "CERT_INFO",
+        cert_type: "IDENTITY_CARD",
+        cert_name: certName,
+        cert_no: certNo,
+      },
+      merchant_config: {
+        return_url: "https://api.happymaa.cn/api/v1/users/realname/callback",
+      },
     };
     this.logger.log(
       JSON.stringify({ event: "alipay_certify_init_request", bizContent }),
     );
 
+    // Step 1: initialize → certify_id
     let initResult: Record<string, unknown>;
     try {
       initResult = (await this.sdk.exec(
-        "alipay.user.certify.open.initialize",
+        "datadigital.fincloud.generalsaas.face.certify.initialize",
         { bizContent },
       )) as Record<string, unknown>;
     } catch (err) {
-      const subCode = (err as Record<string, unknown>)?.subCode as
-        | string
-        | undefined;
-      if (subCode === "isv.illegal-client-ip" && !this.isProduction) {
-        this.logger.warn(
-          JSON.stringify({
-            event: "alipay_certify_init_mocked",
-            reason: "illegal_client_ip",
-            studentId,
-          }),
-        );
-        return { certifyId: `dev-cert-${studentId}`, certifyUrl: "" };
-      }
       this.logger.error(
         JSON.stringify({ event: "alipay_certify_init_error", err }),
       );
@@ -138,18 +139,6 @@ export class AlipayService {
       JSON.stringify({ event: "alipay_certify_init_response", initResult }),
     );
 
-    const subCode = initResult.subCode as string | undefined;
-    if (subCode === "isv.illegal-client-ip" && !this.isProduction) {
-      this.logger.warn(
-        JSON.stringify({
-          event: "alipay_certify_init_mocked",
-          reason: "illegal_client_ip",
-          studentId,
-        }),
-      );
-      return { certifyId: `dev-cert-${studentId}`, certifyUrl: "" };
-    }
-
     const certifyId = initResult.certifyId as string | undefined;
     if (!certifyId) {
       throw new Error(
@@ -157,8 +146,35 @@ export class AlipayService {
       );
     }
 
-    // 小程序-生物核身流程：前端用 my.startAPVerify(certifyId)，不需要 certifyUrl
-    return { certifyId, certifyUrl: "" };
+    // Step 2: verify → 拿 web-view 加载的 H5 url
+    let urlResult: Record<string, unknown>;
+    try {
+      urlResult = (await this.sdk.exec(
+        "datadigital.fincloud.generalsaas.face.certify.verify",
+        { bizContent: { certify_id: certifyId } },
+      )) as Record<string, unknown>;
+    } catch (err) {
+      this.logger.error(
+        JSON.stringify({
+          event: "alipay_certify_url_error",
+          certifyId,
+          err,
+        }),
+      );
+      throw new Error(`certify get-url failed: ${JSON.stringify(err)}`);
+    }
+
+    this.logger.log(
+      JSON.stringify({ event: "alipay_certify_url_response", urlResult }),
+    );
+
+    const certifyUrl = (
+      (urlResult.certifyUrl ??
+        urlResult.url ??
+        urlResult.pageUrl) as string | undefined
+    ) ?? "";
+
+    return { certifyId, certifyUrl };
   }
 
   async queryCertify(
@@ -185,9 +201,10 @@ export class AlipayService {
 
     let resp: Record<string, unknown>;
     try {
-      resp = (await this.sdk.exec("alipay.user.certify.open.query", {
-        bizContent: { certify_id: certifyId },
-      })) as Record<string, unknown>;
+      resp = (await this.sdk.exec(
+        "datadigital.fincloud.generalsaas.face.certify.query",
+        { bizContent: { certify_id: certifyId } },
+      )) as Record<string, unknown>;
     } catch (err) {
       const subCode = (err as Record<string, unknown>)?.subCode as
         | string
@@ -204,6 +221,10 @@ export class AlipayService {
       }
       throw err;
     }
+
+    this.logger.log(
+      JSON.stringify({ event: "alipay_certify_query_response", resp }),
+    );
 
     if (
       (resp.subCode as string | undefined) === "isv.illegal-client-ip" &&

@@ -8,6 +8,6 @@ const config = {
   },
 };
 
-const env = "dev";
+const env = "prod";
 
 module.exports = config[env];

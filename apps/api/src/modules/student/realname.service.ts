@@ -16,7 +16,11 @@ export class RealnameService {
     private readonly alipayService: AlipayService,
   ) {}
 
-  async initialize(studentId: string): Promise<RealnameInitRespDto> {
+  async initialize(
+    studentId: string,
+    name: string,
+    idCardNo: string,
+  ): Promise<RealnameInitRespDto> {
     const student = await this.prisma.student.findUniqueOrThrow({
       where: { id: studentId },
     });
@@ -25,8 +29,17 @@ export class RealnameService {
       throw new ApiBusinessException(40031, "您已完成实名认证，无需重复提交", 400);
     }
 
+    // 临时开关：跳过 Alipay 实人核身，直接返回 mock certifyId
+    if (process.env.REALNAME_BYPASS === "1") {
+      const certifyId = `bypass-${studentId}-${Date.now()}`;
+      this.logger.warn(
+        JSON.stringify({ event: "realname_bypass", studentId, certifyId }),
+      );
+      return { certifyId, certifyUrl: "" };
+    }
+
     const { certifyId, certifyUrl } =
-      await this.alipayService.initializeCertify(studentId);
+      await this.alipayService.initializeCertify(studentId, name, idCardNo);
 
     this.logger.log(
       JSON.stringify({ event: "realname_initialize", studentId, certifyId }),
@@ -45,6 +58,18 @@ export class RealnameService {
 
     if (student.realnameStatus === "VERIFIED") {
       return { realnameStatus: "VERIFIED", name: student.name };
+    }
+
+    // 临时开关：跳过查询，直接放行 bypass certifyId
+    if (process.env.REALNAME_BYPASS === "1" && certifyId.startsWith("bypass-")) {
+      const updated = await this.prisma.student.update({
+        where: { id: studentId },
+        data: { realnameStatus: "VERIFIED" },
+      });
+      this.logger.warn(
+        JSON.stringify({ event: "realname_bypass_verified", studentId }),
+      );
+      return { realnameStatus: "VERIFIED", name: updated.name };
     }
 
     const certifyResult = await this.alipayService.queryCertify(certifyId);

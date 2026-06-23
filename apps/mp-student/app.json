@@ -7,6 +7,7 @@
     "pages/guide/index/index",
     "pages/auth/register/index",
     "pages/auth/realname/index",
+    "pages/auth/realname-webview/index",
     "pages/course/detail/index",
     "pages/order/confirm/index",
     "pages/order/list/index",

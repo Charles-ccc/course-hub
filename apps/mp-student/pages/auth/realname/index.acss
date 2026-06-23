@@ -127,6 +127,36 @@
   display: block;
 }
 
+/* 身份信息表单 */
+.form-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 8rpx 32rpx;
+  box-sizing: border-box;
+  margin-bottom: 24rpx;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.form-row:last-child {
+  border-bottom: none;
+}
+.form-label {
+  width: 160rpx;
+  font-size: 30rpx;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+.form-input {
+  flex: 1;
+  font-size: 30rpx;
+  color: #1a1a1a;
+}
+
 /* 认证失败提示 */
 .rejected-tip {
   width: 100%;
