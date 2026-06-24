@@ -56,48 +56,51 @@
 
 ---
 
-## 模块 3：实名认证
+## 模块 3：实名认证（暂跳过，并入模块 9 一起做）
+
+> **决策（2026-06-24）：** 本 AppID `2021006157643188` 调用 `alipay.user.certify.open.*` 持续返回 UNKNOWN_ERROR（开放平台「配置项检测」全过但 API 路径实际未下发；同样的入参喂给 `datadigital.fincloud.generalsaas.face.certify.*` 可以 `code:10000`）。注册流程不再卡实名，只需业务员码 + 支付宝授权手机号即可注册；实名认证留到模块 9（电子签约）一起用 web-view + datadigital 方案打通。
+>
+> **已落地的占位：** `/users/realname/initialize` `/users/realname/confirm` `/users/realname/callback` 路由已在后端保留；前端 `pages/auth/realname` 和 `pages/auth/realname-webview` 页面已搭好，等模块 9 时直接复用。`REALNAME_BYPASS` 环境变量当前置 0，不影响流程（注册流程已绕开实名）。
 
 ### 后端
 
-- [ ] `POST /users/realname/initialize`：调用 `alipay.user.certify.open.initialize` → `alipay.user.certify.open.certify`，返回 `{ certifyId, certifyUrl }`
-- [ ] `POST /users/realname/confirm`：调用 `alipay.user.certify.open.query`，通过后写入 RealnameRecord，年龄不足拦截
+- [x] ~~实名认证三接口（initialize / confirm / callback）骨架已搭~~
+- [ ] 等模块 9 一起跑通 datadigital + web-view
 
 ### 前端
 
-- [ ] 实名认证页：展示说明文案 + 「开始认证」按钮
-- [ ] 点击后请求 initialize，拿到 `certifyUrl`，通过 `my.ap.navigateToAlipayPage` 或 WebView 跳转
-- [ ] 用户完成（或取消）返回后，调用 confirm 接口确认结果
-- [ ] 三种状态处理：通过（跳首页）/ 未通过（重新认证按钮）/ 用户取消（恢复按钮）
-
-### 测试卡点
-
-- [ ] 点击「开始认证」跳转至支付宝认证页面
-- [ ] 认证通过后跳转首页，个人中心展示「✓ 已实名」
-- [ ] 未成年人认证通过但年龄不满 18 岁，展示拦截提示
-- [ ] 认证失败展示提示，「重新认证」按钮可用
-- [ ] 已认证用户再次进入实名页展示已认证状态，不可重复提交
+- [x] ~~实名认证页 + web-view 兜底页骨架已搭~~
+- [ ] 模块 9 复用
 
 ---
 
 ## 模块 4：课程发现
 
+> **新增范围（2026-06-24）：** 启动方式从「静默登录」改为「显式登录页」，未登录不可进入小程序。`Course` 模型新增 `imageUrl String?` 字段（DB 已迁移），课程卡片预留封面位。分页规约统一为 `page` + `pageSize`，响应 `{ items, page, pageSize, total, hasNext }`，已重构 staff DTO 引用公共 `PageQueryDto` / `PageResult<T>`。
+
 ### 后端
 
-- [ ] `GET /courses`（关键词搜索 + 分页）
-- [ ] `GET /courses/:courseId`（课程详情）
+- [x] `GET /courses`（关键词模糊匹配 name/description + 分页，只返回 status=ONLINE & auditStatus=APPROVED）
+- [x] `GET /courses/:courseId`（课程详情）
+- [x] 公共分页 DTO `apps/api/src/common/dto/page.dto.ts`（PageQueryDto + PageResult + buildPageResult）
+- [x] Course schema 加 `imageUrl String?` 字段并 db push 到生产 + Prisma 客户端重新生成
 
 ### 前端
 
-- [ ] 课程列表页（搜索框 + 分页加载 + 空状态）
-- [ ] 课程卡片组件（名称 / 机构 / 每期价格 / 先学后付徽标）
-- [ ] 课程详情页（大纲 / 分期方案 / 合规声明 / 报名按钮 / 购课须知弹框）
+- [x] 登录页 `pages/auth/login`（去掉静默登录，启动只看本地是否有 token）
+- [x] splash 改路由：有 token → 首页，无 token → 登录页
+- [x] request.js 401 路由改为登录页
+- [x] 注册页注册成功后跳首页（之前跳实名）
+- [x] 课程卡片公共组件 `components/course-card/`（封面占位 + 课程信息 + 先学后付徽标）
+- [x] 首页：搜索框 + 列表 + 触底加载 + 空状态 + 下拉刷新
+- [x] 课程详情页：封面 + 课程信息 + 大纲 + 合规声明 + 付款方式单选 + 试学/报名按钮 + 购课须知 Modal
 
 ### 测试卡点
 
-- [ ] 未登录时可浏览列表，点击课程卡片跳转登录页
-- [ ] 登录后可进入课程详情，首次点击「立即报名」弹购课须知
-- [ ] 关键词搜索结果正确，无结果时展示空状态
+- [ ] 启动小程序：无 token → 显示登录页；点支付宝授权登录 → 已注册进首页，未注册跳引导页
+- [ ] 首页关键词搜索正确，无结果展示空状态，触底加载下一页
+- [ ] 点击课程卡片跳详情页，详情展示课程信息+大纲+合规声明
+- [ ] 切换付款方式 / 试学按钮跳学习页 / 首次「立即报名」弹购课须知，确认后跳订单确认页
 
 ---
 

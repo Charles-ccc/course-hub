@@ -137,7 +137,7 @@ function request(options) {
         .catch((err) => {
           rejectQueue(err);
           clearTokens();
-          my.navigateTo({ url: "/pages/guide/index/index" });
+          my.reLaunch({ url: "/pages/auth/login/index" });
           return Promise.reject(err);
         })
         .finally(() => {

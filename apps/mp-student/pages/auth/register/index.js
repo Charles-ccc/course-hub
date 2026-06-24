@@ -74,6 +74,7 @@ Page({
     const orgCode = this.data.orgCode.trim();
     this.setData({ registering: true });
 
+    console.log('[register] 发送注册请求, orgCode:', orgCode);
     request({
       url: '/auth/alipay/register',
       method: 'POST',
@@ -81,6 +82,15 @@ Page({
       noAuth: true,
     })
       .then((res) => {
+        console.log('[register] /auth/alipay/register response:', res);
+        const profile = {
+          userId: res.userId,
+          name: res.name,
+          phone: res.phone,
+          realnameStatus: res.realnameStatus,
+        };
+        console.log('[register] 注册成功 profile:', profile);
+
         saveTokens(res.accessToken, res.refreshToken);
         const app = getApp();
         app.globalData.accessToken = res.accessToken;
@@ -90,7 +100,7 @@ Page({
           phone: res.phone,
           realnameStatus: res.realnameStatus,
         };
-        my.redirectTo({ url: '/pages/auth/realname/index' });
+        my.switchTab({ url: '/pages/index/index/index' });
       })
       .catch((err) => {
         this.setData({ registering: false });

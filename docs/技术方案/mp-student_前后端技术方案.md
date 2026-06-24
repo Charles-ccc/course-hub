@@ -438,15 +438,16 @@ Error:
 ### 4.3.1 课程列表
 
 ```
-GET /courses?keyword=<string>&page=<int>&size=<int>
-Auth: 可选（OptionalStudentJwtGuard）
+GET /courses?keyword=<string>&page=<int>&pageSize=<int>
+Auth: 公开（无需登录可调用；前端实际限制必须登录）
 
 Response 200:
 {
+  items: CourseItem[],
   total: number,
   page: number,
-  size: number,
-  items: CourseItem[]
+  pageSize: number,
+  hasNext: boolean
 }
 
 CourseItem:

@@ -6,6 +6,7 @@ import {
 import type { Installment } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
+import { buildPageResult } from "../../common/dto/page.dto";
 import type {
   StaffCommissionListDto,
   StaffCommissionSummaryDto,
@@ -70,8 +71,8 @@ export class StaffService {
       }),
     ]);
 
-    return {
-      items: rows.map((row) => ({
+    return buildPageResult(
+      rows.map((row) => ({
         id: row.id,
         type: row.type,
         periodNo: row.periodNo ?? undefined,
@@ -82,9 +83,9 @@ export class StaffService {
         createdAt: row.createdAt.toISOString(),
       })),
       total,
-      page: query.page,
-      pageSize: query.pageSize,
-    };
+      query.page,
+      query.pageSize,
+    );
   }
 
   async getStudents(
@@ -95,12 +96,7 @@ export class StaffService {
 
     const where = await this.buildStudentWhereByTab(staffId, query.tab);
     if (!where) {
-      return {
-        items: [],
-        total: 0,
-        page: query.page,
-        pageSize: query.pageSize,
-      };
+      return buildPageResult([], 0, query.page, query.pageSize);
     }
 
     const [total, students] = await this.prisma.$transaction([
@@ -115,12 +111,7 @@ export class StaffService {
 
     const studentIds = students.map((item) => item.id);
     if (studentIds.length === 0) {
-      return {
-        items: [],
-        total,
-        page: query.page,
-        pageSize: query.pageSize,
-      };
+      return buildPageResult([], total, query.page, query.pageSize);
     }
 
     const studentsWithOrders = await this.prisma.student.findMany({
@@ -179,12 +170,7 @@ export class StaffService {
         overdueDays: item.overdueDays,
       }));
 
-    return {
-      items,
-      total,
-      page: query.page,
-      pageSize: query.pageSize,
-    };
+    return buildPageResult(items, total, query.page, query.pageSize);
   }
 
   async getProfile(staffId: string): Promise<StaffProfileDto> {

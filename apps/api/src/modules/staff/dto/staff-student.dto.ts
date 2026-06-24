@@ -1,26 +1,7 @@
-import { Transform } from "class-transformer";
-import { IsIn, IsInt, IsOptional, Max, Min } from "class-validator";
-import type { PageResult } from "./staff-commission.dto";
+import { IsIn, IsOptional } from "class-validator";
+import { PageQueryDto, PageResult } from "../../../common/dto/page.dto";
 
-const toIntOrDefault = (value: unknown, defaultValue: number): number => {
-  const next = Number(value);
-  return Number.isFinite(next) ? Math.trunc(next) : defaultValue;
-};
-
-export class StaffStudentListQueryDto {
-  @IsOptional()
-  @Transform(({ value }) => toIntOrDefault(value, 1))
-  @IsInt()
-  @Min(1)
-  page: number = 1;
-
-  @IsOptional()
-  @Transform(({ value }) => toIntOrDefault(value, 20))
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  pageSize: number = 20;
-
+export class StaffStudentListQueryDto extends PageQueryDto {
   @IsOptional()
   @IsIn(["all", "due7", "due", "overdue"])
   tab?: "all" | "due7" | "due" | "overdue";

@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="logo-area">
+    <view class="logo-circle">
+      <text class="logo-text">欢</text>
+    </view>
+    <text class="brand">欢乐学</text>
+    <text class="brand-sub">先学后付 · 安心学习</text>
+  </view>
+
+  <view class="footer">
+    <button
+      class="btn-primary {{ loading ? 'loading' : '' }}"
+      onTap="onLogin"
+      disabled="{{ loading }}"
+    >{{ loading ? '登录中...' : '支付宝授权登录' }}</button>
+    <view class="agreement">
+      登录即代表您同意
+      <text class="link">《用户协议》</text>
+      和
+      <text class="link">《隐私政策》</text>
+    </view>
+  </view>
+</view>

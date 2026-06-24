@@ -1,3 +1,89 @@
-<view class="page-container">
-  <view class="placeholder-text">课程详情（模块 4 实现）</view>
+<view a:if="{{ loading }}" class="loading-state">
+  <text>加载中...</text>
+</view>
+
+<view a:elif="{{ !course }}" class="empty-state">
+  <text>课程不存在或已下架</text>
+</view>
+
+<view a:else class="page">
+  <view class="cover">
+    <image
+      a:if="{{ course.imageUrl }}"
+      src="{{ course.imageUrl }}"
+      mode="aspectFill"
+      class="cover-img"
+    />
+    <view a:else class="cover-placeholder">
+      <text class="cover-placeholder-text">课程</text>
+    </view>
+  </view>
+
+  <view class="header">
+    <view class="name">{{ course.name }}</view>
+    <view class="insitution">{{ course.insitutionName }}</view>
+
+    <view class="price-block">
+      <view class="price-main">
+        <text class="per-period-amount">¥{{ pricePerPeriod }}</text>
+        <text class="per-period-unit">/期 × {{ course.periodCount }}期</text>
+      </view>
+      <view class="price-total">总价 ¥{{ priceTotal }}</view>
+      <view class="badge-row">
+        <view class="badge">先学后付</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">课程简介</view>
+    <view class="section-content">{{ course.description }}</view>
+  </view>
+
+  <view a:if="{{ course.instructorInfo }}" class="section">
+    <view class="section-title">讲师信息</view>
+    <view class="section-content">{{ course.instructorInfo }}</view>
+  </view>
+
+  <view a:if="{{ course.outline }}" class="section">
+    <view class="section-title">课程大纲</view>
+    <view class="section-content">{{ course.outline }}</view>
+  </view>
+
+  <view class="section compliance">
+    <view class="compliance-text">
+      平台为居间服务方，机构为课程合同甲方。学员购课即与机构建立合同关系。
+    </view>
+  </view>
+
+  <view class="spacer"></view>
+
+  <view class="footer">
+    <view class="pay-options">
+      <view class="pay-option {{ payType === 'PAY_NOW' ? 'active' : '' }}" data-pay="PAY_NOW" onTap="onPayTypeChange">
+        <view class="pay-option-title">立即付款</view>
+        <view class="pay-option-sub">一次性付款</view>
+      </view>
+      <view class="pay-option {{ payType === 'STUDY_FIRST' ? 'active' : '' }}" data-pay="STUDY_FIRST" onTap="onPayTypeChange">
+        <view class="pay-option-title">先学后付</view>
+        <view class="pay-option-sub">每期结束后扣款</view>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="btn-secondary" onTap="onTrialLearn">免费试学第一节</button>
+      <button class="btn-primary" onTap="onEnroll">立即报名</button>
+    </view>
+  </view>
+
+  <view a:if="{{ showNoticeModal }}" class="modal-mask" onTap="onCancelNotice">
+    <view class="modal" catchTap="noop">
+      <view class="modal-title">购课须知</view>
+      <view class="modal-content">购买后不以任何理由退课，请确认后提交</view>
+      <view class="modal-actions">
+        <button class="btn-secondary modal-btn" onTap="onCancelNotice">取消</button>
+        <button class="btn-primary modal-btn" onTap="onConfirmNotice">确认</button>
+      </view>
+    </view>
+  </view>
 </view>

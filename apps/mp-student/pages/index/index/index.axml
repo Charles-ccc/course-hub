@@ -1,3 +1,38 @@
-<view class="page-container">
-  <view class="placeholder-text">课程列表（模块 4 实现）</view>
+<view class="page">
+  <view class="search-bar">
+    <view class="search-input-wrap">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索课程"
+        value="{{ keyword }}"
+        onInput="onKeywordInput"
+        onConfirm="onSearch"
+        confirm-type="search"
+      />
+      <view a:if="{{ keyword }}" class="clear-btn" onTap="onClearKeyword">×</view>
+    </view>
+    <button class="search-btn" onTap="onSearch">搜索</button>
+  </view>
+
+  <view a:if="{{ loading && !courses.length }}" class="loading-state">
+    <text>加载中...</text>
+  </view>
+
+  <view a:elif="{{ !courses.length }}" class="empty-state">
+    <view class="empty-icon">📚</view>
+    <text class="empty-text">{{ activeKeyword ? '没找到相关课程，换个关键词试试' : '暂无课程' }}</text>
+  </view>
+
+  <view a:else class="list">
+    <course-card
+      a:for="{{ courses }}"
+      key="{{ item.id }}"
+      course="{{ item }}"
+      onTap="onTapCourse"
+    />
+
+    <view a:if="{{ loadingMore }}" class="footer-hint">加载中...</view>
+    <view a:elif="{{ !hasNext }}" class="footer-hint">已经到底啦</view>
+  </view>
 </view>

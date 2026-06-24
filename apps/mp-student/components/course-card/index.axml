@@ -1,0 +1,25 @@
+<view class="card" onTap="onTap">
+  <view class="cover">
+    <image
+      a:if="{{ course.imageUrl }}"
+      src="{{ course.imageUrl }}"
+      mode="aspectFill"
+      class="cover-img"
+    />
+    <view a:else class="cover-placeholder">
+      <text class="cover-placeholder-text">课程</text>
+    </view>
+  </view>
+  <view class="info">
+    <view class="name">{{ course.name }}</view>
+    <view class="insitution">{{ course.insitutionName }}</view>
+    <view class="meta">
+      <view class="prices">
+        <text class="price-per-period">¥{{ pricePerPeriod }}</text>
+        <text class="price-unit">/期</text>
+        <text class="price-total">共 ¥{{ priceTotal }}</text>
+      </view>
+      <view class="badge">先学后付</view>
+    </view>
+  </view>
+</view>

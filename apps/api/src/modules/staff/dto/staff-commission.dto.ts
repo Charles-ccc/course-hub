@@ -1,25 +1,6 @@
-import { Transform } from "class-transformer";
-import { IsInt, IsOptional, Max, Min } from "class-validator";
+import { PageQueryDto, PageResult } from "../../../common/dto/page.dto";
 
-const toIntOrDefault = (value: unknown, defaultValue: number): number => {
-  const next = Number(value);
-  return Number.isFinite(next) ? Math.trunc(next) : defaultValue;
-};
-
-export class StaffCommissionListQueryDto {
-  @IsOptional()
-  @Transform(({ value }) => toIntOrDefault(value, 1))
-  @IsInt()
-  @Min(1)
-  page: number = 1;
-
-  @IsOptional()
-  @Transform(({ value }) => toIntOrDefault(value, 20))
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  pageSize: number = 20;
-}
+export class StaffCommissionListQueryDto extends PageQueryDto {}
 
 export interface StaffCommissionSummaryDto {
   settledCents: number;
@@ -36,13 +17,6 @@ export interface StaffCommissionItemDto {
   studentName: string;
   courseName: string;
   createdAt: string;
-}
-
-export interface PageResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
 }
 
 export type StaffCommissionListDto = PageResult<StaffCommissionItemDto>;

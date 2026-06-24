@@ -15,7 +15,7 @@
 ## 1.1 功能范围
 
 - 归因追踪：在应用启动时捕获来源（业务员/学员邀请），写入归因数据
-- 注册与认证：支付宝授权注册（手机号免填）、支付宝静默登录、支付宝开放认证实名
+- 注册与认证：支付宝授权注册（手机号免填）、登录页支付宝授权登录、支付宝开放认证实名
 - 课程发现：关键词搜索、课程列表、课程详情和免费试学
 - 下单与签约：创建订单、支付宝核身签约确认（Iter2）
 - 学习：视频课播放（Iter2）、联系老师、人脸打卡获取学习激励（Iter3）
@@ -44,7 +44,7 @@
 | 功能模块 | 功能点           | 功能描述                                                | 迭代  |
 | -------- | ---------------- | ------------------------------------------------------- | ----- |
 | 启动     | 归因参数捕获     | 启动时从场景值解析 staffId 或 studentId，写入本地存储   | Iter1 |
-| 启动     | 支付宝静默登录   | 启动时调用 my.login() 获取 authCode，已注册直接进首页   | Iter1 |
+| 启动     | 登录页授权登录   | 未登录用户启动小程序显示登录页，授权后已注册直接进首页 | Iter1 |
 | 启动     | 引导页           | 未注册时展示注册入口                                    | Iter1 |
 | 注册     | 支付宝授权注册   | 输入机构码后，通过 getPhoneNumber 授权获取手机号完成注册 | Iter1 |
 | 实名认证 | 支付宝开放认证   | 调用 alipay.user.certify.open.* 完成人脸+身份证核验     | Iter1 |
@@ -124,10 +124,12 @@
 1. 应用启动时（onLaunch），解析启动参数中的 `?staff=<staffId>` 字段，若存在则写入本地存储键 `referrerStaffId`。
 2. 启动参数中含 `?inv=<studentId>` 时，写入本地存储键 `referrerStudentId`。
 3. 归因数据在后续注册请求时一并传入，其中 `referrerStaffId` 透传为 `inviteSalesmanId`；后端仅在首次注册成功时写入绑定关系，已绑定关系不可被后续请求覆盖。
-4. 启动时调用 `my.login()` 获取 authCode，发起 `POST /api/v1/auth/alipay/login { authCode }`：
-   - 后端查 openId 已注册 → 直接返回 token，跳首页 Tab
-   - 后端查 openId 未注册 → 返回 `needRegister: true`，展示注册引导页
-5. 引导页仅提供「立即注册」入口（已注册用户通过 authCode 静默登录，无需手动登录入口）。
+4. 启动时检测本地是否有 accessToken：
+   - 有 → 直接跳首页 Tab；后续 401 时跳转登录页
+   - 无 → 跳转登录页 `/pages/auth/login/index`
+5. 登录页用户主动点击「支付宝授权登录」按钮，触发 `my.getAuthCode` → `POST /api/v1/auth/alipay/login { authCode }`：
+   - 已注册 → 保存 token，跳首页 Tab
+   - 未注册 → 跳引导页 → 注册页
 
 ---
 
@@ -182,17 +184,17 @@
 
 > 登录完全依托支付宝身份体系，无需密码、无需短信，用户无感知完成登录。
 
-### 4.3.1 支付宝静默登录
+### 4.3.1 支付宝授权登录页
 
 验收条件：
 
-1. 应用启动时（onLaunch）自动调用 `my.login()` 获取 `authCode`，无需用户任何操作。
-2. 调用 `POST /api/v1/auth/alipay/login { authCode }`：
-   - 已注册用户 → 后端返回 `accessToken` + `refreshToken` + `profile`，直接跳首页 Tab
+1. 启动小程序时，splash 检测本地是否有 accessToken。无 token 跳登录页 `/pages/auth/login/index`；有 token 直接进首页 Tab（401 时再回登录页）。
+2. 登录页 UI：logo + 品牌名 + 单一「支付宝授权登录」按钮 + 用户协议链接。
+3. 点击按钮调用 `my.getAuthCode({ scopes: 'auth_base' })` 拿 authCode，请求 `POST /api/v1/auth/alipay/login { authCode }`：
+   - 已注册用户 → 后端返回 `accessToken` + `refreshToken` + `profile`，保存 token 后跳首页 Tab
    - 未注册用户 → 后端返回 `needRegister: true`，跳转注册引导页
-3. 登录成功后将 token 和 profile 写入本地存储。
-4. Access token 过期时，自动用 refresh token 换新 token，用户无感知；refresh token 过期则重新走 `my.login()` 流程。
-5. 不存在独立的"登录页"，登录行为在 app.js 启动阶段完成。
+4. 用户拒绝授权时提示「需要支付宝授权才能登录」，按钮可点击重试。
+5. Access token 过期时，自动用 refresh token 换新 token，无感重试；refresh token 也过期则清空本地 token 并跳回登录页。
 
 ---
 
@@ -230,7 +232,7 @@
 
 | 规则             | 说明                                         |
 | ---------------- | -------------------------------------------- |
-| 唯一登录方式     | 支付宝 authCode 静默登录，应用启动自动完成   |
+| 唯一登录方式     | 支付宝 authCode 授权登录，用户在登录页主动触发 |
 | 无密码体系       | 不存在密码、重置密码等概念                   |
 | Token 有效期     | access token 15 分钟，refresh token 7 天     |
 | Refresh 过期处理 | 重新调用 my.login() 获取新 authCode 完成续期 |
@@ -290,11 +292,11 @@
 验收条件：
 
 1. 首页顶部提供搜索框，支持输入关键词后点击搜索或键盘确认触发搜索。
-2. 搜索或首次加载时请求 `GET /api/v1/courses?keyword=<关键词>&page=1&size=20`。
-3. 课程卡片展示字段：课程名称、机构名称、每期价格（元/期，计算：priceCents / periodCount / 100）、课程总价（元）、「先学后付」徽标。
+2. 搜索或首次加载时请求 `GET /api/v1/courses?keyword=<关键词>&page=1&pageSize=20`，响应统一 `{ items, page, pageSize, total, hasNext }`。
+3. 课程卡片展示字段：封面（imageUrl 缺省时显示占位图）、课程名称、机构名称、每期价格（元/期，计算：priceCents / periodCount / 100）、课程总价（元）、「先学后付」徽标。
 4. 列表为空时展示空状态提示。
-5. 未登录学员可浏览课程列表；点击课程卡片时，若未登录则跳转至登录页。
-6. 已登录学员点击课程卡片跳转至课程详情页。
+5. 进入小程序前必须登录（未登录由 splash 跳转登录页），首页不存在「未登录浏览」状态。
+6. 点击课程卡片跳转至课程详情页。
 
 ---
 
@@ -475,7 +477,7 @@
 - 机构码校验失败时展示明确错误提示
 - 注册成功即绑定业务员，邀请关系不可覆盖
 - 同一手机号禁止重复注册（同一 openId 只能注册一次）
-- 已注册用户打开小程序自动静默登录，无需任何操作
+- 已注册用户打开小程序，凭本地 token 直接进首页；token 失效跳登录页，点一次「授权登录」即可恢复
 - 支付宝授权手机号一键完成注册，无需填写验证码或密码
 - 所有异常均有明确的用户提示文案
 - 登录、注册链路响应时间 ≤ 500ms

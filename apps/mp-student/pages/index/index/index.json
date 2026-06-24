@@ -1,3 +1,6 @@
 {
-  "defaultTitle": "发现课程"
+  "defaultTitle": "发现",
+  "usingComponents": {
+    "course-card": "/components/course-card/index"
+  }
 }

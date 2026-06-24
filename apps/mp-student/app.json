@@ -4,6 +4,7 @@
     "pages/index/index/index",
     "pages/learning/index/index",
     "pages/profile/index/index",
+    "pages/auth/login/index",
     "pages/guide/index/index",
     "pages/auth/register/index",
     "pages/auth/realname/index",

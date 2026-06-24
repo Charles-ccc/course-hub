@@ -175,6 +175,7 @@ model Course {
   teacherContact String?
   priceCents     Int
   periodCount    Int
+  imageUrl       String?
   status         CourseStatus
   auditStatus    CourseAuditStatus @default(APPROVED)
   createdAt      DateTime          @default(now())

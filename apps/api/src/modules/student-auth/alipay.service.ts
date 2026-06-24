@@ -252,20 +252,27 @@ export class AlipayService {
   }
 
   decryptPhone(encryptedData: string, iv?: string): string {
-    // 尝试直接 JSON 解析（开放平台未开启「接口内容加密」时，response 是明文 JSON）
+    // my.getPhoneNumber 返回 {response: "<AES密文base64>", sign: "..."} 格式
+    // 或未开启接口内容加密时直接返回 {mobile: "..."} 明文 JSON
+    let ciphertext = encryptedData;
     try {
-      const plain = JSON.parse(encryptedData) as Record<string, unknown>;
-      const phone = (plain.mobile ?? plain.phoneNumber ?? plain.mobileNo) as
+      const parsed = JSON.parse(encryptedData) as Record<string, unknown>;
+
+      // 明文手机号
+      const direct = (parsed.mobile ?? parsed.phoneNumber ?? parsed.mobileNo) as
         | string
         | undefined;
-      if (phone) {
-        this.logger.log(
-          JSON.stringify({ event: "alipay_phone_plain", phone }),
-        );
-        return phone;
+      if (direct) {
+        this.logger.log(JSON.stringify({ event: "alipay_phone_plain", phone: direct }));
+        return direct;
+      }
+
+      // {response, sign} 格式：取 response 字段作为真正的密文
+      if (typeof parsed.response === "string") {
+        ciphertext = parsed.response;
       }
     } catch {
-      // 不是明文 JSON，走 AES 解密
+      // 非 JSON，当作裸 base64 密文直接解密
     }
 
     const aesKeyBase64 = process.env.ALIPAY_AES_KEY;
@@ -286,11 +293,10 @@ export class AlipayService {
 
     try {
       const key = Buffer.from(aesKeyBase64, "base64");
-      const ivBuf = iv
-        ? Buffer.from(iv, "base64")
-        : Buffer.alloc(16, 0);
+      // Alipay 小程序手机号加密：IV = 16 字节全零（官方规范）
+      const ivBuf = iv ? Buffer.from(iv, "base64") : Buffer.alloc(16, 0);
       const decipher = createDecipheriv("aes-128-cbc", key, ivBuf);
-      let decrypted = decipher.update(encryptedData, "base64", "utf8");
+      let decrypted = decipher.update(ciphertext, "base64", "utf8");
       decrypted += decipher.final("utf8");
       this.logger.log(
         JSON.stringify({ event: "alipay_phone_decrypted_raw", decrypted }),
