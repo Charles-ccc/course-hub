@@ -10,7 +10,7 @@ coverage
 dist/
 build/
 # Local secrets
-ccc.pem
+ccb.pem
 # Alipay mini IDE
 apps/mp-student/.mini-ide/
 # Taro
