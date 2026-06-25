@@ -97,29 +97,44 @@
 
 ### 测试卡点
 
-- [ ] 启动小程序：无 token → 显示登录页；点支付宝授权登录 → 已注册进首页，未注册跳引导页
-- [ ] 首页关键词搜索正确，无结果展示空状态，触底加载下一页
-- [ ] 点击课程卡片跳详情页，详情展示课程信息+大纲+合规声明
-- [ ] 切换付款方式 / 试学按钮跳学习页 / 首次「立即报名」弹购课须知，确认后跳订单确认页
+- [x] 启动小程序：无 token → 显示登录页；点支付宝授权登录 → 已注册进首页，未注册跳引导页
+- [x] 首页关键词搜索正确，无结果展示空状态，触底加载下一页
+- [x] 点击课程卡片跳详情页，详情展示课程信息+大纲+合规声明
+- [x] 切换付款方式 / 试学按钮跳学习页 / 首次「立即报名」弹购课须知，确认后跳订单确认页
 
 ---
 
 ## 模块 5：下单流程
 
+> **决策（2026-06-25）：**
+>
+> - 允许重复下单（同一学员 × 同一课程可创建多个订单，异常由后台管理员处理）。
+> - 分期日期：`dueDate = createdAt + periodNo × 30 天`。
+> - 移除冷静期：`COOLING_OFF` 状态不再使用，`coolingOffEndAt` 不写入。
+> - 购课须知弹窗文案更新：「本课程提供免费试学，建议先试学后再下单。下单即视为您已体验并认可课程内容，购课后不支持退课退款，请确认。」变量名 `trialConfirmed` → `enrollConfirmed`。
+> - 暂不做实名拦截（Module 9 签约时再加）；`studentName` 取 `student.name`，null 时兜底 `student.phone`。
+
 ### 后端
 
-- [ ] `POST /orders`（RealnameGuard 拦截 + UNDERAGE / PRICE_LIMIT 错误处理）
-- [ ] `POST /orders/:orderId/sign/initialize` → 返回 501（占位）
+- [x] `POST /orders`（验证课程状态 → 创建 Order → 生成 Installment → 返回 orderId）
+- [x] `GET /orders/:orderId`（订单详情 + installments 列表）
+- [x] `POST /orders/:orderId/sign/initialize` → 返回 501（占位）
+
+> 后端冒烟测试已通过（2026-06-25）：DEFERRED 12 期金额合计校验一致、每期 30 天；IMMEDIATE 1 期全额；签约接口 501；无 token 401；不存在课程 40010。
 
 ### 前端
 
-- [ ] 下单确认页（课程名 / 付款方式说明 / 确认按钮）
+- [x] 课程详情页购课须知弹窗文案 & 变量名更新（`trialConfirmed` → `enrollConfirmed`，payType 对齐后端 `IMMEDIATE`/`DEFERRED`）
+- [x] 下单确认页 `pages/order/confirm/index`（课程信息 / 付款方式说明 / 确认按钮）
+- [x] 订单详情页 `pages/order/detail/index`（基础版：订单状态 / 分期明细 / 签约占位按钮）
 
 ### 测试卡点
 
-- [ ] 未实名用户点击下单，提示「请先完成实名认证」
-- [ ] 先学后付 / 立即付款两种 payType 均可创建订单
-- [ ] 创建成功后跳转订单详情页，订单状态为 CREATED
+- [x] DEFERRED 下单：生成 N 条 Installment，每期 30 天，金额均分（末期吸收余数）
+- [x] IMMEDIATE 下单：生成 1 条 Installment，全额
+- [x] 订单详情页展示课程名、总价、期数、payType 说明
+- [x] 点击「签约授权」toast「签约功能即将上线，敬请期待」
+- [x] 课程不存在 / 已下架时返回合适错误提示
 
 ---
 

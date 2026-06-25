@@ -60,11 +60,11 @@
 
   <view class="footer">
     <view class="pay-options">
-      <view class="pay-option {{ payType === 'PAY_NOW' ? 'active' : '' }}" data-pay="PAY_NOW" onTap="onPayTypeChange">
+      <view class="pay-option {{ payType === 'IMMEDIATE' ? 'active' : '' }}" data-pay="IMMEDIATE" onTap="onPayTypeChange">
         <view class="pay-option-title">立即付款</view>
         <view class="pay-option-sub">一次性付款</view>
       </view>
-      <view class="pay-option {{ payType === 'STUDY_FIRST' ? 'active' : '' }}" data-pay="STUDY_FIRST" onTap="onPayTypeChange">
+      <view class="pay-option {{ payType === 'DEFERRED' ? 'active' : '' }}" data-pay="DEFERRED" onTap="onPayTypeChange">
         <view class="pay-option-title">先学后付</view>
         <view class="pay-option-sub">每期结束后扣款</view>
       </view>
@@ -79,10 +79,10 @@
   <view a:if="{{ showNoticeModal }}" class="modal-mask" onTap="onCancelNotice">
     <view class="modal" catchTap="noop">
       <view class="modal-title">购课须知</view>
-      <view class="modal-content">购买后不以任何理由退课，请确认后提交</view>
+      <view class="modal-content">本课程提供免费试学，建议先试学后再下单。下单即视为您已体验并认可课程内容，购课后不支持退课退款，请确认。</view>
       <view class="modal-actions">
         <button class="btn-secondary modal-btn" onTap="onCancelNotice">取消</button>
-        <button class="btn-primary modal-btn" onTap="onConfirmNotice">确认</button>
+        <button class="btn-primary modal-btn" onTap="onConfirmNotice">我已了解，确认下单</button>
       </view>
     </view>
   </view>

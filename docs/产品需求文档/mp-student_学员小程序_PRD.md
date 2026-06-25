@@ -316,10 +316,10 @@
 
 **购课确认**
 
-5. 点击「立即报名」时，若用户尚未看过购课须知弹框（`trialConfirmed = false`），弹出购课须知 Modal，文案：**购课须知：购买后不以任何理由退课，请确认后提交**。
-6. 学员在 Modal 内点击「确认」后，`trialConfirmed` 置为 true，跳转至下单确认页（携带 courseId 和 payType）。
-7. 若 `trialConfirmed` 已为 true，直接跳转至下单确认页，不再弹窗。
-8. `trialConfirmed` 为页面内本地状态，页面刷新后重置，不做持久化。
+5. 点击「立即报名」时，若用户尚未看过购课须知弹框（`enrollConfirmed = false`），弹出购课须知 Modal，标题「购课须知」，正文：**本课程提供免费试学，建议先试学后再下单。下单即视为您已体验并认可课程内容，购课后不支持退课退款，请确认。**，底部两个按钮：「取消」和「我已了解，确认下单」。
+6. 学员点击「我已了解，确认下单」后，`enrollConfirmed` 置为 true，跳转至下单确认页（携带 courseId 和 payType）；点击「取消」关闭弹框，不做跳转。
+7. 若 `enrollConfirmed` 已为 true，直接跳转至下单确认页，不再弹窗。
+8. `enrollConfirmed` 为页面内本地状态，页面刷新后重置，不做持久化。
 
 ---
 
@@ -327,23 +327,36 @@
 
 ### 4.10.1 下单确认
 
+> **决策（2026-06-25）：**
+> - 允许同一学员对同一课程重复下单（后台管理员处理异常订单）。
+> - 分期日期：从下单时间起每 30 天一期（`dueDate = createdAt + periodNo × 30 天`）。
+> - 移除冷静期（`COOLING_OFF` 状态废弃不用，`coolingOffEndAt` 不再写入）；改为在课程详情页弹购课须知（见 4.9.2）。
+
 验收条件：
 
-1. 下单确认页展示课程名称和所选付款方式说明：
+1. 下单确认页展示课程名称、机构名称、总价、期数和所选付款方式说明：
    - 立即付款：一次性付款，立即开始学习
-   - 先学后付：先学后付，每期课程结束后再扣款
+   - 先学后付：每期课程结束后再扣款，无需预付
 2. 页面底部按钮文案：立即付款 → 「确认付款」；先学后付 → 「确认并签约」。
-3. 点击确认按钮后，调用 `POST /api/v1/orders { courseId, payType }`，成功后 toast 提示，1.5 秒后跳转至订单详情页。
-4. 若后端返回错误码 40002（PRICE_LIMIT_EXCEEDED），提示：**该课程暂不支持分期购买**。
-5. 若后端返回错误码 40001（UNDERAGE_USER），提示：**未满 18 周岁，暂不可报名分期课程**。
-6. 先学后付订单需机构确认后才生效，机构认为学员不满足条件时可在订单生效前取消订单。
+3. 点击确认按钮后，调用 `POST /api/v1/orders { courseId, payType }`，后端：
+   - 验证课程 `status=ONLINE & auditStatus=APPROVED`
+   - 创建 Order（`status=CREATED`，不设 `coolingOffEndAt`）
+   - `studentName` 取 `student.name`，若为 null 则用 `student.phone` 兜底
+   - DEFERRED → 创建 N 条 Installment（每 30 天一期，金额 = totalAmountCents / periodCount，末期吸收余数）
+   - IMMEDIATE → 创建 1 条 Installment（全额，`dueDate = createdAt`）
+4. 创建成功后跳转至订单详情页，toast 提示「报名成功」。
+5. 若后端返回错误码 40002（PRICE_LIMIT_EXCEEDED），提示：**该课程暂不支持分期购买**。
+6. 若后端返回错误码 40001（UNDERAGE_USER），提示：**未满 18 周岁，暂不可报名分期课程**。
 
 ---
 
 ### 4.10.2 电子签约（Iter 1 占位，Iter 2 实现）
 
-> **当前阶段（Iter 1）：** 订单详情页展示「签约授权（法大大）」按钮，点击后 Toast 提示「签约功能即将上线，敬请期待」，不调用法大大接口。  
-> **Iter 2 实现：** 对接法大大 H5 签约 SDK，补充 `POST /api/v1/orders/<orderId>/sign/fadadada` 后端实现及前端 WebView 跳转逻辑；接口路径与前端按钮已在 Iter 1 确定，升级无破坏性变更。
+> **签约方案（2026-06-25 决策）：** 全面采用支付宝实名核身方案（`datadigital.fincloud.generalsaas.face.certify.*`），不接入第三方签约服务。
+>
+> **当前阶段（Iter 1）：** 订单详情页展示「签约授权」按钮，点击后 Toast 提示「签约功能即将上线，敬请期待」，不调用后端接口。立即付款订单不显示分期期数与分期明细。
+>
+> **Iter 2 实现：** 对接支付宝人脸核身完成本人签约确认，补充 `POST /api/v1/orders/:orderId/sign/initialize` 后端实现及前端 web-view 跳转逻辑。
 
 ---
 

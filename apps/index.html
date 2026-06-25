@@ -559,6 +559,19 @@
         border-top: 1px solid var(--line);
         padding-top: 24px;
       }
+      .beian-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink-soft);
+      }
+      .beian-link img {
+        width: 16px;
+        height: 16px;
+      }
+      .beian-link:hover {
+        color: var(--orange-deep);
+      }
 
       /* ---------- 响应式 ---------- */
       @media (max-width: 880px) {
@@ -1022,6 +1035,15 @@
         <div class="foot-base">
           <span>© 2026 欢乐学 · 湖北省欢乐马商业管理有限公司 版权所有</span>
           <span>鄂ICP备2026028491号-1 · 服务仅面向年满 18 周岁用户</span>
+          <a
+            class="beian-link"
+            href="https://beian.mps.gov.cn/#/query/webSearch?code=42011102006346"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <img src="./assets/beian.jpg" alt="公安备案图标" />
+            鄂公网安备42011102006346号
+          </a>
         </div>
       </div>
     </footer>

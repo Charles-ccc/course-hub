@@ -1,3 +1,60 @@
-<view class="page-container">
-  <view class="placeholder-text">订单详情（模块 6 实现）</view>
+<view a:if="{{ loading }}" class="loading-state">
+  <text>加载中...</text>
+</view>
+
+<view a:elif="{{ !order }}" class="empty-state">
+  <text>订单不存在</text>
+</view>
+
+<view a:else class="page">
+  <view class="status-bar {{ statusCls }}">
+    <text class="status-text">{{ statusText }}</text>
+  </view>
+
+  <view class="card">
+    <view class="course-name" onTap="onViewCourse">{{ order.courseName }}</view>
+    <view class="course-insitution">{{ order.insitutionName }}</view>
+    <view class="info-rows">
+      <view class="row">
+        <text class="row-label">付款方式</text>
+        <text class="row-value">{{ payTitle }}</text>
+      </view>
+      <view class="row">
+        <text class="row-label">订单总额</text>
+        <text class="row-value highlight">¥{{ totalYuan }}</text>
+      </view>
+      <view a:if="{{ isDeferred }}" class="row">
+        <text class="row-label">分期期数</text>
+        <text class="row-value">{{ order.periodCount }}期</text>
+      </view>
+      <view class="row">
+        <text class="row-label">报名学员</text>
+        <text class="row-value">{{ order.studentName }}</text>
+      </view>
+    </view>
+  </view>
+
+  <view a:if="{{ isDeferred }}" class="card">
+    <view class="card-title">分期明细</view>
+    <view class="installment" a:for="{{ installments }}" a:key="periodNo">
+      <view class="installment-left">
+        <text class="installment-no">第 {{ item.periodNo }} 期</text>
+        <text class="installment-date">应扣日 {{ item.dueDate }}</text>
+      </view>
+      <view class="installment-right">
+        <text class="installment-amount">¥{{ item.amountYuan }}</text>
+        <text class="installment-status">{{ item.statusText }}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card compliance">
+    <view class="compliance-text">
+      平台为居间服务方，机构为课程合同甲方。{{ isDeferred ? '先学后付订单需完成签约后生效。' : '立即付款订单确认后即时生效。' }}
+    </view>
+  </view>
+
+  <view a:if="{{ canSign }}" class="footer">
+    <button class="btn-primary" onTap="onSign">签约授权</button>
+  </view>
 </view>

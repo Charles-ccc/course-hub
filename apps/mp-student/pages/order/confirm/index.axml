@@ -1,3 +1,56 @@
-<view class="page-container">
-  <view class="placeholder-text">下单确认（模块 5 实现）</view>
+<view a:if="{{ loading }}" class="loading-state">
+  <text>加载中...</text>
+</view>
+
+<view a:elif="{{ !course }}" class="empty-state">
+  <text>课程不存在或已下架</text>
+</view>
+
+<view a:else class="page">
+  <view class="card course-card">
+    <view class="course-cover">
+      <image
+        a:if="{{ course.imageUrl }}"
+        src="{{ course.imageUrl }}"
+        mode="aspectFill"
+        class="course-cover-img"
+      />
+      <view a:else class="course-cover-placeholder">
+        <text>课程</text>
+      </view>
+    </view>
+    <view class="course-info">
+      <view class="course-name">{{ course.name }}</view>
+      <view class="course-insitution">{{ course.insitutionName }}</view>
+      <view class="course-price">
+        <text class="course-price-amount">¥{{ priceTotal }}</text>
+        <text class="course-price-period">（¥{{ pricePerPeriod }}/期 × {{ course.periodCount }}期）</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card pay-card">
+    <view class="row">
+      <text class="row-label">付款方式</text>
+      <text class="row-value highlight">{{ payTitle }}</text>
+    </view>
+    <view class="pay-desc">{{ payDesc }}</view>
+  </view>
+
+  <view class="card compliance">
+    <view class="compliance-text">
+      平台为居间服务方，机构为课程合同甲方。提交订单即视为您已认可课程内容并同意购课须知，购课后不支持退课退款。
+    </view>
+  </view>
+
+  <view class="footer">
+    <button
+      class="btn-primary"
+      loading="{{ submitting }}"
+      disabled="{{ submitting }}"
+      onTap="onConfirm"
+    >
+      {{ btnText }}
+    </button>
+  </view>
 </view>

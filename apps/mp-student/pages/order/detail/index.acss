@@ -1,2 +1,174 @@
-.page-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-.placeholder-text { color: #999; font-size: 28rpx; }
+.loading-state,
+.empty-state {
+  padding: 200rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 200rpx;
+}
+
+.status-bar {
+  padding: 40rpx 32rpx;
+  color: #fff;
+}
+
+.status-bar.status-created {
+  background: linear-gradient(135deg, #ff8c42 0%, #ff6b00 100%);
+}
+
+.status-bar.status-active {
+  background: linear-gradient(135deg, #36c46f 0%, #18a058 100%);
+}
+
+.status-bar.status-done {
+  background: linear-gradient(135deg, #9aa0a6 0%, #6b7177 100%);
+}
+
+.status-text {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin: 20rpx;
+}
+
+.course-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.course-insitution {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 8rpx;
+  margin-bottom: 20rpx;
+}
+
+.info-rows {
+  border-top: 1rpx solid #f5f5f5;
+  padding-top: 20rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 0;
+}
+
+.row-label {
+  font-size: 28rpx;
+  color: #888;
+}
+
+.row-value {
+  font-size: 28rpx;
+  color: #1a1a1a;
+}
+
+.row-value.highlight {
+  color: #ff6b00;
+  font-weight: 700;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8rpx;
+}
+
+.installment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.installment:last-child {
+  border-bottom: none;
+}
+
+.installment-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.installment-no {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.installment-date {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+.installment-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.installment-amount {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.installment-status {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+.compliance {
+  background: #fff8f0;
+}
+
+.compliance-text {
+  font-size: 24rpx;
+  color: #888;
+  line-height: 1.7;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1rpx solid #eee;
+  padding: 20rpx 24rpx 32rpx;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.btn-primary {
+  width: 100%;
+  height: 88rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 44rpx;
+  border: none;
+  background: #ff6b00;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

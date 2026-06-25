@@ -11,13 +11,13 @@ Page({
     courseId: '',
     course: null,
     loading: true,
-    payType: 'PAY_NOW',
+    payType: 'IMMEDIATE',
     pricePerPeriod: '0',
     priceTotal: '0',
     showNoticeModal: false,
   },
 
-  _trialConfirmed: false,
+  _enrollConfirmed: false,
 
   onLoad(query) {
     const courseId = (query && query.courseId) || '';
@@ -43,7 +43,7 @@ Page({
 
   onEnroll() {
     if (!this.data.course) return;
-    if (this._trialConfirmed) {
+    if (this._enrollConfirmed) {
       this._goConfirm();
     } else {
       this.setData({ showNoticeModal: true });
@@ -55,7 +55,7 @@ Page({
   },
 
   onConfirmNotice() {
-    this._trialConfirmed = true;
+    this._enrollConfirmed = true;
     this.setData({ showNoticeModal: false });
     this._goConfirm();
   },
