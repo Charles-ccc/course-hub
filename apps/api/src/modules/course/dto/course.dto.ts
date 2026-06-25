@@ -31,3 +31,13 @@ export interface CourseDetailDto {
   periodCount: number;
   imageUrl: string | null;
 }
+
+export interface CourseVideoItemDto {
+  id: string;
+  title: string;
+  durationSec: number;
+  isTrial: boolean;
+  sortOrder: number;
+}
+
+export type CourseVideoListDto = CourseVideoItemDto[];

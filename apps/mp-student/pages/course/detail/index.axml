@@ -66,7 +66,7 @@
       </view>
       <view class="pay-option {{ payType === 'DEFERRED' ? 'active' : '' }}" data-pay="DEFERRED" onTap="onPayTypeChange">
         <view class="pay-option-title">先学后付</view>
-        <view class="pay-option-sub">每期结束后扣款</view>
+        <view class="pay-option-sub">签约后解锁全课，每30天自动扣款</view>
       </view>
     </view>
 

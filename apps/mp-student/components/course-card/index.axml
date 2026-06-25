@@ -14,12 +14,7 @@
     <view class="name">{{ course.name }}</view>
     <view class="insitution">{{ course.insitutionName }}</view>
     <view class="meta">
-      <view class="prices">
-        <text class="price-per-period">¥{{ pricePerPeriod }}</text>
-        <text class="price-unit">/期</text>
-        <text class="price-total">共 ¥{{ priceTotal }}</text>
-      </view>
-      <view class="badge">先学后付</view>
+      <text class="price-total">¥{{ priceTotal }}</text>
     </view>
   </view>
 </view>

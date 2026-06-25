@@ -1,3 +1,4 @@
+const { request } = require('../../../services/request');
 const app = getApp();
 
 Page({
@@ -5,18 +6,38 @@ Page({
     initial: '',
     name: '',
     phone: '',
+    loading: false,
   },
 
   onShow() {
     const profile = app.globalData.studentProfile;
     if (profile) {
-      const name = profile.name || profile.phone || '';
-      this.setData({
-        name,
-        phone: profile.phone || '',
-        initial: name ? name.charAt(0).toUpperCase() : '我',
-      });
+      this._applyProfile(profile);
+    } else {
+      this._fetchProfile();
     }
+  },
+
+  _applyProfile(profile) {
+    const name = profile.name || profile.phone || '';
+    this.setData({
+      name,
+      phone: profile.phone || '',
+      initial: name ? name.charAt(0) : '我',
+      loading: false,
+    });
+  },
+
+  _fetchProfile() {
+    this.setData({ loading: true });
+    request({ url: '/users/me', method: 'GET' })
+      .then((profile) => {
+        app.globalData.studentProfile = profile;
+        this._applyProfile(profile);
+      })
+      .catch(() => {
+        this.setData({ loading: false });
+      });
   },
 
   onGoOrders() {

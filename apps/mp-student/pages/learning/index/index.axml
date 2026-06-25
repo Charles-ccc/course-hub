@@ -1,3 +1,109 @@
-<view class="page-container">
-  <view class="placeholder-text">学习中心（模块 7 实现）</view>
-</view>
+<!-- ══ HOME 模式：TabBar 直接进入，展示我的课程 ══ -->
+<block a:if="{{ mode === 'home' }}">
+  <view a:if="{{ loading }}" class="loading-wrap">
+    <text>加载中...</text>
+  </view>
+
+  <view a:elif="{{ orders.length === 0 }}" class="empty-wrap">
+    <view class="empty-icon">📚</view>
+    <view class="empty-text">还没有报名的课程</view>
+    <view class="empty-hint">去发现感兴趣的课程吧</view>
+    <button class="btn-discover" onTap="onGoDiscover">去发现课程</button>
+  </view>
+
+  <scroll-view a:else scroll-y class="home-list">
+    <view class="home-title">我的课程</view>
+    <view
+      class="order-card"
+      a:for="{{ orders }}"
+      a:key="id"
+    >
+      <view class="card-header" data-id="{{ item.id }}" onTap="onTapOrder">
+        <text class="course-name">{{ item.courseName }}</text>
+        <view class="status-tag {{ item.statusCls }}">{{ item.statusText }}</view>
+      </view>
+      <view class="insitution" data-id="{{ item.id }}" onTap="onTapOrder">{{ item.insitutionName }}</view>
+      <view class="card-footer">
+        <text class="card-date">{{ item.createdAt }}</text>
+        <button
+          a:if="{{ item.canLearn }}"
+          class="btn-learn"
+          data-course-id="{{ item.courseId }}"
+          onTap="onLearnCourse"
+        >去学习</button>
+        <button
+          a:elif="{{ item.canSign }}"
+          class="btn-sign"
+          data-id="{{ item.id }}"
+          onTap="onTapOrder"
+        >去签约</button>
+        <text a:else class="btn-done">已完成</text>
+      </view>
+    </view>
+  </scroll-view>
+</block>
+
+<!-- ══ COURSE 模式：带 courseId 深链进入 ══ -->
+<block a:else>
+  <view a:if="{{ loading }}" class="loading-wrap">
+    <text>加载中...</text>
+  </view>
+
+  <view a:elif="{{ !course }}" class="empty-wrap">
+    <text>课程不存在或已下架</text>
+  </view>
+
+  <view a:else class="page">
+    <!-- 试学横幅 -->
+    <view a:if="{{ isTrial }}" class="trial-banner">
+      <text class="trial-banner-text">📖 试学模式 · 非试学章节购课后可解锁</text>
+    </view>
+
+    <!-- 课程头部 -->
+    <view class="course-header">
+      <view class="course-name-lg">{{ course.name }}</view>
+      <view class="course-institution">{{ course.insitutionName }}</view>
+    </view>
+
+    <!-- 章节列表 -->
+    <view class="section">
+      <view class="section-title">课程章节</view>
+      <view a:if="{{ videos.length === 0 }}" class="no-videos">
+        <text>暂无章节内容</text>
+      </view>
+      <view
+        a:else
+        class="video-item {{ item.locked ? 'video-locked' : '' }}"
+        a:for="{{ videos }}"
+        a:key="id"
+        data-locked="{{ item.locked }}"
+        onTap="onTapVideo"
+      >
+        <view class="video-left">
+          <view class="video-icon">{{ item.locked ? '🔒' : '▷' }}</view>
+          <view class="video-info">
+            <view class="video-title">{{ item.title }}</view>
+            <view class="video-meta">
+              <text a:if="{{ item.isTrial }}" class="trial-tag">试学</text>
+              <text class="video-duration">{{ item.durationStr }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系老师 -->
+    <view a:if="{{ course.teacherContact }}" class="section">
+      <view class="section-title">联系老师</view>
+      <view class="teacher-contact">{{ course.teacherContact }}</view>
+    </view>
+
+    <!-- 试学购课 CTA -->
+    <view a:if="{{ isTrial }}" class="enroll-cta">
+      <view class="enroll-cta-text">已试学满意？立即购课，解锁全部章节</view>
+      <button class="btn-enroll" onTap="onEnroll">立即购课</button>
+    </view>
+
+    <view a:if="{{ isTrial }}" class="footer-spacer"></view>
+  </view>
+</block>

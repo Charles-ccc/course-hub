@@ -37,6 +37,7 @@ export interface CreateOrderRespDto {
 
 export interface OrderListItemDto {
   id: string;
+  courseId: string | null;
   courseName: string;
   insitutionName: string;
   totalAmountCents: number;

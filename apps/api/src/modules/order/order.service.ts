@@ -140,6 +140,7 @@ export class OrderService {
     });
     return orders.map((o) => ({
       id: o.id,
+      courseId: o.courseId,
       courseName: o.courseName,
       insitutionName: o.insitution.name,
       totalAmountCents: o.totalAmountCents,

@@ -166,23 +166,33 @@
 
 ## 模块 7：学习中心（骨架）
 
+> **决策（2026-06-25）：**
+>
+> - `GET /courses/:courseId/videos` 始终返回全部章节（含 `isTrial` 字段），无 trial 参数过滤；前端根据 `isTrial` 字段和页面进入方式决定锁灰逻辑。
+> - trial 模式（`?trial=1`）：所有章节展示，非试学章节锁灰（opacity 0.45 + 🔒 图标），点击提示「购课后可解锁全部章节」。
+> - 时长格式：`mm:ss`，durationSec=0 时展示 `00:00`。
+> - `teacherContact` 字段直接纯文本展示，不做结构化解析。
+
 ### 后端
 
-- [ ] `GET /courses/:courseId/videos`（章节列表，trial 参数过滤）
-- [ ] `GET /courses/videos/:videoId/url` → 返回 501（占位）
-- [ ] `POST /learning/checkin` → 返回 501（占位）
+- [x] `GET /courses/:courseId/videos`（章节列表，按 sortOrder asc 排序，含 isTrial 字段）
+- [x] `GET /courses/videos/:videoId/url` → 返回 501（占位）
+- [x] 新建 `LearningModule`，`POST /learning/checkin` → 返回 501（占位）
 
 ### 前端
 
-- [ ] 学习中心页：章节列表渲染，点击 Toast「视频功能即将上线」
-- [ ] trial=1 时顶部黄色横幅 + 底部报名引导卡片
-- [ ] 联系老师区域（微信号 / 联系电话）
+- [x] 学习中心页 `pages/learning/index/index`（并行请求课程详情 + 章节列表）
+- [x] 章节列表：时长 mm:ss / 试学标签 / 点击 Toast「视频功能即将上线，敬请期待」
+- [x] trial=1 时：顶部黄色横幅 + 非试学章节锁灰 + 底部「立即购课」CTA 卡片
+- [x] 联系老师区域（teacherContact 不为空时展示）
 
 ### 测试卡点
 
-- [ ] 进入学习页展示章节列表（标题 / 时长占位）
-- [ ] 点击任意章节 Toast 提示「视频功能即将上线，敬请期待」
-- [ ] trial=1 时只展示第一节，顶部横幅可见，底部有购课入口
+- [x] 进入学习页（从订单详情「去学习」按钮），展示课程名 + 章节列表（含时长）
+- [x] 点击任意章节 Toast 提示「视频功能即将上线，敬请期待」
+- [x] trial=1 进入：非试学章节锁灰，点击提示「购课后可解锁全部章节」
+- [x] trial=1 时顶部黄色横幅可见，底部「立即购课」按钮跳课程详情页
+- [x] teacherContact 不为空时展示「联系老师」区块，为空时隐藏
 
 ---
 

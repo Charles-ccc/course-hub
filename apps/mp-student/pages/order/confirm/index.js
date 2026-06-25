@@ -35,8 +35,8 @@ Page({
       loading: true,
       payTitle: isDeferred ? '先学后付' : '立即付款',
       payDesc: isDeferred
-        ? '每期课程结束后再扣款，无需预付'
-        : '一次性付款，立即开始学习',
+        ? '签约后无需预付，即可一次性解锁完整课程。签约后每 30 天自动扣款一次。此服务为商家行为，非金融信贷产品，不产生任何利息或手续费。'
+        : '一次性付款，立即开始学习。',
       btnText: isDeferred ? '确认并签约' : '确认付款',
     });
     this._fetch(courseId);

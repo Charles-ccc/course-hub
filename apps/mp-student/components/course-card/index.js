@@ -11,7 +11,6 @@ Component({
   },
 
   data: {
-    pricePerPeriod: '0',
     priceTotal: '0',
   },
 
@@ -28,11 +27,7 @@ Component({
   methods: {
     recompute(course) {
       if (!course) return;
-      const periods = course.periodCount || 1;
-      this.setData({
-        pricePerPeriod: formatYuan(Math.round(course.priceCents / periods)),
-        priceTotal: formatYuan(course.priceCents),
-      });
+      this.setData({ priceTotal: formatYuan(course.priceCents) });
     },
 
     onTap() {

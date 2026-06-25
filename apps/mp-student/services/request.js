@@ -134,11 +134,12 @@ function request(options) {
           drainQueue(newToken);
           return request({ ...options, _retry: true });
         })
-        .catch((err) => {
-          rejectQueue(err);
+        .catch(() => {
+          rejectQueue(new Error("session_expired"));
           clearTokens();
           my.reLaunch({ url: "/pages/auth/login/index" });
-          return Promise.reject(err);
+          // reLaunch 会替换整个页面栈，返回永不 resolve 的 Promise 以阻止下游 catch 弹 toast
+          return new Promise(() => {});
         })
         .finally(() => {
           isRefreshing = false;

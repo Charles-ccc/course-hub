@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Header, Post, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Header, NotFoundException, Post, Res, UseGuards } from "@nestjs/common";
 import { SimpleAuthGuard } from "../../common/auth/simple-auth.guard";
 import { CurrentUser } from "../../common/auth/current-user.decorator";
 import { RequireRole } from "../../common/auth/roles.decorator";
 import type { AuthenticatedUser } from "../../common/auth/auth.types";
+import { PrismaService } from "../../prisma/prisma.service";
 import { RealnameService } from "./realname.service";
 import {
   RealnameConfirmReqDto,
@@ -15,7 +16,24 @@ import {
 @UseGuards(SimpleAuthGuard)
 @RequireRole("STUDENT")
 export class StudentController {
-  constructor(private readonly realnameService: RealnameService) {}
+  constructor(
+    private readonly realnameService: RealnameService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  @Get("me")
+  async me(@CurrentUser() user: AuthenticatedUser) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: user.subject },
+    });
+    if (!student) throw new NotFoundException("Student not found");
+    return {
+      id: student.id,
+      name: student.name,
+      phone: student.phone,
+      realnameStatus: student.realnameStatus,
+    };
+  }
 
   @Post("realname/initialize")
   initialize(

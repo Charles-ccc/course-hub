@@ -58,36 +58,10 @@
 .meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.prices {
-  display: flex;
-  align-items: baseline;
-}
-
-.price-per-period {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #ff6b00;
-}
-
-.price-unit {
-  font-size: 24rpx;
-  color: #ff6b00;
-  margin-right: 16rpx;
 }
 
 .price-total {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.badge {
-  background: #fff2e6;
+  font-size: 34rpx;
+  font-weight: 700;
   color: #ff6b00;
-  font-size: 22rpx;
-  font-weight: 500;
-  padding: 6rpx 16rpx;
-  border-radius: 8rpx;
 }

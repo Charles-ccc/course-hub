@@ -6,6 +6,7 @@ import type {
   CourseDetailDto,
   CourseListDto,
   CourseListQueryDto,
+  CourseVideoListDto,
 } from "./dto/course.dto";
 
 @Injectable()
@@ -50,6 +51,25 @@ export class CourseService {
       query.page,
       query.pageSize,
     );
+  }
+
+  async videos(courseId: string): Promise<CourseVideoListDto> {
+    const course = await this.prisma.course.findFirst({
+      where: { id: courseId, status: "ONLINE", auditStatus: "APPROVED" },
+    });
+    if (!course) throw new NotFoundException("Course not found");
+
+    const rows = await this.prisma.courseVideo.findMany({
+      where: { courseId },
+      orderBy: { sortOrder: "asc" },
+    });
+    return rows.map((v) => ({
+      id: v.id,
+      title: v.title,
+      durationSec: v.durationSec,
+      isTrial: v.isTrial,
+      sortOrder: v.sortOrder,
+    }));
   }
 
   async detail(courseId: string): Promise<CourseDetailDto> {
