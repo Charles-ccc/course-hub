@@ -34,3 +34,16 @@ export interface OrderDetailDto {
 export interface CreateOrderRespDto {
   orderId: string;
 }
+
+export interface OrderListItemDto {
+  id: string;
+  courseName: string;
+  insitutionName: string;
+  totalAmountCents: number;
+  periodCount: number;
+  payType: string;
+  status: string;
+  createdAt: string;
+}
+
+export type OrderListDto = OrderListItemDto[];

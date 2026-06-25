@@ -6,6 +6,7 @@ import type {
   CreateOrderReqDto,
   CreateOrderRespDto,
   OrderDetailDto,
+  OrderListDto,
 } from "./dto/order.dto";
 
 const INSTALLMENT_INTERVAL_DAYS = 30;
@@ -129,6 +130,24 @@ export class OrderService {
         status: it.status,
       })),
     };
+  }
+
+  async list(studentId: string): Promise<OrderListDto> {
+    const orders = await this.prisma.order.findMany({
+      where: { studentId },
+      include: { insitution: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    return orders.map((o) => ({
+      id: o.id,
+      courseName: o.courseName,
+      insitutionName: o.insitution.name,
+      totalAmountCents: o.totalAmountCents,
+      periodCount: o.periodCount,
+      payType: o.payType,
+      status: o.status,
+      createdAt: o.createdAt.toISOString(),
+    }));
   }
 
   /**

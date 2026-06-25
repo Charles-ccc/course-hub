@@ -1,3 +1,31 @@
-<view class="page-container">
-  <view class="placeholder-text">订单列表（模块 6 实现）</view>
+<view a:if="{{ loading }}" class="loading-wrap">
+  <text>加载中...</text>
 </view>
+
+<view a:elif="{{ orders.length === 0 }}" class="empty-wrap">
+  <view class="empty-icon">📋</view>
+  <view class="empty-text">还没有任何订单</view>
+  <view class="empty-hint">去看看感兴趣的课程吧</view>
+  <button class="btn-go-home" onTap="onGoHome">去看看课程</button>
+</view>
+
+<scroll-view a:else scroll-y class="list">
+  <view
+    class="order-card"
+    a:for="{{ orders }}"
+    a:key="id"
+    data-id="{{ item.id }}"
+    onTap="onTapOrder"
+  >
+    <view class="card-header">
+      <text class="course-name">{{ item.courseName }}</text>
+      <view class="status-tag {{ item.statusCls }}">{{ item.statusText }}</view>
+    </view>
+    <view class="insitution">{{ item.insitutionName }}</view>
+    <view class="card-footer">
+      <text class="pay-label">{{ item.payLabel }}</text>
+      <text class="price">¥{{ item.totalYuan }}</text>
+    </view>
+    <view class="card-date">{{ item.createdAt }}</view>
+  </view>
+</scroll-view>

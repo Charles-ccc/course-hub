@@ -44,6 +44,7 @@ Page({
     statusCls: '',
     installments: [],
     canSign: false,
+    canLearn: false,
   },
 
   onLoad(query) {
@@ -80,6 +81,7 @@ Page({
           statusCls: statusInfo.cls,
           installments,
           canSign: order.status === 'CREATED',
+          canLearn: order.status === 'ACTIVE',
         });
       })
       .catch((err) => {
@@ -90,6 +92,14 @@ Page({
 
   onSign() {
     my.showToast({ content: '签约功能即将上线，敬请期待', type: 'none' });
+  },
+
+  onLearn() {
+    if (this.data.order && this.data.order.courseId) {
+      my.navigateTo({
+        url: `/pages/learning/index/index?courseId=${this.data.order.courseId}`,
+      });
+    }
   },
 
   onViewCourse() {

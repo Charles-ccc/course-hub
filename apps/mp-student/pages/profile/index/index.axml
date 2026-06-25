@@ -1,3 +1,23 @@
-<view class="page-container">
-  <view class="placeholder-text">个人中心（模块 8 实现）</view>
+<view class="page">
+  <view class="header">
+    <view class="avatar">{{ initial }}</view>
+    <view class="user-info">
+      <view class="user-name">{{ name || '加载中...' }}</view>
+      <view class="user-phone">{{ phone }}</view>
+    </view>
+  </view>
+
+  <view class="menu-group">
+    <view class="menu-item" onTap="onGoOrders">
+      <text class="menu-label">我的课程</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="menu-group">
+    <view class="menu-item menu-danger" onTap="onLogout">
+      <text class="menu-label">退出登录</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
 </view>

@@ -17,6 +17,7 @@ import {
   CreateOrderReqDto,
   type CreateOrderRespDto,
   type OrderDetailDto,
+  type OrderListDto,
 } from "./dto/order.dto";
 
 @Controller("orders")
@@ -24,6 +25,11 @@ import {
 @RequireRole("STUDENT")
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
+
+  @Get()
+  list(@CurrentUser() user: AuthenticatedUser): Promise<OrderListDto> {
+    return this.orderService.list(user.subject);
+  }
 
   @Post()
   create(
