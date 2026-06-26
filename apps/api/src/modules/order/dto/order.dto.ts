@@ -48,3 +48,16 @@ export interface OrderListItemDto {
 }
 
 export type OrderListDto = OrderListItemDto[];
+
+export interface ZhimaInitializeRespDto {
+  scheme: string;
+}
+
+export interface ZhimaConfirmRespDto {
+  success: boolean;
+  orderStatus: string;
+}
+
+export interface RepayRespDto {
+  tradeNo: string;
+}

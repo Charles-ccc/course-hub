@@ -36,14 +36,26 @@
 
   <view a:if="{{ isDeferred }}" class="card">
     <view class="card-title">分期明细</view>
-    <view class="installment" a:for="{{ installments }}" a:key="periodNo">
+    <view
+      a:for="{{ installments }}"
+      a:key="periodNo"
+      class="installment {{ item.isOverdue ? 'installment-overdue' : '' }}"
+    >
       <view class="installment-left">
         <text class="installment-no">第 {{ item.periodNo }} 期</text>
         <text class="installment-date">应扣日 {{ item.dueDate }}</text>
       </view>
       <view class="installment-right">
         <text class="installment-amount">¥{{ item.amountYuan }}</text>
-        <text class="installment-status">{{ item.statusText }}</text>
+        <view class="installment-status-row">
+          <text class="installment-status {{ item.isOverdue ? 'status-overdue' : '' }}">{{ item.statusText }}</text>
+          <button
+            a:if="{{ item.isOverdue }}"
+            class="btn-repay"
+            data-period-no="{{ item.periodNo }}"
+            onTap="onRepay"
+          >立即还款</button>
+        </view>
       </view>
     </view>
   </view>
@@ -54,10 +66,13 @@
     </view>
   </view>
 
-  <view a:if="{{ canSign }}" class="footer">
-    <button class="btn-primary" onTap="onSign">签约授权</button>
+  <!-- DEFERRED 待授权 -->
+  <view a:if="{{ canZhima }}" class="footer">
+    <view class="footer-hint">授权后即可解锁全部课程内容</view>
+    <button class="btn-primary" onTap="onZhima">芝麻先享授权</button>
   </view>
 
+  <!-- 已激活，去学习 -->
   <view a:if="{{ canLearn }}" class="footer">
     <button class="btn-primary btn-green" onTap="onLearn">去学习</button>
   </view>

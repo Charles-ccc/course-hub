@@ -2,9 +2,8 @@ import {
   Body,
   Controller,
   Get,
-  HttpException,
-  HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   UseGuards,
 } from "@nestjs/common";
@@ -18,6 +17,9 @@ import {
   type CreateOrderRespDto,
   type OrderDetailDto,
   type OrderListDto,
+  type ZhimaInitializeRespDto,
+  type ZhimaConfirmRespDto,
+  type RepayRespDto,
 } from "./dto/order.dto";
 
 @Controller("orders")
@@ -47,12 +49,44 @@ export class OrderController {
     return this.orderService.detail(user.subject, orderId);
   }
 
-  // Module 9 电子签约占位：当前返回 501
-  @Post(":orderId/sign/initialize")
-  signInitialize(): never {
-    throw new HttpException(
-      { code: 50100, message: "签约功能即将上线，敬请期待" },
-      HttpStatus.NOT_IMPLEMENTED,
-    );
+  // ── 芝麻先享（仅 DEFERRED 订单）────────────────────────
+
+  @Post(":orderId/zhima/initialize")
+  zhimaInitialize(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("orderId") orderId: string,
+  ): Promise<ZhimaInitializeRespDto> {
+    return this.orderService.zhimaInitialize(user.subject, orderId);
+  }
+
+  @Post(":orderId/zhima/confirm")
+  zhimaConfirm(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("orderId") orderId: string,
+  ): Promise<ZhimaConfirmRespDto> {
+    return this.orderService.zhimaConfirm(user.subject, orderId);
+  }
+
+  // ── 逾期还款 ─────────────────────────────────────────────
+
+  @Post(":orderId/installments/:periodNo/repay")
+  repay(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("orderId") orderId: string,
+    @Param("periodNo", ParseIntPipe) periodNo: number,
+  ): Promise<RepayRespDto> {
+    return this.orderService.repay(user.subject, orderId, periodNo);
+  }
+}
+
+// 芝麻先享扣款回调（无需认证，由支付宝服务器调用）
+@Controller("orders/zhima")
+export class ZhimaWebhookController {
+  constructor(private readonly orderService: OrderService) {}
+
+  @Post("notify")
+  async notify(@Body() body: Record<string, string>): Promise<string> {
+    await this.orderService.handleZhimaNotify(body);
+    return "success";
   }
 }

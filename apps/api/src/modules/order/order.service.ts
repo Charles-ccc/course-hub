@@ -2,11 +2,15 @@ import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { PrismaService } from "../../prisma/prisma.service";
 import { ApiBusinessException } from "../../common/exceptions/api-business.exception";
+import { AlipayService } from "../student-auth/alipay.service";
 import type {
   CreateOrderReqDto,
   CreateOrderRespDto,
   OrderDetailDto,
   OrderListDto,
+  ZhimaInitializeRespDto,
+  ZhimaConfirmRespDto,
+  RepayRespDto,
 } from "./dto/order.dto";
 
 const INSTALLMENT_INTERVAL_DAYS = 30;
@@ -16,7 +20,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly alipay: AlipayService,
+  ) {}
 
   async create(
     studentId: string,
@@ -150,6 +157,174 @@ export class OrderService {
       createdAt: o.createdAt.toISOString(),
     }));
   }
+
+  // ── 芝麻先享 ──────────────────────────────────────────────
+
+  async zhimaInitialize(
+    studentId: string,
+    orderId: string,
+  ): Promise<ZhimaInitializeRespDto> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, studentId },
+    });
+    if (!order) throw new ApiBusinessException(40411, "订单不存在", 404);
+    if (order.status !== "CREATED") {
+      throw new ApiBusinessException(40020, "订单状态不允许发起芝麻先享授权", 400);
+    }
+    if (order.payType !== "DEFERRED") {
+      throw new ApiBusinessException(40021, "仅先学后付订单支持芝麻先享", 400);
+    }
+
+    const outOrderNo = orderId.replace(/-/g, "_");
+    const firstInstallment = await this.prisma.installment.findFirst({
+      where: { orderId, periodNo: 1 },
+    });
+    const perPeriodAmountCents =
+      firstInstallment?.plannedAmountCents ?? Math.floor(order.totalAmountCents / order.periodCount);
+
+    const { creditBizOrderId, schemeUrl } = await this.alipay.createZhimaCreditOrder({
+      outOrderNo,
+      totalAmountCents: order.totalAmountCents,
+      perPeriodAmountCents,
+      periodCount: order.periodCount,
+      courseName: order.courseName,
+    });
+
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { creditBizOrderId },
+    });
+
+    this.logger.log(
+      JSON.stringify({ event: "zhima_initialize", orderId, creditBizOrderId }),
+    );
+
+    return { scheme: schemeUrl };
+  }
+
+  async zhimaConfirm(
+    studentId: string,
+    orderId: string,
+  ): Promise<ZhimaConfirmRespDto> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, studentId },
+    });
+    if (!order) throw new ApiBusinessException(40411, "订单不存在", 404);
+    if (order.status !== "CREATED") {
+      return { success: true, orderStatus: order.status };
+    }
+    if (!order.creditBizOrderId) {
+      throw new ApiBusinessException(40022, "尚未发起芝麻先享授权", 400);
+    }
+
+    const outOrderNo = orderId.replace(/-/g, "_");
+    const { signed } = await this.alipay.queryZhimaCreditOrder({
+      outOrderNo,
+      creditBizOrderId: order.creditBizOrderId,
+    });
+
+    if (!signed) {
+      throw new ApiBusinessException(40501, "用户尚未完成芝麻先享授权", 400);
+    }
+
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: "ACTIVE" },
+    });
+
+    this.logger.log(JSON.stringify({ event: "zhima_confirmed", orderId }));
+
+    return { success: true, orderStatus: "ACTIVE" };
+  }
+
+  async handleZhimaNotify(params: Record<string, string>): Promise<void> {
+    const valid = this.alipay.verifyNotifySign(params);
+    if (!valid) {
+      this.logger.warn(JSON.stringify({ event: "zhima_notify_invalid_sign", params }));
+      return;
+    }
+
+    const outOrderNo = params["out_order_no"] ?? params["outOrderNo"] ?? "";
+    const orderId = outOrderNo.replace(/_/g, "-");
+    const periodNoStr = params["period_no"] ?? params["periodNo"] ?? "";
+    const periodNo = parseInt(periodNoStr, 10);
+    const notifyType = params["notify_type"] ?? params["notifyType"] ?? "";
+
+    this.logger.log(
+      JSON.stringify({ event: "zhima_notify", orderId, periodNo, notifyType }),
+    );
+
+    if (!orderId || !periodNo) return;
+
+    const isSuccess =
+      notifyType === "WITHHOLD_SUCCESS" ||
+      notifyType === "withhold_success" ||
+      params["status"] === "SUCCESS";
+
+    const newStatus = isSuccess ? "PAID" : "OVERDUE";
+    const paidAmountCents = isSuccess
+      ? Math.round(parseFloat(params["amount"] ?? params["income_amount"] ?? "0") * 100)
+      : 0;
+
+    await this.prisma.installment.updateMany({
+      where: { orderId, periodNo },
+      data: {
+        status: newStatus,
+        ...(isSuccess ? { paidAmountCents } : {}),
+      },
+    });
+
+    if (isSuccess) {
+      const remaining = await this.prisma.installment.count({
+        where: { orderId, status: { not: "PAID" } },
+      });
+      if (remaining === 0) {
+        await this.prisma.order.update({
+          where: { id: orderId },
+          data: { status: "COMPLETED" },
+        });
+        this.logger.log(JSON.stringify({ event: "order_completed", orderId }));
+      }
+    }
+  }
+
+  async repay(
+    studentId: string,
+    orderId: string,
+    periodNo: number,
+  ): Promise<RepayRespDto> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, studentId },
+      include: { student: { select: { alipayOpenId: true } } },
+    });
+    if (!order) throw new ApiBusinessException(40411, "订单不存在", 404);
+
+    const installment = await this.prisma.installment.findUnique({
+      where: { orderId_periodNo: { orderId, periodNo } },
+    });
+    if (!installment) throw new ApiBusinessException(40412, "分期不存在", 404);
+    if (installment.status !== "OVERDUE") {
+      throw new ApiBusinessException(40023, "该期次无需还款", 400);
+    }
+
+    const outTradeNo = `${orderId.replace(/-/g, "")}_${periodNo}`;
+    const subject = `${order.courseName} 第${periodNo}期`;
+
+    const { tradeNo } = await this.alipay.createAlipayTrade({
+      outTradeNo,
+      totalAmountCents: installment.plannedAmountCents,
+      subject,
+      buyerOpenId: order.student?.alipayOpenId ?? "",
+    });
+
+    this.logger.log(
+      JSON.stringify({ event: "repay_trade_created", orderId, periodNo, tradeNo }),
+    );
+
+    return { tradeNo };
+  }
+
+  // ── 分期明细生成 ────────────────────────────────────────
 
   /**
    * 生成分期明细。

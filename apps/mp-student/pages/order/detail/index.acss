@@ -176,3 +176,44 @@
 .btn-green {
   background: #18a058;
 }
+
+.footer-hint {
+  font-size: 22rpx;
+  color: #888;
+  text-align: center;
+  margin-bottom: 12rpx;
+}
+
+.installment-overdue {
+  background: #fff5f5;
+  margin: 0 -28rpx;
+  padding-left: 28rpx;
+  padding-right: 28rpx;
+}
+
+.installment-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 6rpx;
+}
+
+.status-overdue {
+  color: #c62828;
+}
+
+.btn-repay {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #fff;
+  background: #c62828;
+  border: none;
+  border-radius: 24rpx;
+  padding: 4rpx 16rpx;
+  height: auto;
+  line-height: 1.6;
+}
+
+.btn-repay::after {
+  border: none;
+}

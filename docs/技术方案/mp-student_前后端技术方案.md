@@ -209,7 +209,17 @@ model Order {
 
 ## 3.2 Iter 2 新增
 
-### 3.2.1 SignRecord 表（支付宝核身签约记录）
+### 3.2.1 Order 表新增字段
+
+```prisma
+model Order {
+  // 已有字段...
+  creditBizOrderId  String?   // 芝麻先享信用订单号（仅 DEFERRED 订单，creditbizorder.create 返回）
+  signRecordId      String?   // 电子签约流水号（法大大/e签宝，所有订单）
+}
+```
+
+### 3.2.2 SignRecord 表（电子签约留痕，供第三方服务商对接）
 
 ```prisma
 enum SignStatus {
@@ -221,7 +231,8 @@ enum SignStatus {
 model SignRecord {
   id          String     @id
   orderId     String     @unique
-  certifyId   String                // 支付宝开放认证流水号
+  provider    String                // "fadada" | "esign"（第三方服务商标识）
+  flowId      String                // 第三方签约流程号
   status      SignStatus @default(PENDING)
   signedAt    DateTime?
   createdAt   DateTime   @default(now())
@@ -229,6 +240,10 @@ model SignRecord {
   order       Order      @relation(fields: [orderId], references: [id])
 }
 ```
+
+> 电子签约（法大大/e签宝）与芝麻先享授权是两个独立步骤，互不替代：
+> - `SignRecord`：所有订单（IMMEDIATE + DEFERRED）均需完成，用于留存本人签约证据
+> - `creditBizOrderId`：仅 DEFERRED 订单额外需要，用于芝麻先享周期扣款授权
 
 ## 3.3 Iter 3 新增
 
@@ -269,7 +284,7 @@ model CheckinRecord {
 | 迭代  | 行为                                                                                                                                |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Iter1 | `POST /orders` 创建后 status = `CREATED`（无论 payType）。`IMMEDIATE` 订单**不创建 Installment 记录**，机构后台人工审核激活。       |
-| Iter2 | `DEFERRED` 订单：支付宝核身签约确认（`/sign/confirm`）成功后，status 更新为 `ACTIVE`，生成 Installment 记录。                        |
+| Iter2 | 所有订单：电子签约（法大大/e签宝）完成后 SignRecord SIGNED。`DEFERRED` 订单额外完成芝麻先享授权后 status 更新为 `ACTIVE`，生成 Installment 记录。 |
 | Iter3 | `IMMEDIATE` 订单：支付宝支付成功回调后，status 更新为 `ACTIVE`，生成单条 Installment（periodNo=1, dueDate=today, status=PENDING）。 |
 
 > Iter1 学员端订单详情中 `CREATED` 状态下的签约按钮（占位）是目前唯一的操作入口，`installments` 数组在此状态下返回空数组。
@@ -609,39 +624,103 @@ InstallmentItem:
 }
 ```
 
-### 4.4.4 签约初始化（获取 certifyUrl）
+### 4.4.4 电子签约初始化（法大大/e签宝）
 
 ```
 POST /orders/:orderId/sign/initialize
 Auth: 必须登录，且为本人订单
+适用：所有 payType（IMMEDIATE + DEFERRED）
 
 模块 1-8 Response: 501 { message: "签约功能即将上线" }
 模块 9 Response 200:
 {
-  certifyId: string,
-  certifyUrl: string    // 支付宝开放认证页 URL，前端跳转
+  signUrl: string    // 第三方签约页链接，前端 WebView 或跳转打开
 }
 ```
 
-> 后端调用 `alipay.user.certify.open.initialize`（bizNo 传入 orderId）→ 再调用 `alipay.user.certify.open.certify` → 返回 `certifyUrl`。
-> 前端通过 `my.ap.navigateToAlipayPage` 或 WebView 跳转到该页，用户完成人脸核身作为"本人确认签约"。
+> 后端调用法大大/e签宝 SDK 创建签约流程，返回签约链接。
+> 创建 `SignRecord`（status=PENDING，flowId=第三方流程号），存入 `Order.signRecordId`。
+>
+> **注意：** 当前具体服务商（法大大 vs e签宝）待确认，接口路径和参数不变，
+> 仅 provider 和 SDK 调用层需适配。计划使用第三方而非支付宝核身，
+> 以保持平台无关性（兼容未来微信小程序/H5 迁移）。
 
-### 4.4.5 签约确认（核查结果并激活订单）
+### 4.4.5 电子签约确认（查询结果，所有订单通用）
 
 ```
 POST /orders/:orderId/sign/confirm
 Auth: 必须登录，且为本人订单
-Body: { certifyId: string }
+Body: {}
+
+Response 200: { success: true, signStatus: "SIGNED" }
+
+Error:
+  40501 SIGN_NOT_COMPLETED   (用户尚未完成签约)
+  40502 ORDER_NOT_FOUND
+```
+
+> 后端查询第三方签约状态；SIGNED → 更新 `SignRecord.status = SIGNED`，记录 `signedAt`。
+> **此步骤仅完成签约留痕，不直接激活订单：**
+> - `IMMEDIATE` 订单：签约后等待支付完成才激活（Iter3）
+> - `DEFERRED` 订单：签约后还需完成芝麻先享授权才激活（见 4.4.6）
+
+### 4.4.6 芝麻先享授权初始化（仅 DEFERRED 订单）
+
+```
+POST /orders/:orderId/zhima/initialize
+Auth: 必须登录，且为本人订单，且 SignRecord.status = SIGNED
+
+模块 1-9 Response: 501 { message: "授权功能即将上线" }
+模块 10 Response 200:
+{
+  scheme: string    // 芝麻先享签约页 scheme URL，前端通过 my.ap.navigateToAlipayPage 跳转
+}
+```
+
+> 前置条件：电子签约已完成（SignRecord.status = SIGNED）。
+> 后端调用 `zhima.credit.payafteruse.creditbizorder.create`，参数：
+> - `out_order_no` = `order.id.replace(/-/g, '_')`
+> - `credit_amount` = 总价（分），`period_type` = `MONTH`，`period` = `course.periodCount`
+> - `product_code` = `w1010100100000000001`
+>
+> 返回的 `credit_biz_order_id` 存入 `Order.creditBizOrderId`，`scheme` 直传前端。
+
+### 4.4.7 芝麻先享授权确认（激活 DEFERRED 订单）
+
+```
+POST /orders/:orderId/zhima/confirm
+Auth: 必须登录，且为本人订单
+Body: {}
 
 Response 200: { success: true, orderStatus: "ACTIVE" }
 
 Error:
-  40501 SIGN_VERIFY_FAILED   (核身未通过，无法签约)
+  40501 ZHIMA_NOT_COMPLETED   (用户尚未完成芝麻授权)
   40502 ORDER_NOT_FOUND
+  40503 SIGN_REQUIRED         (电子签约未完成，不可授权)
 ```
 
-> 后端调用 `alipay.user.certify.open.query { certifyId }` 查询结果；
-> 通过后写入 SignRecord（certifyId + signedAt），订单状态更新为 ACTIVE，生成 Installment 分期记录。
+> 后端调用 `zhima.credit.payafteruse.creditbizorder.query { out_order_no }`；
+> SIGNED → `Order.status = ACTIVE`，按 `periodCount` 批量创建 Installment（status=PENDING）。
+
+### 4.4.6 芝麻先享扣款回调（Notify）
+
+```
+POST /orders/zhima/notify
+Auth: 无（IP 白名单 + 支付宝验签）
+
+Body: 支付宝标准 notify 表单参数（application/x-www-form-urlencoded）
+
+Response: "success"（纯文本，支付宝要求）
+```
+
+> 处理逻辑：
+> 1. 验签（`alipayPublicKey`）
+> 2. 根据 `out_order_no`（下划线形 UUID）还原 orderId
+> 3. 根据 `period_no` 定位对应 `Installment`
+> 4. 扣款成功（`notify_type = WITHHOLD_SUCCESS`）→ `Installment.status = PAID`
+> 5. 扣款失败（`notify_type = WITHHOLD_FAILED`）→ `Installment.status = OVERDUE`
+> 6. 若最后一期变为 PAID → `Order.status = COMPLETED`
 
 ---
 
@@ -1149,30 +1228,87 @@ apps/mp-student/
 
 ---
 
-## 模块 9：电子签约（支付宝生物核身确认）
+## 模块 9：电子签约（法大大/e签宝，所有订单）+ 芝麻先享授权（DEFERRED 订单）
 
-> 目标：CREATED 状态订单的签约按钮接入支付宝开放认证流程（`alipay.user.certify.open.*`），核身通过后订单变为 ACTIVE。
+> 目标：所有订单通过第三方电子签约服务完成身份核验与合同留痕；DEFERRED 订单在签约完成后额外发起芝麻先享授权扣款，两步都完成后订单变为 ACTIVE。
+>
+> **设计原则：** 电子签约使用平台无关的第三方服务商（法大大/e签宝），不依赖支付宝核身，
+> 保证未来迁移微信小程序或 H5 时签约能力不受影响。芝麻先享仅作为 Alipay 端的支付机制。
+
+---
+
+### 前置条件（非技术）
+
+| 项目 | 状态 | 说明 |
+| ---- | ---- | ---- |
+| 支付宝开放平台申请芝麻先享权限 | 待申请 | 需提交业务场景、守约链接 |
+| 守约链接配置 | **临时 H5 方案**（见下方说明） | 最终迁移到小程序页面 |
+| 小程序上架 | 待上线 | 上线后替换守约链接 |
+
+---
+
+### 守约链接方案
+
+> **守约链接（信用服务守约链接）** 是支付宝开通芝麻先享时必填的配置项，用于在芝麻信用页向用户展示还款协议入口。
+
+#### 临时方案（H5 静态页）⚠️ 待迁移
+
+- **链接：** `https://happymaa.cn/credit-agreement`（待部署）
+- **内容：** 一个 H5 静态页，展示「先学后付」服务说明、还款周期、免责条款
+- **用途：** 仅用于通过支付宝芝麻先享审核
+- **限制：** 无法感知具体订单信息，只能展示通用条款
+
+#### 最终方案（小程序页面）— 小程序上架后迁移
+
+- **链接格式：** `alipays://platformapi/startapp?appId=2021006157643188&page=pages%2Forder%2Flist%2Findex`
+- **逾期守约跳转：** `alipays://platformapi/startapp?appId=2021006157643188&page=pages%2Forder%2Fdetail%2Findex&query=orderId%3D{out_order_no}`
+  - `out_order_no` 为 UUID 下划线形式，前端 `onLoad` 中需将 `_` 还原为 `-` 匹配数据库 orderId
+- **迁移步骤：** 小程序上线后在支付宝开放平台控制台更新守约链接配置，无需代码改动
+
+---
 
 ### 后端任务
 
 | 任务 | 模块 |
 | ---- | ---- |
-| DB 迁移：新增 SignRecord 表（certifyId + signedAt） | db |
-| `POST /orders/:orderId/sign/initialize`：调用 `alipay.user.certify.open.initialize` → `alipay.user.certify.open.certify`，返回 `{ certifyId, certifyUrl }` | student/order |
-| `POST /orders/:orderId/sign/confirm`：调用 `alipay.user.certify.open.query`，通过后激活订单 + 生成 Installment | student/order |
+| DB 迁移：新增 `SignRecord` 表（provider / flowId / status / signedAt）；`Order` 新增 `signRecordId`、`creditBizOrderId` 字段 | db |
+| `POST /orders/:orderId/sign/initialize`：创建第三方签约流程，返回 `{ signUrl }` | student/order |
+| `POST /orders/:orderId/sign/confirm`：查询第三方结果，SIGNED → 更新 SignRecord | student/order |
+| `POST /orders/:orderId/zhima/initialize`（DEFERRED）：校验已签约 → 调用 creditbizorder.create，返回 `{ scheme }` | student/order |
+| `POST /orders/:orderId/zhima/confirm`（DEFERRED）：查询 creditbizorder → SIGNED → Order ACTIVE + 批量创建 Installment | student/order |
+| `POST /orders/zhima/notify`：验签 → 更新 Installment 状态（PAID/OVERDUE）→ 末期 PAID 时 Order COMPLETED | student/order |
+| 逾期还款：`POST /orders/:orderId/installments/:periodNo/repay` → 返回 `tradeNo` | student/order |
 
 ### 前端任务
 
 | 任务 | 页面 |
 | ---- | ---- |
-| 订单详情页「签约授权」按钮：调用 initialize 接口，拿到 `certifyUrl`，通过 `my.ap.navigateToAlipayPage` 跳转支付宝核身页 | pages/order/detail |
-| 用户完成返回后调用 confirm 接口，刷新订单状态 | pages/order/detail |
+| 订单详情页状态机：待签约 → 签约中 → 待授权（DEFERRED）→ 授权中 → ACTIVE | pages/order/detail |
+| 「签约授权」按钮：调用 sign/initialize，WebView/跳转打开 `signUrl`，返回后调用 sign/confirm | pages/order/detail |
+| DEFERRED 订单签约完成后显示「芝麻先享授权」按钮：调用 zhima/initialize，`my.ap.navigateToAlipayPage(scheme)`，`onShow` 后调用 zhima/confirm | pages/order/detail |
+| 逾期状态展示 + 「立即还款」→ repay 接口 → `my.tradePay` | pages/order/detail |
+
+### DEFERRED 订单激活完整流程
+
+```
+用户点击「签约授权」
+  → sign/initialize（第三方签约链接）
+  → 用户在第三方页完成人脸核身 + 签约
+  → onShow → sign/confirm（SignRecord SIGNED）
+  → 显示「芝麻先享授权」按钮
+  → zhima/initialize（芝麻先享 scheme）
+  → 用户在支付宝芝麻页完成授权
+  → onShow → zhima/confirm（Order ACTIVE）
+  → 显示「去学习」按钮
+```
 
 ### 测试卡点
 
-- 点击「签约授权」按钮跳转至支付宝核身页面
-- 核身通过后订单状态变为 ACTIVE，签约按钮消失，「去学习」按钮出现
-- 核身失败时展示错误提示，可再次发起
+- 电子签约跳转第三方页面，核身通过后返回 SignRecord SIGNED
+- DEFERRED 订单：签约后显示芝麻授权按钮，授权完成后 Order 变为 ACTIVE
+- IMMEDIATE 订单：签约后等待支付激活（Iter3），不出现芝麻授权入口
+- 取消任意步骤后，页面仍显示当前未完成步骤的操作按钮，可重试
+- 芝麻 notify 正确更新 Installment，逾期时「立即还款」可见
 
 ---
 

@@ -16,8 +16,7 @@ function formatDate(iso) {
 }
 
 const ORDER_STATUS_MAP = {
-  CREATED: { text: '待签约', cls: 'status-created' },
-  COOLING_OFF: { text: '冷静期', cls: 'status-created' },
+  CREATED: { text: '待授权', cls: 'status-created' },
   ACTIVE: { text: '进行中', cls: 'status-active' },
   COMPLETED: { text: '已完成', cls: 'status-done' },
   REFUNDED: { text: '已退款', cls: 'status-done' },
@@ -25,7 +24,7 @@ const ORDER_STATUS_MAP = {
 };
 
 const PERIOD_STATUS_MAP = {
-  PENDING: '待开课',
+  PENDING: '待扣款',
   DELIVERED: '已开课',
   PAID: '已扣款',
   OVERDUE: '已逾期',
@@ -43,9 +42,13 @@ Page({
     statusText: '',
     statusCls: '',
     installments: [],
-    canSign: false,
+    canZhima: false,
     canLearn: false,
+    hasOverdue: false,
   },
+
+  // 标记是否刚从芝麻先享页返回，用于 onShow 触发 confirm
+  _zhimaPending: false,
 
   onLoad(query) {
     const orderId = (query && query.orderId) || '';
@@ -55,6 +58,13 @@ Page({
     }
     this.setData({ orderId, loading: true });
     this._fetch(orderId);
+  },
+
+  onShow() {
+    if (this._zhimaPending && this.data.orderId) {
+      this._zhimaPending = false;
+      this._zhimaConfirm(this.data.orderId);
+    }
   },
 
   _fetch(orderId) {
@@ -69,8 +79,10 @@ Page({
           dueDate: formatDate(it.dueDate),
           amountYuan: formatYuan(it.plannedAmountCents),
           statusText: PERIOD_STATUS_MAP[it.status] || it.status,
+          isOverdue: it.status === 'OVERDUE',
         }));
         const isDeferred = order.payType === 'DEFERRED';
+        const hasOverdue = installments.some((it) => it.isOverdue);
         this.setData({
           order,
           loading: false,
@@ -80,8 +92,9 @@ Page({
           statusText: statusInfo.text,
           statusCls: statusInfo.cls,
           installments,
-          canSign: order.status === 'CREATED',
+          canZhima: order.status === 'CREATED' && isDeferred,
           canLearn: order.status === 'ACTIVE',
+          hasOverdue,
         });
       })
       .catch((err) => {
@@ -90,8 +103,71 @@ Page({
       });
   },
 
-  onSign() {
-    my.showToast({ content: '签约功能即将上线，敬请期待', type: 'none' });
+  onZhima() {
+    const { orderId } = this.data;
+    my.showLoading({ content: '准备授权...' });
+    request({ url: `/orders/${orderId}/zhima/initialize`, method: 'POST' })
+      .then((res) => {
+        my.hideLoading();
+        const scheme = res && res.scheme;
+        if (!scheme) {
+          my.showToast({ content: '获取授权链接失败', type: 'fail' });
+          return;
+        }
+        this._zhimaPending = true;
+        my.ap.navigateToAlipayPage({ path: scheme });
+      })
+      .catch((err) => {
+        my.hideLoading();
+        my.showToast({ content: (err && err.message) || '发起授权失败', type: 'fail' });
+      });
+  },
+
+  _zhimaConfirm(orderId) {
+    request({ url: `/orders/${orderId}/zhima/confirm`, method: 'POST' })
+      .then((res) => {
+        if (res && res.orderStatus === 'ACTIVE') {
+          my.showToast({ content: '授权成功，课程已解锁！', type: 'success' });
+          this._fetch(orderId);
+        } else {
+          // 用户未完成授权，静默忽略
+        }
+      })
+      .catch(() => {
+        // 未完成授权不显示错误，用户可再次点击按钮重试
+      });
+  },
+
+  onRepay(e) {
+    const periodNo = e.currentTarget.dataset.periodNo;
+    const { orderId } = this.data;
+    my.showLoading({ content: '创建支付单...' });
+    request({
+      url: `/orders/${orderId}/installments/${periodNo}/repay`,
+      method: 'POST',
+    })
+      .then((res) => {
+        my.hideLoading();
+        const tradeNo = res && res.tradeNo;
+        if (!tradeNo) {
+          my.showToast({ content: '创建支付单失败', type: 'fail' });
+          return;
+        }
+        my.tradePay({
+          tradeNO: tradeNo,
+          success: () => {
+            my.showToast({ content: '还款成功', type: 'success' });
+            this._fetch(orderId);
+          },
+          fail: () => {
+            my.showToast({ content: '还款取消或失败', type: 'none' });
+          },
+        });
+      })
+      .catch((err) => {
+        my.hideLoading();
+        my.showToast({ content: (err && err.message) || '还款失败', type: 'fail' });
+      });
   },
 
   onLearn() {

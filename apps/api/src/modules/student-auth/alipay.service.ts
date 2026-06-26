@@ -251,6 +251,138 @@ export class AlipayService {
     }
   }
 
+  // ── 芝麻先享 ──────────────────────────────────────────────
+
+  async createZhimaCreditOrder(params: {
+    outOrderNo: string;
+    totalAmountCents: number;
+    perPeriodAmountCents: number;
+    periodCount: number;
+    courseName: string;
+  }): Promise<{ creditBizOrderId: string; schemeUrl: string }> {
+    if (!this.sdk) {
+      if (!this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({ event: "zhima_create_mocked", reason: "sdk_not_configured" }),
+        );
+        return { creditBizOrderId: `dev-zhima-${params.outOrderNo}`, schemeUrl: "" };
+      }
+      throw new Error("AlipaySDK not configured");
+    }
+
+    const totalYuan = (params.totalAmountCents / 100).toFixed(2);
+    const perPeriodYuan = (params.perPeriodAmountCents / 100).toFixed(2);
+
+    const result = (await this.sdk.exec(
+      "zhima.credit.payafteruse.creditbizorder.create",
+      {
+        bizContent: {
+          out_order_no: params.outOrderNo,
+          credit_amount: totalYuan,
+          income_amount: perPeriodYuan,
+          period_type: "MONTH",
+          period: String(params.periodCount),
+          product_code: "w1010100100000000001",
+          credit_mer_info: params.courseName,
+          pay_notify_url: `${process.env.API_BASE_URL ?? "https://api.happymaa.cn/api/v1"}/orders/zhima/notify`,
+          mer_return_url: `alipays://platformapi/startapp?appId=${process.env.ALIPAY_APP_ID ?? ""}&page=pages%2Forder%2Flist%2Findex`,
+        },
+      },
+    )) as Record<string, unknown>;
+
+    this.logger.log(JSON.stringify({ event: "zhima_create_response", result }));
+
+    const creditBizOrderId = result.creditBizOrderId as string | undefined;
+    const schemeUrl = (result.schemeUrl ?? result.scheme ?? "") as string;
+    if (!creditBizOrderId) {
+      throw new Error(`zhima create failed: ${JSON.stringify(result)}`);
+    }
+
+    return { creditBizOrderId, schemeUrl };
+  }
+
+  async queryZhimaCreditOrder(params: {
+    outOrderNo: string;
+    creditBizOrderId: string;
+  }): Promise<{ signed: boolean; status: string }> {
+    if (!this.sdk) {
+      if (!this.isProduction) {
+        this.logger.warn(
+          JSON.stringify({ event: "zhima_query_mocked", reason: "sdk_not_configured" }),
+        );
+        return { signed: true, status: "SIGNED" };
+      }
+      throw new Error("AlipaySDK not configured");
+    }
+
+    const result = (await this.sdk.exec(
+      "zhima.credit.payafteruse.creditbizorder.query",
+      {
+        bizContent: {
+          out_order_no: params.outOrderNo,
+          credit_biz_order_id: params.creditBizOrderId,
+        },
+      },
+    )) as Record<string, unknown>;
+
+    this.logger.log(JSON.stringify({ event: "zhima_query_response", result }));
+
+    const status = (result.status ?? result.bizStatus ?? "") as string;
+    return { signed: status === "SIGNED", status };
+  }
+
+  verifyNotifySign(params: Record<string, string>): boolean {
+    if (!this.sdk) {
+      if (!this.isProduction) {
+        this.logger.warn(JSON.stringify({ event: "zhima_notify_verify_mocked" }));
+        return true;
+      }
+      return false;
+    }
+    try {
+      return (this.sdk as unknown as { checkNotifySign(p: Record<string, string>): boolean })
+        .checkNotifySign(params);
+    } catch {
+      return false;
+    }
+  }
+
+  async createAlipayTrade(params: {
+    outTradeNo: string;
+    totalAmountCents: number;
+    subject: string;
+    buyerOpenId: string;
+  }): Promise<{ tradeNo: string }> {
+    if (!this.sdk) {
+      if (!this.isProduction) {
+        this.logger.warn(JSON.stringify({ event: "alipay_trade_mocked" }));
+        return { tradeNo: `dev-trade-${params.outTradeNo}` };
+      }
+      throw new Error("AlipaySDK not configured");
+    }
+
+    const totalYuan = (params.totalAmountCents / 100).toFixed(2);
+    const result = (await this.sdk.exec("alipay.trade.create", {
+      bizContent: {
+        out_trade_no: params.outTradeNo,
+        total_amount: totalYuan,
+        subject: params.subject,
+        buyer_open_id: params.buyerOpenId,
+        product_code: "FACE_TO_FACE_PAYMENT",
+      },
+    })) as Record<string, unknown>;
+
+    this.logger.log(JSON.stringify({ event: "alipay_trade_create_response", result }));
+
+    const tradeNo = result.tradeNo as string | undefined;
+    if (!tradeNo) {
+      throw new Error(`alipay trade create failed: ${JSON.stringify(result)}`);
+    }
+    return { tradeNo };
+  }
+
+  // ── 手机号解密 ───────────────────────────────────────────
+
   decryptPhone(encryptedData: string, iv?: string): string {
     // my.getPhoneNumber 返回 {response: "<AES密文base64>", sign: "..."} 格式
     // 或未开启接口内容加密时直接返回 {mobile: "..."} 明文 JSON

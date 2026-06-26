@@ -217,24 +217,58 @@
 
 ---
 
-## 模块 9：电子签约（支付宝生物核身确认）
+## 模块 9：电子签约 + 芝麻先享授权
+
+> **决策：**
+>
+> - 电子签约使用第三方服务商（**法大大 / e签宝**，待确认），不再依赖支付宝核身（`alipay.user.certify.open.*`）。理由：平台无关，未来迁移微信小程序 / H5 时签约能力不受影响。
+> - 芝麻先享（`zhima.credit.payafteruse.creditbizorder.*`）作为 DEFERRED 订单的支付授权机制，在签约完成后单独发起，与电子签约互不替代。
+> - 守约链接：**临时 H5 方案**（`https://happymaa.cn/credit-agreement`），用于通过支付宝芝麻先享审核。小程序上线后迁移为小程序深链，仅需改平台配置，无需改代码。
+>
+> **DEFERRED 订单激活流程：**
+> `下单(CREATED)` → `电子签约（法大大/e签宝）` → `芝麻先享授权` → `ACTIVE`
+>
+> **IMMEDIATE 订单激活流程（Iter3）：**
+> `下单(CREATED)` → `电子签约（法大大/e签宝）` → `支付宝付款` → `ACTIVE`
+
+### 前置条件（开始编码前需确认）
+
+- [ ] 确认电子签约服务商（法大大 vs e签宝），取得沙箱 AppKey / Secret
+- [ ] 支付宝开放平台申请芝麻先享权限
+- [ ] 部署守约链接临时 H5 页面（`https://happymaa.cn/credit-agreement`）
+- [ ] 芝麻先享审核通过
 
 ### 后端
 
-- [ ] DB 迁移：新增 SignRecord 表（certifyId + signedAt）
-- [ ] `POST /orders/:orderId/sign/initialize`：调用 `alipay.user.certify.open.initialize` → `alipay.user.certify.open.certify`，返回 `{ certifyId, certifyUrl }`
-- [ ] `POST /orders/:orderId/sign/confirm`：调用 `alipay.user.certify.open.query`，通过后激活订单 + 生成 Installment
+**电子签约（法大大，后期接入，当前跳过）**
+
+- [ ] DB 迁移：`Order` 新增 `signRecordId String?`；新增 `SignRecord` 表（provider / flowId / status / signedAt）
+- [ ] `POST /orders/:orderId/sign/initialize`：调用法大大 SDK 创建签约流程，返回 `{ signUrl }`
+- [ ] `POST /orders/:orderId/sign/confirm`：查询法大大结果，SIGNED → 更新 `SignRecord.status = SIGNED`
+
+**芝麻先享授权（仅 DEFERRED 订单，当前阶段已完成）**
+
+- [x] DB 迁移：`Order` 新增 `creditBizOrderId String?`（需在服务器执行 `ALTER TABLE \`Order\` ADD COLUMN creditBizOrderId VARCHAR(191) NULL;`）
+- [x] `AlipayService` 新增芝麻/收单方法：`createZhimaCreditOrder` / `queryZhimaCreditOrder` / `verifyNotifySign` / `createAlipayTrade`
+- [x] `POST /orders/:orderId/zhima/initialize`：调用 creditbizorder.create，存 creditBizOrderId，返回 `{ scheme }`
+- [x] `POST /orders/:orderId/zhima/confirm`：查询 creditbizorder → SIGNED → Order ACTIVE
+- [x] `POST /orders/zhima/notify`（`ZhimaWebhookController`，无鉴权）：验签 → 更新 Installment 状态 → 末期 PAID 时 Order COMPLETED
+- [x] `POST /orders/:orderId/installments/:periodNo/repay`：调用 alipay.trade.create 返回 `{ tradeNo }`
 
 ### 前端
 
-- [ ] 订单详情页「签约授权」按钮：调用 initialize，拿到 `certifyUrl`，跳转支付宝认证页
-- [ ] 用户完成返回后调用 confirm，刷新订单状态
+- [x] 订单详情页：DEFERRED + CREATED → 显示「芝麻先享授权」按钮（电子签约跳过，后期补入）
+- [x] `onZhima()`：调用 zhima/initialize → `my.ap.navigateToAlipayPage(scheme)`，设 `_zhimaPending = true`
+- [x] `onShow()`：检测 `_zhimaPending` → 调用 zhima/confirm → 成功刷新订单，失败静默
+- [x] 逾期分期高亮展示 + 「立即还款」→ repay → `my.tradePay`
 
 ### 测试卡点
 
-- [ ] 点击「签约授权」跳转至支付宝认证页面
-- [ ] 认证通过后订单状态变为 ACTIVE，签约按钮消失，「去学习」出现
-- [ ] 认证失败展示错误提示，可再次发起
+- [ ] DEFERRED 订单详情显示「芝麻先享授权」按钮
+- [ ] 点击授权 → 跳转支付宝芝麻页，完成后返回 `onShow` 触发 confirm → Order 变为 ACTIVE，显示「去学习」
+- [ ] 取消授权返回后，按钮仍可见，可重试
+- [ ] 芝麻 notify 回调正确更新 Installment 状态（沙箱模拟）
+- [ ] 逾期状态下「立即还款」可见，还款成功后逾期解除
 
 ---
 
@@ -259,7 +293,7 @@
 
 ## 模块 11：人脸打卡激励
 
-> 实名认证已在模块 3 用支付宝核身完成，本模块仅需完成打卡激励功能。
+> 实名信息来自注册时的支付宝手机号授权（student.name / phone）；打卡核身使用 `datadigital.fincloud.generalsaas.face.certify.*`，与模块 9 电子签约（法大大/e签宝）相互独立。
 
 ### 后端
 
