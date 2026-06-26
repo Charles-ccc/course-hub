@@ -43,6 +43,7 @@ Page({
       .then((list) => {
         const orders = (list || []).map((o) => {
           const s = STATUS_MAP[o.status] || { text: o.status, cls: 'tag-grey' };
+          const overdueCount = o.overdueCount || 0;
           return {
             id: o.id,
             courseName: o.courseName,
@@ -52,6 +53,9 @@ Page({
             createdAt: formatDate(o.createdAt),
             statusText: s.text,
             statusCls: s.cls,
+            hasOverdue: overdueCount > 0,
+            overdueCount,
+            overdueYuan: formatYuan(o.overdueAmountCents || 0),
           };
         });
         this.setData({ orders, loading: false });

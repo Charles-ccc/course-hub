@@ -45,6 +45,8 @@ export interface OrderListItemDto {
   payType: string;
   status: string;
   createdAt: string;
+  overdueCount: number;
+  overdueAmountCents: number;
 }
 
 export type OrderListDto = OrderListItemDto[];

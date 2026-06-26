@@ -584,15 +584,21 @@ Response 200:
 OrderItem:
 {
   id: string
+  courseId: string | null
   courseName: string
   insitutionName: string
   totalAmountCents: number
   periodCount: number
-  paidCount: number
+  payType: PayType
   status: OrderStatus
   createdAt: string
+  overdueCount: number          // 逾期分期期数（0 表示无逾期）
+  overdueAmountCents: number     // 逾期应还总额（分）
 }
 ```
+
+> `overdueCount` / `overdueAmountCents` 通过对 Installment 按 orderId 聚合 `status=OVERDUE` 得到（`groupBy` + `_count` + `_sum`）。
+> 用途：守约链接落地到订单列表页后，逾期订单显示红色「N 期逾期待还 ¥X · 去还款」标识，引导用户点入详情页完成还款。
 
 ### 4.4.3 订单详情
 

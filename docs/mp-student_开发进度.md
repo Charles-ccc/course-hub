@@ -254,6 +254,7 @@
 - [x] `POST /orders/:orderId/zhima/confirm`：查询 creditbizorder → SIGNED → Order ACTIVE
 - [x] `POST /orders/zhima/notify`（`ZhimaWebhookController`，无鉴权）：验签 → 更新 Installment 状态 → 末期 PAID 时 Order COMPLETED
 - [x] `POST /orders/:orderId/installments/:periodNo/repay`：调用 alipay.trade.create 返回 `{ tradeNo }`
+- [x] `GET /orders` 列表项补充 `overdueCount` / `overdueAmountCents`（Installment 按 orderId 聚合 status=OVERDUE）
 
 ### 前端
 
@@ -261,6 +262,7 @@
 - [x] `onZhima()`：调用 zhima/initialize → `my.ap.navigateToAlipayPage(scheme)`，设 `_zhimaPending = true`
 - [x] `onShow()`：检测 `_zhimaPending` → 调用 zhima/confirm → 成功刷新订单，失败静默
 - [x] 逾期分期高亮展示 + 「立即还款」→ repay → `my.tradePay`
+- [x] 订单列表页（守约链接落地页）：逾期订单显示红色「N 期逾期待还 ¥X · 去还款」标识 + 红色边框，点入详情还款
 
 ### 测试卡点
 
@@ -269,6 +271,9 @@
 - [ ] 取消授权返回后，按钮仍可见，可重试
 - [ ] 芝麻 notify 回调正确更新 Installment 状态（沙箱模拟）
 - [ ] 逾期状态下「立即还款」可见，还款成功后逾期解除
+- [ ] 守约链接落地订单列表页：含逾期分期的订单显示红色待还标识
+
+> **守约履约完整路径（含落地页）：** 芝麻信用「待履约」页点「去支付」→ 守约链接 → 订单列表页（逾期订单红标）→ 点入订单详情 → 「立即还款」→ my.tradePay → 履约完成。
 
 ---
 

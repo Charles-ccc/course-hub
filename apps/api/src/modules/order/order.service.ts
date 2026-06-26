@@ -145,17 +145,40 @@ export class OrderService {
       include: { insitution: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     });
-    return orders.map((o) => ({
-      id: o.id,
-      courseId: o.courseId,
-      courseName: o.courseName,
-      insitutionName: o.insitution.name,
-      totalAmountCents: o.totalAmountCents,
-      periodCount: o.periodCount,
-      payType: o.payType,
-      status: o.status,
-      createdAt: o.createdAt.toISOString(),
-    }));
+
+    // 聚合各订单的逾期分期：期数 + 逾期应还总额（守约链接落地后用于列表红标）
+    const overdueGroups = await this.prisma.installment.groupBy({
+      by: ["orderId"],
+      where: { orderId: { in: orders.map((o) => o.id) }, status: "OVERDUE" },
+      _count: { _all: true },
+      _sum: { plannedAmountCents: true },
+    });
+    const overdueMap = new Map(
+      overdueGroups.map((g) => [
+        g.orderId,
+        {
+          count: g._count._all,
+          amountCents: g._sum.plannedAmountCents ?? 0,
+        },
+      ]),
+    );
+
+    return orders.map((o) => {
+      const overdue = overdueMap.get(o.id);
+      return {
+        id: o.id,
+        courseId: o.courseId,
+        courseName: o.courseName,
+        insitutionName: o.insitution.name,
+        totalAmountCents: o.totalAmountCents,
+        periodCount: o.periodCount,
+        payType: o.payType,
+        status: o.status,
+        createdAt: o.createdAt.toISOString(),
+        overdueCount: overdue?.count ?? 0,
+        overdueAmountCents: overdue?.amountCents ?? 0,
+      };
+    });
   }
 
   // ── 芝麻先享 ──────────────────────────────────────────────

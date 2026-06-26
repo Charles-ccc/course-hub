@@ -102,6 +102,32 @@
   margin-bottom: 20rpx;
 }
 
+.order-card-overdue {
+  border: 1rpx solid #ffccc7;
+}
+
+.overdue-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff5f5;
+  border-radius: 10rpx;
+  padding: 14rpx 18rpx;
+  margin-bottom: 18rpx;
+}
+
+.overdue-text {
+  font-size: 24rpx;
+  color: #c62828;
+  font-weight: 600;
+}
+
+.overdue-action {
+  font-size: 24rpx;
+  color: #c62828;
+  font-weight: 600;
+}
+
 .card-footer {
   display: flex;
   align-items: center;

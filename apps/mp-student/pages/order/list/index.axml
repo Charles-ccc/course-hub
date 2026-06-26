@@ -11,7 +11,7 @@
 
 <scroll-view a:else scroll-y class="list">
   <view
-    class="order-card"
+    class="order-card {{ item.hasOverdue ? 'order-card-overdue' : '' }}"
     a:for="{{ orders }}"
     a:key="id"
     data-id="{{ item.id }}"
@@ -22,6 +22,10 @@
       <view class="status-tag {{ item.statusCls }}">{{ item.statusText }}</view>
     </view>
     <view class="insitution">{{ item.insitutionName }}</view>
+    <view a:if="{{ item.hasOverdue }}" class="overdue-bar">
+      <text class="overdue-text">{{ item.overdueCount }} 期逾期待还 ¥{{ item.overdueYuan }}</text>
+      <text class="overdue-action">去还款 ›</text>
+    </view>
     <view class="card-footer">
       <text class="pay-label">{{ item.payLabel }}</text>
       <text class="price">¥{{ item.totalYuan }}</text>
