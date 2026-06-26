@@ -49,7 +49,7 @@ Page({
               phone: res.phone,
               realnameStatus: res.realnameStatus,
             };
-            my.switchTab({ url: '/pages/index/index/index' });
+            my.reLaunch({ url: '/pages/index/index/index' });
           })
           .catch((err) => {
             this.setData({ loading: false });

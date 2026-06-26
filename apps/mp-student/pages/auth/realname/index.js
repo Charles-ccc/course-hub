@@ -89,7 +89,7 @@ Page({
         if (res.realnameStatus === 'VERIFIED') {
           my.showToast({ content: '实名认证成功', type: 'success' });
           setTimeout(() => {
-            my.switchTab({ url: '/pages/index/index/index' });
+            my.reLaunch({ url: '/pages/index/index/index' });
           }, 1500);
         } else {
           my.showToast({ content: '认证未通过，请重新提交', type: 'fail' });
@@ -104,6 +104,6 @@ Page({
   },
 
   onGoHome() {
-    my.switchTab({ url: '/pages/index/index/index' });
+    my.reLaunch({ url: '/pages/index/index/index' });
   },
 });
