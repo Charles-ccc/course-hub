@@ -273,29 +273,40 @@ export class AlipayService {
     const totalYuan = (params.totalAmountCents / 100).toFixed(2);
     const perPeriodYuan = (params.perPeriodAmountCents / 100).toFixed(2);
 
-    const result = (await this.sdk.exec(
-      "zhima.credit.payafteruse.creditbizorder.create",
-      {
-        bizContent: {
-          out_order_no: params.outOrderNo,
-          credit_amount: totalYuan,
-          income_amount: perPeriodYuan,
-          period_type: "MONTH",
-          period: String(params.periodCount),
-          product_code: "w1010100100000000001",
-          credit_mer_info: params.courseName,
-          pay_notify_url: `${process.env.API_BASE_URL ?? "https://api.happymaa.cn/api/v1"}/orders/zhima/notify`,
-          mer_return_url: `alipays://platformapi/startapp?appId=${process.env.ALIPAY_APP_ID ?? ""}&page=pages%2Forder%2Flist%2Findex`,
+    let result: Record<string, unknown>;
+    try {
+      result = (await this.sdk.exec(
+        "zhima.credit.payafteruse.creditbizorder.create",
+        {
+          bizContent: {
+            out_order_no: params.outOrderNo,
+            credit_amount: totalYuan,
+            income_amount: perPeriodYuan,
+            period_type: "MONTH",
+            period: String(params.periodCount),
+            product_code: "w1010100100000000001",
+            credit_mer_info: params.courseName,
+            pay_notify_url: `${process.env.API_BASE_URL ?? "https://api.happymaa.cn/api/v1"}/orders/zhima/notify`,
+            mer_return_url: `alipays://platformapi/startapp?appId=${process.env.ALIPAY_APP_ID ?? ""}&page=pages%2Forder%2Flist%2Findex`,
+          },
         },
-      },
-    )) as Record<string, unknown>;
+      )) as Record<string, unknown>;
+    } catch (err) {
+      this.logger.error(
+        JSON.stringify({ event: "zhima_create_error", err: String(err) }),
+      );
+      throw new Error(`ZHIMA_API_UNAVAILABLE: ${String(err)}`);
+    }
 
     this.logger.log(JSON.stringify({ event: "zhima_create_response", result }));
 
     const creditBizOrderId = result.creditBizOrderId as string | undefined;
     const schemeUrl = (result.schemeUrl ?? result.scheme ?? "") as string;
     if (!creditBizOrderId) {
-      throw new Error(`zhima create failed: ${JSON.stringify(result)}`);
+      this.logger.error(
+        JSON.stringify({ event: "zhima_create_no_order_id", result }),
+      );
+      throw new Error(`ZHIMA_API_UNAVAILABLE: missing creditBizOrderId`);
     }
 
     return { creditBizOrderId, schemeUrl };

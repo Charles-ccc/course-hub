@@ -182,13 +182,23 @@ export class OrderService {
     const perPeriodAmountCents =
       firstInstallment?.plannedAmountCents ?? Math.floor(order.totalAmountCents / order.periodCount);
 
-    const { creditBizOrderId, schemeUrl } = await this.alipay.createZhimaCreditOrder({
-      outOrderNo,
-      totalAmountCents: order.totalAmountCents,
-      perPeriodAmountCents,
-      periodCount: order.periodCount,
-      courseName: order.courseName,
-    });
+    let creditBizOrderId: string;
+    let schemeUrl: string;
+    try {
+      ({ creditBizOrderId, schemeUrl } = await this.alipay.createZhimaCreditOrder({
+        outOrderNo,
+        totalAmountCents: order.totalAmountCents,
+        perPeriodAmountCents,
+        periodCount: order.periodCount,
+        courseName: order.courseName,
+      }));
+    } catch (err) {
+      const msg = String(err);
+      if (msg.includes("ZHIMA_API_UNAVAILABLE")) {
+        throw new ApiBusinessException(50101, "芝麻先享服务暂不可用，API 权限申请中，请稍后重试", 501);
+      }
+      throw err;
+    }
 
     await this.prisma.order.update({
       where: { id: orderId },
