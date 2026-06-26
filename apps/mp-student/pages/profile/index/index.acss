@@ -30,11 +30,25 @@
   flex: 1;
 }
 
+.user-name-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
 .user-name {
   font-size: 34rpx;
   font-weight: 600;
   color: #1a1a1a;
-  margin-bottom: 8rpx;
+}
+
+.badge-verified {
+  font-size: 22rpx;
+  color: #18a058;
+  background: #e8f7ee;
+  border-radius: 8rpx;
+  padding: 4rpx 14rpx;
+  margin-left: 16rpx;
 }
 
 .user-phone {
@@ -70,7 +84,61 @@
   color: #e53935;
 }
 
+.menu-realname .menu-label {
+  color: #ff6b00;
+  font-weight: 600;
+}
+
+.menu-realname .menu-arrow {
+  color: #ff6b00;
+}
+
 .menu-arrow {
   font-size: 36rpx;
   color: #ccc;
+}
+
+.logged-out {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 180rpx;
+}
+
+.logged-out-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  background: #d8dce5;
+  color: #fff;
+  font-size: 52rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
+}
+
+.logged-out-tip {
+  font-size: 28rpx;
+  color: #888;
+  margin-bottom: 48rpx;
+}
+
+.btn-login {
+  width: 320rpx;
+  height: 84rpx;
+  background: #ff6b00;
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 42rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-login::after {
+  border: none;
 }

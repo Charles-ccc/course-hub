@@ -223,7 +223,7 @@
 >
 > - 电子签约使用第三方服务商（**法大大 / e签宝**，待确认），不再依赖支付宝核身（`alipay.user.certify.open.*`）。理由：平台无关，未来迁移微信小程序 / H5 时签约能力不受影响。
 > - 芝麻先享（`zhima.credit.payafteruse.creditbizorder.*`）作为 DEFERRED 订单的支付授权机制，在签约完成后单独发起，与电子签约互不替代。
-> - 守约链接：**临时 H5 方案**（`https://happymaa.cn/credit-agreement`），用于通过支付宝芝麻先享审核。小程序上线后迁移为小程序深链，仅需改平台配置，无需改代码。
+> - 守约链接：**小程序订单列表页 scheme**（`alipays://platformapi/startapp?appId=2021006157643188&page=pages%2Forder%2Flist%2Findex`）。支付宝官方定义为「用户点『去支付』后跳转到商家小程序订单列表页」。**不是 H5**（此前 H5 方案基于错误理解，已废弃）。该页已实现，无需额外代码；芝麻信用页的待付款信息由 `creditbizorder.create` 参数自动渲染。
 >
 > **DEFERRED 订单激活流程：**
 > `下单(CREATED)` → `电子签约（法大大/e签宝）` → `芝麻先享授权` → `ACTIVE`
@@ -234,8 +234,8 @@
 ### 前置条件（开始编码前需确认）
 
 - [ ] 确认电子签约服务商（法大大 vs e签宝），取得沙箱 AppKey / Secret
-- [ ] 支付宝开放平台申请芝麻先享权限
-- [ ] 部署守约链接临时 H5 页面（`https://happymaa.cn/credit-agreement`）
+- [ ] 小程序上架（守约链接 scheme 依赖小程序上线）
+- [ ] 支付宝开放平台申请芝麻先享权限，配置守约链接（订单列表页 scheme）
 - [ ] 芝麻先享审核通过
 
 ### 后端
