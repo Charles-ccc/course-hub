@@ -24,14 +24,21 @@
     <view class="insitution">{{ course.insitutionName }}</view>
 
     <view class="price-block">
-      <view class="price-main">
-        <text class="per-period-amount">¥{{ pricePerPeriod }}</text>
-        <text class="per-period-unit">/期 × {{ course.periodCount }}期</text>
+      <!-- 立即付款：只展示总价 -->
+      <view a:if="{{ payType === 'IMMEDIATE' }}" class="price-main">
+        <text class="price-amount">¥{{ priceTotal }}</text>
       </view>
-      <view class="price-total">总价 ¥{{ priceTotal }}</view>
-      <view class="badge-row">
-        <view class="badge">先学后付</view>
-      </view>
+      <!-- 先学后付：分期单价 + 总价 + badge -->
+      <block a:else>
+        <view class="price-main">
+          <text class="per-period-amount">¥{{ pricePerPeriod }}</text>
+          <text class="per-period-unit">/期 × {{ course.periodCount }}期</text>
+        </view>
+        <view class="price-total">总价 ¥{{ priceTotal }}</view>
+        <view class="badge-row">
+          <view class="badge">先学后付</view>
+        </view>
+      </block>
     </view>
   </view>
 

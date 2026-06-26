@@ -72,6 +72,12 @@
   margin-bottom: 8rpx;
 }
 
+.price-amount {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #ff6b00;
+}
+
 .per-period-amount {
   font-size: 48rpx;
   font-weight: 700;
