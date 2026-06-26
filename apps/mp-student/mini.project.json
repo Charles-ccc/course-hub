@@ -13,6 +13,7 @@
     },
     "uploadExclude": [
       "node_modules/**",
+      ".mini-ide/**",
       "src/**",
       "dist/**"
     ]
