@@ -18,3 +18,5 @@ apps/mp-student/dist/
 # Prisma
 apps/api/prisma/dev.db
 apps/api/mock-data/
+# TypeScript incremental build artifacts
+*.tsbuildinfo
