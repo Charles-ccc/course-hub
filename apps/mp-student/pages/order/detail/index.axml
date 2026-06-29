@@ -72,6 +72,12 @@
     <button class="btn-primary" onTap="onZhima">芝麻先享授权</button>
   </view>
 
+  <!-- IMMEDIATE 待支付 -->
+  <view a:if="{{ canPay }}" class="footer">
+    <view class="footer-hint">支付成功后即可解锁全部课程内容</view>
+    <button class="btn-primary" onTap="onPay">立即支付 ¥{{ totalYuan }}</button>
+  </view>
+
   <!-- 已激活，去学习 -->
   <view a:if="{{ canLearn }}" class="footer">
     <button class="btn-primary btn-green" onTap="onLearn">去学习</button>

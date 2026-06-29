@@ -20,6 +20,8 @@ import {
   type ZhimaInitializeRespDto,
   type ZhimaConfirmRespDto,
   type RepayRespDto,
+  type PayInitRespDto,
+  type PayConfirmRespDto,
 } from "./dto/order.dto";
 
 @Controller("orders")
@@ -67,6 +69,24 @@ export class OrderController {
     return this.orderService.zhimaConfirm(user.subject, orderId);
   }
 
+  // ── 一次性付款（IMMEDIATE）────────────────────────────
+
+  @Post(":orderId/pay")
+  pay(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("orderId") orderId: string,
+  ): Promise<PayInitRespDto> {
+    return this.orderService.pay(user.subject, orderId);
+  }
+
+  @Post(":orderId/pay/confirm")
+  payConfirm(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("orderId") orderId: string,
+  ): Promise<PayConfirmRespDto> {
+    return this.orderService.payConfirm(user.subject, orderId);
+  }
+
   // ── 逾期还款 ─────────────────────────────────────────────
 
   @Post(":orderId/installments/:periodNo/repay")
@@ -87,6 +107,18 @@ export class ZhimaWebhookController {
   @Post("notify")
   async notify(@Body() body: Record<string, string>): Promise<string> {
     await this.orderService.handleZhimaNotify(body);
+    return "success";
+  }
+}
+
+// 普通收单支付回调（IMMEDIATE 首付 + 逾期还款，无需认证）
+@Controller("orders/trade")
+export class TradeWebhookController {
+  constructor(private readonly orderService: OrderService) {}
+
+  @Post("notify")
+  async notify(@Body() body: Record<string, string>): Promise<string> {
+    await this.orderService.handleTradeNotify(body);
     return "success";
   }
 }

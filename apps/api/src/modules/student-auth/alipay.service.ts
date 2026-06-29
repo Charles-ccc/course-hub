@@ -373,23 +373,61 @@ export class AlipayService {
     }
 
     const totalYuan = (params.totalAmountCents / 100).toFixed(2);
-    const result = (await this.sdk.exec("alipay.trade.create", {
-      bizContent: {
-        out_trade_no: params.outTradeNo,
-        total_amount: totalYuan,
-        subject: params.subject,
-        buyer_open_id: params.buyerOpenId,
-        product_code: "FACE_TO_FACE_PAYMENT",
-      },
-    })) as Record<string, unknown>;
+    const notifyUrl = `${process.env.API_BASE_URL ?? "https://api.happymaa.cn/api/v1"}/orders/trade/notify`;
+
+    let result: Record<string, unknown>;
+    try {
+      result = (await this.sdk.exec("alipay.trade.create", {
+        bizContent: {
+          out_trade_no: params.outTradeNo,
+          total_amount: totalYuan,
+          subject: params.subject,
+          buyer_open_id: params.buyerOpenId,
+          product_code: "JSAPI_PAY",
+        },
+        notify_url: notifyUrl,
+      })) as Record<string, unknown>;
+    } catch (err) {
+      this.logger.error(
+        JSON.stringify({ event: "alipay_trade_create_error", err: String(err) }),
+      );
+      throw new Error(`TRADE_API_UNAVAILABLE: ${String(err)}`);
+    }
 
     this.logger.log(JSON.stringify({ event: "alipay_trade_create_response", result }));
 
     const tradeNo = result.tradeNo as string | undefined;
     if (!tradeNo) {
-      throw new Error(`alipay trade create failed: ${JSON.stringify(result)}`);
+      this.logger.error(
+        JSON.stringify({ event: "alipay_trade_create_no_trade_no", result }),
+      );
+      throw new Error(`TRADE_API_UNAVAILABLE: missing tradeNo`);
     }
     return { tradeNo };
+  }
+
+  async queryAlipayTrade(params: {
+    outTradeNo: string;
+  }): Promise<{ paid: boolean; status: string }> {
+    if (!this.sdk) {
+      if (!this.isProduction) {
+        this.logger.warn(JSON.stringify({ event: "alipay_trade_query_mocked" }));
+        return { paid: true, status: "TRADE_SUCCESS" };
+      }
+      throw new Error("AlipaySDK not configured");
+    }
+
+    const result = (await this.sdk.exec("alipay.trade.query", {
+      bizContent: { out_trade_no: params.outTradeNo },
+    })) as Record<string, unknown>;
+
+    this.logger.log(JSON.stringify({ event: "alipay_trade_query_response", result }));
+
+    const status = (result.tradeStatus ?? "") as string;
+    return {
+      paid: status === "TRADE_SUCCESS" || status === "TRADE_FINISHED",
+      status,
+    };
   }
 
   // ── 手机号解密 ───────────────────────────────────────────

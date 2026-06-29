@@ -277,6 +277,41 @@
 
 ---
 
+## 模块 9.5：一次性付款（IMMEDIATE，普通收单）
+
+> **决策（2026-06-29）：**
+>
+> - IMMEDIATE 订单接入支付宝「小程序支付」产品（`alipay.trade.create` + `my.tradePay`），与芝麻先享相互独立，不受芝麻审核阻塞。
+> - 支付成功后订单置 **ACTIVE**（解锁课程、学习中），不置 COMPLETED。
+> - 支付确认走「前端即时（trade.query）+ notify 兜底」双保险；IMMEDIATE 首付与逾期还款共用一个 `trade/notify` 回调。
+> - `out_trade_no` = `订单ID去连字符(32位hex)_期次`；notify 中按固定位置重新插入连字符还原 UUID。
+
+### 前置条件（非技术）
+
+- [ ] 支付宝开放平台签约「小程序支付」产品（用营业执照，涉及费率/收款账户）。**独立于芝麻先享。**
+
+### 后端（已完成，未签约时返回友好 501）
+
+- [x] `AlipayService.createAlipayTrade` 补 `notify_url`，product_code 改为 `JSAPI_PAY`
+- [x] `AlipayService.queryAlipayTrade`（trade.query，确认支付结果）
+- [x] `POST /orders/:orderId/pay`（IMMEDIATE + CREATED → 创建收单，返回 tradeNo）
+- [x] `POST /orders/:orderId/pay/confirm`（trade.query 即时确认 → Order ACTIVE）
+- [x] `POST /orders/trade/notify`（`TradeWebhookController`，验签 → Installment PAID；CREATED→ACTIVE；DEFERRED 全付清→COMPLETED）
+
+### 前端（已完成）
+
+- [x] 订单详情页：IMMEDIATE + CREATED → 「立即支付 ¥X」按钮
+- [x] `onPay()` → `/pay` 拿 tradeNo → `my.tradePay` → success 调 `/pay/confirm` → 刷新成 ACTIVE
+
+### 测试卡点（待小程序支付产品签约后验证）
+
+- [ ] IMMEDIATE 订单详情显示「立即支付」按钮
+- [ ] 点击支付 → 支付宝收银台 → 支付成功后订单变 ACTIVE，显示「去学习」
+- [ ] 取消支付返回后按钮仍可见，可重试
+- [ ] trade notify 正确更新 Installment 与订单状态
+
+---
+
 ## 模块 10：视频播放（点播对接）
 
 ### 后端
