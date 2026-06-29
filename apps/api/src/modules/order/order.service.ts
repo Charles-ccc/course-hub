@@ -51,18 +51,6 @@ export class OrderService {
       throw new ApiBusinessException(40010, "课程不存在或已下架", 400);
     }
 
-    // 先学后付（分期）受价格上限约束；立即付款不限
-    if (dto.payType === "DEFERRED") {
-      const config = await this.prisma.systemConfig.findFirst();
-      if (config && course.priceCents > config.priceLimitCents) {
-        throw new ApiBusinessException(
-          40002,
-          "该课程暂不支持分期购买",
-          400,
-        );
-      }
-    }
-
     const studentName = student.name ?? student.phone;
     const periodCount =
       dto.payType === "DEFERRED" ? Math.max(course.periodCount, 1) : 1;
