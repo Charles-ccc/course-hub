@@ -15,6 +15,15 @@
     <view class="insitution">{{ course.insitutionName }}</view>
     <view class="meta">
       <text class="price-total">¥{{ priceTotal }}</text>
+      <text a:if="{{ segmentCount }}" class="seg-tag">分{{ segmentCount }}段</text>
+    </view>
+    <view a:if="{{ segmentCount }}" class="tags">
+      <text class="tag">芝麻先享</text>
+      <text class="tag">阶段付</text>
+      <text class="tag">7天无理由退课</text>
+    </view>
+    <view class="card-footer">
+      <button class="btn-enroll" catchTap="onTap">去报名</button>
     </view>
   </view>
 </view>

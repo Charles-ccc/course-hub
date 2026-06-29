@@ -24,27 +24,37 @@
     <view class="insitution">{{ course.insitutionName }}</view>
 
     <view class="price-block">
-      <!-- 立即付款：只展示总价 -->
-      <view a:if="{{ payType === 'IMMEDIATE' }}" class="price-main">
+      <view class="price-main">
         <text class="price-amount">¥{{ priceTotal }}</text>
+        <text a:if="{{ segmentCount }}" class="seg-tag">分{{ segmentCount }}段</text>
       </view>
-      <!-- 先学后付：分期单价 + 总价 + badge -->
-      <block a:else>
-        <view class="price-main">
-          <text class="per-period-amount">¥{{ pricePerPeriod }}</text>
-          <text class="per-period-unit">/期 × {{ course.periodCount }}期</text>
-        </view>
-        <view class="price-total">总价 ¥{{ priceTotal }}</view>
-        <view class="badge-row">
-          <view class="badge">先学后付</view>
-        </view>
-      </block>
+      <view a:if="{{ segmentCount }}" class="tags">
+        <text class="tag">芝麻先享</text>
+        <text class="tag">阶段付</text>
+        <text class="tag">7天无理由退课</text>
+      </view>
     </view>
   </view>
 
   <view class="section">
     <view class="section-title">课程简介</view>
     <view class="section-content">{{ course.description }}</view>
+  </view>
+
+  <view a:if="{{ segmentCount }}" class="section">
+    <view class="section-title">先学后付方案</view>
+    <view class="plan-row">
+      <text class="plan-label">合同周期</text>
+      <text class="plan-value">{{ segmentCount }}期</text>
+    </view>
+    <view class="plan-row">
+      <text class="plan-label">收费日期</text>
+      <text class="plan-value">固定</text>
+    </view>
+    <view class="plan-row" onTap="onShowPlan">
+      <text class="plan-label">扣款计划</text>
+      <text class="plan-value link">查看详情 ›</text>
+    </view>
   </view>
 
   <view a:if="{{ course.instructorInfo }}" class="section">
@@ -59,37 +69,62 @@
 
   <view class="section compliance">
     <view class="compliance-text">
-      平台为居间服务方，机构为课程合同甲方。学员购课即与机构建立合同关系。
+      平台为居间服务方，机构为课程合同甲方。学员报名即与机构建立服务关系。
     </view>
   </view>
 
   <view class="spacer"></view>
 
   <view class="footer">
-    <view class="pay-options">
+    <view a:if="{{ segmentCount }}" class="pay-options">
       <view class="pay-option {{ payType === 'IMMEDIATE' ? 'active' : '' }}" data-pay="IMMEDIATE" onTap="onPayTypeChange">
         <view class="pay-option-title">立即付款</view>
-        <view class="pay-option-sub">一次性付款</view>
+        <view class="pay-option-sub">一次性付清</view>
       </view>
       <view class="pay-option {{ payType === 'DEFERRED' ? 'active' : '' }}" data-pay="DEFERRED" onTap="onPayTypeChange">
         <view class="pay-option-title">先学后付</view>
-        <view class="pay-option-sub">签约后解锁全课，每30天自动扣款</view>
+        <view class="pay-option-sub">0元下单，按月扣款</view>
       </view>
     </view>
 
     <view class="action-row">
       <button class="btn-secondary" onTap="onTrialLearn">免费试学第一节</button>
-      <button class="btn-primary" onTap="onEnroll">立即报名</button>
+      <button class="btn-primary" onTap="onEnroll">{{ payType === 'DEFERRED' ? '免预付报名' : '立即报名' }}</button>
+    </view>
+  </view>
+
+  <!-- 扣款计划弹窗 -->
+  <view a:if="{{ showPlanModal }}" class="modal-mask" onTap="onClosePlan">
+    <view class="plan-modal" catchTap="noop">
+      <view class="plan-modal-head">
+        <text class="plan-modal-title">扣款计划</text>
+        <text class="plan-modal-close" onTap="onClosePlan">×</text>
+      </view>
+      <scroll-view scroll-y class="plan-modal-body">
+        <view class="plan-item">
+          <view class="plan-item-left">
+            <text class="plan-item-no">0元下单</text>
+          </view>
+          <text class="plan-item-amount">¥0</text>
+        </view>
+        <view class="plan-item" a:for="{{ planRows }}" a:key="periodNo">
+          <view class="plan-item-left">
+            <text class="plan-item-no">第{{ item.periodNo }}期</text>
+            <text class="plan-item-date">扣款日期 {{ item.dateStr }}</text>
+          </view>
+          <text class="plan-item-amount">¥{{ item.amountYuan }}</text>
+        </view>
+      </scroll-view>
     </view>
   </view>
 
   <view a:if="{{ showNoticeModal }}" class="modal-mask" onTap="onCancelNotice">
     <view class="modal" catchTap="noop">
-      <view class="modal-title">购课须知</view>
-      <view class="modal-content">本课程提供免费试学，建议先试学后再下单。下单即视为您已体验并认可课程内容，购课后不支持退课退款，请确认。</view>
+      <view class="modal-title">报名须知</view>
+      <view class="modal-content">本课程提供免费试学，建议先试学后再报名。提交即视为您已体验并认可课程内容，报名后不支持退课退款，请确认。</view>
       <view class="modal-actions">
         <button class="btn-secondary modal-btn" onTap="onCancelNotice">取消</button>
-        <button class="btn-primary modal-btn" onTap="onConfirmNotice">我已了解，确认下单</button>
+        <button class="btn-primary modal-btn" onTap="onConfirmNotice">我已了解，确认报名</button>
       </view>
     </view>
   </view>

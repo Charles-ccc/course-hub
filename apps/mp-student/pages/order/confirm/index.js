@@ -6,6 +6,30 @@ function formatYuan(cents) {
   return Number.isInteger(yuan) ? String(yuan) : yuan.toFixed(2);
 }
 
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+// 客户端计算扣款计划（与后端 buildInstallments 一致）
+function computePlan(priceCents, periodCount) {
+  const rows = [];
+  const base = Math.floor(priceCents / periodCount);
+  let allocated = 0;
+  const now = new Date();
+  for (let k = 1; k <= periodCount; k++) {
+    const isLast = k === periodCount;
+    const cents = isLast ? priceCents - allocated : base;
+    allocated += cents;
+    const d = new Date(now.getTime() + k * 30 * 24 * 60 * 60 * 1000);
+    rows.push({
+      periodNo: k,
+      dateStr: `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
+      amountYuan: formatYuan(cents),
+    });
+  }
+  return rows;
+}
+
 Page({
   data: {
     courseId: '',
@@ -13,11 +37,10 @@ Page({
     course: null,
     loading: true,
     submitting: false,
-    pricePerPeriod: '0',
+    isDeferred: false,
     priceTotal: '0',
-    payTitle: '',
-    payDesc: '',
-    btnText: '',
+    segmentCount: 0,
+    planRows: [],
   },
 
   onLoad(query) {
@@ -27,17 +50,11 @@ Page({
       my.showToast({ content: '课程参数缺失', type: 'fail' });
       return;
     }
-
-    const isDeferred = payType === 'DEFERRED';
     this.setData({
       courseId,
       payType,
+      isDeferred: payType === 'DEFERRED',
       loading: true,
-      payTitle: isDeferred ? '先学后付' : '立即付款',
-      payDesc: isDeferred
-        ? '签约后无需预付，即可一次性解锁完整课程。签约后每 30 天自动扣款一次。此服务为商家行为，非金融信贷产品，不产生任何利息或手续费。'
-        : '一次性付款，立即开始学习。',
-      btnText: isDeferred ? '确认并签约' : '确认付款',
     });
     this._fetch(courseId);
   },
@@ -46,11 +63,13 @@ Page({
     request({ url: `/courses/${courseId}`, method: 'GET', noAuth: true })
       .then((course) => {
         const periods = course.periodCount || 1;
+        const isDeferred = this.data.payType === 'DEFERRED';
         this.setData({
           course,
           loading: false,
-          pricePerPeriod: formatYuan(Math.round(course.priceCents / periods)),
           priceTotal: formatYuan(course.priceCents),
+          segmentCount: periods > 1 ? periods : 0,
+          planRows: isDeferred && periods > 1 ? computePlan(course.priceCents, periods) : [],
         });
       })
       .catch((err) => {
@@ -76,7 +95,7 @@ Page({
       })
       .catch((err) => {
         this.setData({ submitting: false });
-        my.showToast({ content: (err && err.message) || '下单失败，请重试', type: 'fail' });
+        my.showToast({ content: (err && err.message) || '报名失败，请重试', type: 'fail' });
       });
   },
 });

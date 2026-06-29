@@ -23,8 +23,8 @@
     </view>
     <view class="insitution">{{ item.insitutionName }}</view>
     <view a:if="{{ item.hasOverdue }}" class="overdue-bar">
-      <text class="overdue-text">{{ item.overdueCount }} 期逾期待还 ¥{{ item.overdueYuan }}</text>
-      <text class="overdue-action">去还款 ›</text>
+      <text class="overdue-text">{{ item.overdueCount }} 期待履约 ¥{{ item.overdueYuan }}</text>
+      <text class="overdue-action">去履约 ›</text>
     </view>
     <view class="card-footer">
       <text class="pay-label">{{ item.payLabel }}</text>

@@ -73,7 +73,7 @@
 
 .course-price {
   display: flex;
-  align-items: baseline;
+  align-items: center;
 }
 
 .course-price-amount {
@@ -82,38 +82,147 @@
   color: #ff6b00;
 }
 
-.course-price-period {
+.seg-tag {
+  margin-left: 12rpx;
   font-size: 22rpx;
-  color: #999;
-  margin-left: 8rpx;
+  color: #ff6b00;
+  background: #fff2e6;
+  border-radius: 6rpx;
+  padding: 2rpx 12rpx;
 }
 
-.row {
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12rpx;
+}
+
+.plan-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f7f7f7;
 }
 
-.row-label {
+.plan-item:last-child {
+  border-bottom: none;
+}
+
+.plan-item-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-item-no {
   font-size: 28rpx;
-  color: #555;
+  color: #1a1a1a;
+  font-weight: 500;
 }
 
-.row-value {
+.plan-item-date {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+.plan-item-amount {
   font-size: 28rpx;
   color: #1a1a1a;
   font-weight: 600;
 }
 
-.row-value.highlight {
-  color: #ff6b00;
+/* 芝麻先享详情 */
+.zhima-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.pay-desc {
-  margin-top: 16rpx;
+.zhima-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #2f74ff;
+}
+
+.zhima-score {
+  font-size: 22rpx;
+  color: #2f74ff;
+  background: #eef3ff;
+  border-radius: 6rpx;
+  padding: 4rpx 14rpx;
+}
+
+.zhima-sub {
   font-size: 24rpx;
-  color: #999;
+  color: #888;
+  margin-top: 8rpx;
+}
+
+.zhima-promise {
+  font-size: 24rpx;
+  color: #555;
   line-height: 1.6;
+  margin: 16rpx 0 20rpx;
+}
+
+.compare-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.compare-col {
+  flex: 1;
+  border-radius: 12rpx;
+  padding: 20rpx 18rpx;
+}
+
+.compare-ok {
+  background: #eafaf0;
+}
+
+.compare-bad {
+  background: #fdecec;
+}
+
+.compare-col-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+}
+
+.compare-ok .compare-col-title {
+  color: #18a058;
+}
+
+.compare-bad .compare-col-title {
+  color: #d83b3b;
+}
+
+.compare-line {
+  font-size: 24rpx;
+  color: #555;
+  padding: 6rpx 0;
+}
+
+/* FAQ */
+.faq-q {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-top: 18rpx;
+}
+
+.faq-a {
+  font-size: 24rpx;
+  color: #888;
+  line-height: 1.7;
+  margin-top: 8rpx;
+}
+
+.spacer {
+  height: 20rpx;
 }
 
 .compliance {

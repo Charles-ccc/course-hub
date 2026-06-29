@@ -20,7 +20,7 @@ function formatDate(iso) {
 }
 
 const HOME_STATUS_MAP = {
-  CREATED:    { text: '待签约', cls: 'tag-orange' },
+  CREATED:    { text: '待处理', cls: 'tag-orange' },
   ACTIVE:     { text: '进行中', cls: 'tag-green' },
   COMPLETED:  { text: '已完成', cls: 'tag-grey' },
   REFUNDED:   { text: '已退款', cls: 'tag-grey' },

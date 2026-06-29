@@ -6,14 +6,40 @@ function formatYuan(cents) {
   return Number.isInteger(yuan) ? String(yuan) : yuan.toFixed(2);
 }
 
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+// 客户端计算扣款计划（与后端 buildInstallments 一致：均分、末段吸收余数、每段 +30 天）
+function computePlan(priceCents, periodCount) {
+  const rows = [];
+  const base = Math.floor(priceCents / periodCount);
+  let allocated = 0;
+  const now = new Date();
+  for (let k = 1; k <= periodCount; k++) {
+    const isLast = k === periodCount;
+    const cents = isLast ? priceCents - allocated : base;
+    allocated += cents;
+    const d = new Date(now.getTime() + k * 30 * 24 * 60 * 60 * 1000);
+    rows.push({
+      periodNo: k,
+      dateStr: `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
+      amountYuan: formatYuan(cents),
+    });
+  }
+  return rows;
+}
+
 Page({
   data: {
     courseId: '',
     course: null,
     loading: true,
     payType: 'IMMEDIATE',
-    pricePerPeriod: '0',
     priceTotal: '0',
+    segmentCount: 0,
+    planRows: [],
+    showPlanModal: false,
     showNoticeModal: false,
   },
 
@@ -32,6 +58,14 @@ Page({
   onPayTypeChange(e) {
     const payType = e.currentTarget.dataset.pay;
     if (payType) this.setData({ payType });
+  },
+
+  onShowPlan() {
+    this.setData({ showPlanModal: true });
+  },
+
+  onClosePlan() {
+    this.setData({ showPlanModal: false });
   },
 
   onTrialLearn() {
@@ -79,8 +113,9 @@ Page({
         this.setData({
           course,
           loading: false,
-          pricePerPeriod: formatYuan(Math.round(course.priceCents / periods)),
           priceTotal: formatYuan(course.priceCents),
+          segmentCount: periods > 1 ? periods : 0,
+          planRows: periods > 1 ? computePlan(course.priceCents, periods) : [],
         });
       })
       .catch((err) => {

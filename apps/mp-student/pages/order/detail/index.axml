@@ -24,7 +24,7 @@
         <text class="row-value highlight">¥{{ totalYuan }}</text>
       </view>
       <view a:if="{{ isDeferred }}" class="row">
-        <text class="row-label">分期期数</text>
+        <text class="row-label">合同周期</text>
         <text class="row-value">{{ order.periodCount }}期</text>
       </view>
       <view class="row">
@@ -35,7 +35,7 @@
   </view>
 
   <view a:if="{{ isDeferred }}" class="card">
-    <view class="card-title">分期明细</view>
+    <view class="card-title">扣款计划</view>
     <view
       a:for="{{ installments }}"
       a:key="periodNo"
@@ -43,7 +43,7 @@
     >
       <view class="installment-left">
         <text class="installment-no">第 {{ item.periodNo }} 期</text>
-        <text class="installment-date">应扣日 {{ item.dueDate }}</text>
+        <text class="installment-date">扣款日期 {{ item.dueDate }}</text>
       </view>
       <view class="installment-right">
         <text class="installment-amount">¥{{ item.amountYuan }}</text>
@@ -54,7 +54,7 @@
             class="btn-repay"
             data-period-no="{{ item.periodNo }}"
             onTap="onRepay"
-          >立即还款</button>
+          >去履约</button>
         </view>
       </view>
     </view>
@@ -62,7 +62,7 @@
 
   <view class="card compliance">
     <view class="compliance-text">
-      平台为居间服务方，机构为课程合同甲方。{{ isDeferred ? '先学后付：签约后即时解锁完整课程，每 30 天自动扣款一次，非金融信贷产品，不产生利息或手续费。' : '立即付款订单确认后即时生效。' }}
+      平台为居间服务方，机构为课程合同甲方。{{ isDeferred ? '先学后付：报名后即时解锁完整课程，按月扣款，凭芝麻信用担保，为商家课程收款安排，非金融产品，不产生利息或手续费。' : '立即付款订单确认后即时生效。' }}
     </view>
   </view>
 

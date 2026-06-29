@@ -12,6 +12,7 @@ Component({
 
   data: {
     priceTotal: '0',
+    segmentCount: 0,
   },
 
   didMount() {
@@ -27,7 +28,11 @@ Component({
   methods: {
     recompute(course) {
       if (!course) return;
-      this.setData({ priceTotal: formatYuan(course.priceCents) });
+      const periods = course.periodCount || 1;
+      this.setData({
+        priceTotal: formatYuan(course.priceCents),
+        segmentCount: periods > 1 ? periods : 0,
+      });
     },
 
     onTap() {

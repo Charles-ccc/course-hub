@@ -65,3 +65,50 @@
   font-weight: 700;
   color: #ff6b00;
 }
+
+.seg-tag {
+  margin-left: 12rpx;
+  font-size: 22rpx;
+  color: #ff6b00;
+  background: #fff2e6;
+  border-radius: 6rpx;
+  padding: 2rpx 12rpx;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+
+.tag {
+  font-size: 20rpx;
+  color: #2f74ff;
+  background: #eef3ff;
+  border-radius: 6rpx;
+  padding: 4rpx 12rpx;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18rpx;
+}
+
+.btn-enroll {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  background: #2f74ff;
+  border: none;
+  border-radius: 28rpx;
+  padding: 0 32rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  margin: 0;
+}
+
+.btn-enroll::after {
+  border: none;
+}

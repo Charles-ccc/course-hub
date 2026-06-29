@@ -68,8 +68,8 @@
 
 .price-main {
   display: flex;
-  align-items: baseline;
-  margin-bottom: 8rpx;
+  align-items: center;
+  margin-bottom: 12rpx;
 }
 
 .price-amount {
@@ -78,35 +78,121 @@
   color: #ff6b00;
 }
 
-.per-period-amount {
-  font-size: 48rpx;
-  font-weight: 700;
-  color: #ff6b00;
-}
-
-.per-period-unit {
-  font-size: 26rpx;
-  color: #888;
-  margin-left: 8rpx;
-}
-
-.price-total {
+.seg-tag {
+  margin-left: 16rpx;
   font-size: 24rpx;
-  color: #999;
-  margin-bottom: 16rpx;
-}
-
-.badge-row {
-  display: flex;
-}
-
-.badge {
-  background: #fff2e6;
   color: #ff6b00;
-  font-size: 22rpx;
-  font-weight: 500;
-  padding: 6rpx 16rpx;
+  background: #fff2e6;
   border-radius: 8rpx;
+  padding: 4rpx 16rpx;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.tag {
+  font-size: 22rpx;
+  color: #2f74ff;
+  background: #eef3ff;
+  border-radius: 6rpx;
+  padding: 4rpx 14rpx;
+}
+
+.plan-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.plan-row:last-child {
+  border-bottom: none;
+}
+
+.plan-label {
+  font-size: 28rpx;
+  color: #888;
+}
+
+.plan-value {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.plan-value.link {
+  color: #2f74ff;
+}
+
+.plan-modal {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.plan-modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.plan-modal-close {
+  font-size: 44rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.plan-modal-body {
+  padding: 8rpx 32rpx 40rpx;
+}
+
+.plan-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f7f7f7;
+}
+
+.plan-item-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-item-no {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.plan-item-date {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+.plan-item-amount {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  font-weight: 600;
 }
 
 .section {

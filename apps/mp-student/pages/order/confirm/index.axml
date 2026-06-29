@@ -7,6 +7,7 @@
 </view>
 
 <view a:else class="page">
+  <!-- 课程信息 -->
   <view class="card course-card">
     <view class="course-cover">
       <image
@@ -24,24 +25,85 @@
       <view class="course-insitution">{{ course.insitutionName }}</view>
       <view class="course-price">
         <text class="course-price-amount">¥{{ priceTotal }}</text>
-        <text class="course-price-period">（¥{{ pricePerPeriod }}/期 × {{ course.periodCount }}期）</text>
+        <text a:if="{{ segmentCount }}" class="seg-tag">分{{ segmentCount }}段</text>
       </view>
     </view>
   </view>
 
-  <view class="card pay-card">
-    <view class="row">
-      <text class="row-label">付款方式</text>
-      <text class="row-value highlight">{{ payTitle }}</text>
+  <!-- 付款方案 -->
+  <view class="card">
+    <view class="card-title">付款方案</view>
+
+    <block a:if="{{ isDeferred }}">
+      <view class="plan-item">
+        <view class="plan-item-left"><text class="plan-item-no">0元下单</text></view>
+        <text class="plan-item-amount">¥0</text>
+      </view>
+      <view class="plan-item" a:for="{{ planRows }}" a:key="periodNo">
+        <view class="plan-item-left">
+          <text class="plan-item-no">第{{ item.periodNo }}期</text>
+          <text class="plan-item-date">扣款日期 {{ item.dateStr }}</text>
+        </view>
+        <text class="plan-item-amount">¥{{ item.amountYuan }}</text>
+      </view>
+    </block>
+
+    <view a:else class="plan-item">
+      <view class="plan-item-left"><text class="plan-item-no">一次性付清</text></view>
+      <text class="plan-item-amount">¥{{ priceTotal }}</text>
     </view>
-    <view class="pay-desc">{{ payDesc }}</view>
+  </view>
+
+  <!-- 芝麻先享详情（仅先学后付）-->
+  <view a:if="{{ isDeferred }}" class="card zhima-card">
+    <view class="zhima-head">
+      <text class="zhima-title">芝麻先享 · 周期付</text>
+      <text class="zhima-score">芝麻分 ≥ 550</text>
+    </view>
+    <view class="zhima-sub">服务先享 · 按月扣款</view>
+    <view class="zhima-promise">承诺按时上完订单内全部课程，如中途违约退课须向商家支付违约金。</view>
+    <view class="compare-row">
+      <view class="compare-col compare-ok">
+        <view class="compare-col-title">✓ 履约完成</view>
+        <view class="compare-line">免预付费报名</view>
+        <view class="compare-line">先学习后扣费</view>
+        <view class="compare-line">积累芝麻信用</view>
+      </view>
+      <view class="compare-col compare-bad">
+        <view class="compare-col-title">✕ 履约未完成</view>
+        <view class="compare-line">须支付违约金</view>
+        <view class="compare-line">结算已上课程费</view>
+        <view class="compare-line">降低芝麻信用</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 常见问题（仅先学后付）-->
+  <view a:if="{{ isDeferred }}" class="card">
+    <view class="card-title">常见问题</view>
+    <view class="faq">
+      <view class="faq-q">1. 什么是先学后付？</view>
+      <view class="faq-a">先学后付是欢乐学平台基于支付宝芝麻信用提供的服务。芝麻分达标的用户报名「芝麻先享」担保方式的课程，可享受「0元下单、先学后付」的权益。</view>
+      <view class="faq-q">2. 先学后付如何扣款？</view>
+      <view class="faq-a">报名后，系统将按课程付款方案的日期与金额，从您的支付宝账户自动扣除应支付给商家的课程款。</view>
+      <view class="faq-q">3. 如何退课/退款？</view>
+      <view class="faq-a">课程支持 7 天无理由退课，7 天内退课无需与商家协商；超过 7 天或已学完整课程，需与商家协商，可能需向商家支付违约金。</view>
+      <view class="faq-q">4. 为什么无法申请通过？</view>
+      <view class="faq-a">可能因综合评估暂未通过，暂时无法使用先学后付。建议保持良好信用记录后再尝试，也可选择「立即付款」方式报名。</view>
+      <view class="faq-q">5. 未及时履约（扣款）对我有什么影响？</view>
+      <view class="faq-a">若支付宝账户余额不足导致扣款失败，可能影响平台后续正常使用，商家有权对您持续追偿。</view>
+      <view class="faq-q">6. 使用芝麻先享报名，对我的芝麻信用有帮助吗？</view>
+      <view class="faq-a">完成订单后可积累芝麻信用，丰富的履约行为有利于芝麻分评估。</view>
+    </view>
   </view>
 
   <view class="card compliance">
     <view class="compliance-text">
-      平台为居间服务方，机构为课程合同甲方。提交订单即视为您已认可课程内容并同意购课须知，购课后不支持退课退款。
+      平台为居间服务方，机构为课程合同甲方。提交订单即视为您已认可课程内容并同意报名须知。
     </view>
   </view>
+
+  <view class="spacer"></view>
 
   <view class="footer">
     <button
@@ -50,7 +112,7 @@
       disabled="{{ submitting }}"
       onTap="onConfirm"
     >
-      {{ btnText }}
+      确认报名
     </button>
   </view>
 </view>

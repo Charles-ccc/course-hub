@@ -36,7 +36,7 @@
           class="btn-sign"
           data-id="{{ item.id }}"
           onTap="onTapOrder"
-        >去签约</button>
+        >去处理</button>
         <text a:else class="btn-done">已完成</text>
       </view>
     </view>

@@ -84,13 +84,20 @@ Page({
         }));
         const isDeferred = order.payType === 'DEFERRED';
         const hasOverdue = installments.some((it) => it.isOverdue);
+        // CREATED 状态按付款方式区分文案
+        const statusText =
+          order.status === 'CREATED'
+            ? isDeferred
+              ? '待履约'
+              : '待支付'
+            : statusInfo.text;
         this.setData({
           order,
           loading: false,
           isDeferred,
           payTitle: isDeferred ? '先学后付' : '立即付款',
           totalYuan: formatYuan(order.totalAmountCents),
-          statusText: statusInfo.text,
+          statusText,
           statusCls: statusInfo.cls,
           installments,
           canZhima: order.status === 'CREATED' && isDeferred,
@@ -199,17 +206,17 @@ Page({
         my.tradePay({
           tradeNO: tradeNo,
           success: () => {
-            my.showToast({ content: '还款成功', type: 'success' });
+            my.showToast({ content: '履约成功', type: 'success' });
             this._fetch(orderId);
           },
           fail: () => {
-            my.showToast({ content: '还款取消或失败', type: 'none' });
+            my.showToast({ content: '已取消', type: 'none' });
           },
         });
       })
       .catch((err) => {
         my.hideLoading();
-        my.showToast({ content: (err && err.message) || '还款失败', type: 'fail' });
+        my.showToast({ content: (err && err.message) || '履约失败', type: 'fail' });
       });
   },
 
