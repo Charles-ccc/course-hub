@@ -242,7 +242,7 @@ model SignRecord {
 ```
 
 > 电子签约（法大大/e签宝）与芝麻先享授权是两个独立步骤，互不替代：
-> - `SignRecord`：所有订单（IMMEDIATE + DEFERRED）均需完成，用于留存本人签约证据
+> - `SignRecord`：所有 DEFERRED 订单均需完成（IMMEDIATE 已撤销），用于留存本人签约证据
 > - `creditBizOrderId`：仅 DEFERRED 订单额外需要，用于芝麻先享周期扣款授权
 
 ## 3.3 Iter 3 新增
@@ -279,15 +279,11 @@ model CheckinRecord {
 - 注册后 `Student.boundSalesmanId = null`，PRD § 4.5.3「无来源」规则适用
 - 业务规则：机构码必须关联机构（insitutionId 不可空），salesmanId 可空
 
-## 3.5 IMMEDIATE 付款订单 Iter1 行为说明
+## ~~3.5 IMMEDIATE 付款订单行为说明~~（已撤销，2026-06-29）
 
-| 迭代  | 行为                                                                                                                                |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Iter1 | `POST /orders` 创建后 status = `CREATED`（无论 payType）。`IMMEDIATE` 订单**不创建 Installment 记录**，机构后台人工审核激活。       |
-| Iter2 | 所有订单：电子签约（法大大/e签宝）完成后 SignRecord SIGNED。`DEFERRED` 订单额外完成芝麻先享授权后 status 更新为 `ACTIVE`，生成 Installment 记录。 |
-| Iter3 | `IMMEDIATE` 订单：支付宝支付成功回调后，status 更新为 `ACTIVE`，生成单条 Installment（periodNo=1, dueDate=today, status=PENDING）。 |
-
-> Iter1 学员端订单详情中 `CREATED` 状态下的签约按钮（占位）是目前唯一的操作入口，`installments` 数组在此状态下返回空数组。
+> IMMEDIATE（一次性付款）已从前后端完整移除。所有订单统一为 DEFERRED（先学后付）。下单流程固定为：`下单(CREATED)` → `电子签约（法大大/e签宝，待接入）` → `芝麻先享授权` → `ACTIVE`。
+>
+> `TradeWebhookController`（`POST /orders/trade/notify`）保留，仅用于 DEFERRED 逾期阶段履约还款的 notify 回调。
 
 ---
 
@@ -553,7 +549,7 @@ Iter 2：对接腾讯云 VOD 或阿里云点播签名逻辑
 ```
 POST /orders
 Auth: 必须登录，RealnameGuard
-Body: { courseId: string, payType: "IMMEDIATE" | "DEFERRED" }
+Body: { courseId: string, payType: "DEFERRED" }   // IMMEDIATE 已撤销，固定传 DEFERRED
 
 Response 201:
 {
@@ -565,9 +561,9 @@ Response 201:
 
 Error:
   40001 UNDERAGE_USER
-  40002 PRICE_LIMIT_EXCEEDED
   40403 COURSE_NOT_FOUND
   40404 ALREADY_ENROLLED     (已有相同课程的 CREATED/ACTIVE 订单)
+  // 40002 PRICE_LIMIT_EXCEEDED 已移除（价格上限不再拦截下单）
 ```
 
 ### 4.4.2 订单列表
@@ -598,7 +594,7 @@ OrderItem:
 ```
 
 > `overdueCount` / `overdueAmountCents` 通过对 Installment 按 orderId 聚合 `status=OVERDUE` 得到（`groupBy` + `_count` + `_sum`）。
-> 用途：守约链接落地到订单列表页后，逾期订单显示红色「N 期逾期待还 ¥X · 去还款」标识，引导用户点入详情页完成还款。
+> 用途：守约链接落地到订单列表页后，逾期订单显示红色「N 阶段逾期待履约 ¥X · 去履约」标识，引导用户点入详情页完成履约。
 
 ### 4.4.3 订单详情
 
@@ -635,7 +631,7 @@ InstallmentItem:
 ```
 POST /orders/:orderId/sign/initialize
 Auth: 必须登录，且为本人订单
-适用：所有 payType（IMMEDIATE + DEFERRED）
+适用：DEFERRED 订单（IMMEDIATE 已撤销）
 
 模块 1-8 Response: 501 { message: "签约功能即将上线" }
 模块 9 Response 200:
@@ -667,8 +663,8 @@ Error:
 
 > 后端查询第三方签约状态；SIGNED → 更新 `SignRecord.status = SIGNED`，记录 `signedAt`。
 > **此步骤仅完成签约留痕，不直接激活订单：**
-> - `IMMEDIATE` 订单：签约后等待支付完成才激活（Iter3）
 > - `DEFERRED` 订单：签约后还需完成芝麻先享授权才激活（见 4.4.6）
+> - IMMEDIATE 已撤销，所有订单统一为 DEFERRED
 
 ### 4.4.6 芝麻先享授权初始化（仅 DEFERRED 订单）
 
@@ -1326,9 +1322,9 @@ alipays://platformapi/startapp?appId=2021006157643188&page=pages%2Forder%2Flist%
 
 - 电子签约跳转第三方页面，核身通过后返回 SignRecord SIGNED
 - DEFERRED 订单：签约后显示芝麻授权按钮，授权完成后 Order 变为 ACTIVE
-- IMMEDIATE 订单：签约后等待支付激活（Iter3），不出现芝麻授权入口
+- （IMMEDIATE 已撤销）所有订单为 DEFERRED，签约后统一进入芝麻授权流程
 - 取消任意步骤后，页面仍显示当前未完成步骤的操作按钮，可重试
-- 芝麻 notify 正确更新 Installment，逾期时「立即还款」可见
+- 芝麻 notify 正确更新 Installment，逾期时「去履约」可见
 
 ---
 

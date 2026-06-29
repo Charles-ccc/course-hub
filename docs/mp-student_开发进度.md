@@ -93,14 +93,14 @@
 - [x] 注册页注册成功后跳首页（之前跳实名）
 - [x] 课程卡片公共组件 `components/course-card/`（封面占位 + 课程信息 + 先学后付徽标）
 - [x] 首页：搜索框 + 列表 + 触底加载 + 空状态 + 下拉刷新
-- [x] 课程详情页：封面 + 课程信息 + 大纲 + 合规声明 + 付款方式单选 + 试学/报名按钮 + 购课须知 Modal
+- [x] 课程详情页：封面 + 课程信息 + 大纲 + 合规声明 + 先学后付方案块 + 试学/报名按钮 + 购课须知 Modal
 
 ### 测试卡点
 
 - [x] 启动小程序：无 token → 显示登录页；点支付宝授权登录 → 已注册进首页，未注册跳引导页
 - [x] 首页关键词搜索正确，无结果展示空状态，触底加载下一页
 - [x] 点击课程卡片跳详情页，详情展示课程信息+大纲+合规声明
-- [x] 切换付款方式 / 试学按钮跳学习页 / 首次「立即报名」弹购课须知，确认后跳订单确认页
+- [x] 试学按钮跳学习页 / 首次「免预付报名」弹购课须知，确认后跳订单确认页
 
 ---
 
@@ -120,7 +120,7 @@
 - [x] `GET /orders/:orderId`（订单详情 + installments 列表）
 - [x] `POST /orders/:orderId/sign/initialize` → 返回 501（占位）
 
-> 后端冒烟测试已通过（2026-06-25）：DEFERRED 12 期金额合计校验一致、每期 30 天；IMMEDIATE 1 期全额；签约接口 501；无 token 401；不存在课程 40010。
+> 后端冒烟测试已通过（2026-06-25）：DEFERRED 12 期金额合计校验一致、每期 30 天；签约接口 501；无 token 401；不存在课程 40010。（IMMEDIATE 已撤销，相关用例废弃）
 
 ### 前端
 
@@ -131,8 +131,7 @@
 ### 测试卡点
 
 - [x] DEFERRED 下单：生成 N 条 Installment，每期 30 天，金额均分（末期吸收余数）
-- [x] IMMEDIATE 下单：生成 1 条 Installment，全额
-- [x] 订单详情页展示课程名、总价、期数、payType 说明
+- [x] 订单详情页展示课程名、总价、阶段数、先学后付说明
 - [x] 点击「签约授权」toast「签约功能即将上线，敬请期待」
 - [x] 课程不存在 / 已下架时返回合适错误提示
 
@@ -228,8 +227,8 @@
 > **DEFERRED 订单激活流程：**
 > `下单(CREATED)` → `电子签约（法大大/e签宝）` → `芝麻先享授权` → `ACTIVE`
 >
-> **IMMEDIATE 订单激活流程（Iter3）：**
-> `下单(CREATED)` → `电子签约（法大大/e签宝）` → `支付宝付款` → `ACTIVE`
+> ~~**IMMEDIATE 订单激活流程（Iter3，已撤销）：**~~
+> ~~`下单(CREATED)` → `电子签约（法大大/e签宝）` → `支付宝付款` → `ACTIVE`~~
 
 ### 前置条件（开始编码前需确认）
 
@@ -261,8 +260,8 @@
 - [x] 订单详情页：DEFERRED + CREATED → 显示「芝麻先享授权」按钮（电子签约跳过，后期补入）
 - [x] `onZhima()`：调用 zhima/initialize → `my.ap.navigateToAlipayPage(scheme)`，设 `_zhimaPending = true`
 - [x] `onShow()`：检测 `_zhimaPending` → 调用 zhima/confirm → 成功刷新订单，失败静默
-- [x] 逾期分期高亮展示 + 「立即还款」→ repay → `my.tradePay`
-- [x] 订单列表页（守约链接落地页）：逾期订单显示红色「N 期逾期待还 ¥X · 去还款」标识 + 红色边框，点入详情还款
+- [x] 逾期阶段高亮展示 + 「去履约」→ repay → `my.tradePay`
+- [x] 订单列表页（守约链接落地页）：逾期订单显示红色「N 阶段逾期 · ¥X · 去履约」标识 + 红色边框，点入详情履约
 
 ### 测试卡点
 
@@ -270,45 +269,16 @@
 - [ ] 点击授权 → 跳转支付宝芝麻页，完成后返回 `onShow` 触发 confirm → Order 变为 ACTIVE，显示「去学习」
 - [ ] 取消授权返回后，按钮仍可见，可重试
 - [ ] 芝麻 notify 回调正确更新 Installment 状态（沙箱模拟）
-- [ ] 逾期状态下「立即还款」可见，还款成功后逾期解除
+- [ ] 逾期状态下「去履约」可见，履约成功后逾期解除
 - [ ] 守约链接落地订单列表页：含逾期分期的订单显示红色待还标识
 
-> **守约履约完整路径（含落地页）：** 芝麻信用「待履约」页点「去支付」→ 守约链接 → 订单列表页（逾期订单红标）→ 点入订单详情 → 「立即还款」→ my.tradePay → 履约完成。
+> **守约履约完整路径（含落地页）：** 芝麻信用「待履约」页点「去支付」→ 守约链接 → 订单列表页（逾期订单红标）→ 点入订单详情 → 「去履约」→ my.tradePay → 履约完成。
 
 ---
 
-## 模块 9.5：一次性付款（IMMEDIATE，普通收单）
+## ~~模块 9.5：一次性付款（IMMEDIATE，普通收单）~~（已撤销）
 
-> **决策（2026-06-29）：**
->
-> - IMMEDIATE 订单接入支付宝「小程序支付」产品（`alipay.trade.create` + `my.tradePay`），与芝麻先享相互独立，不受芝麻审核阻塞。
-> - 支付成功后订单置 **ACTIVE**（解锁课程、学习中），不置 COMPLETED。
-> - 支付确认走「前端即时（trade.query）+ notify 兜底」双保险；IMMEDIATE 首付与逾期还款共用一个 `trade/notify` 回调。
-> - `out_trade_no` = `订单ID去连字符(32位hex)_期次`；notify 中按固定位置重新插入连字符还原 UUID。
-
-### 前置条件（非技术）
-
-- [ ] 支付宝开放平台签约「小程序支付」产品（用营业执照，涉及费率/收款账户）。**独立于芝麻先享。**
-
-### 后端（已完成，未签约时返回友好 501）
-
-- [x] `AlipayService.createAlipayTrade` 补 `notify_url`，product_code 改为 `JSAPI_PAY`
-- [x] `AlipayService.queryAlipayTrade`（trade.query，确认支付结果）
-- [x] `POST /orders/:orderId/pay`（IMMEDIATE + CREATED → 创建收单，返回 tradeNo）
-- [x] `POST /orders/:orderId/pay/confirm`（trade.query 即时确认 → Order ACTIVE）
-- [x] `POST /orders/trade/notify`（`TradeWebhookController`，验签 → Installment PAID；CREATED→ACTIVE；DEFERRED 全付清→COMPLETED）
-
-### 前端（已完成）
-
-- [x] 订单详情页：IMMEDIATE + CREATED → 「立即支付 ¥X」按钮
-- [x] `onPay()` → `/pay` 拿 tradeNo → `my.tradePay` → success 调 `/pay/confirm` → 刷新成 ACTIVE
-
-### 测试卡点（待小程序支付产品签约后验证）
-
-- [ ] IMMEDIATE 订单详情显示「立即支付」按钮
-- [ ] 点击支付 → 支付宝收银台 → 支付成功后订单变 ACTIVE，显示「去学习」
-- [ ] 取消支付返回后按钮仍可见，可重试
-- [ ] trade notify 正确更新 Installment 与订单状态
+> **撤销决策（2026-06-29）：** IMMEDIATE 付款（一次性付款）功能已从前后端完整移除。所有订单统一走先学后付（DEFERRED + 芝麻先享授权）流程。`TradeWebhookController` 仅保留用于 DEFERRED 逾期履约还款的 notify 回调，不再承接首付支付逻辑。代码层面 `/orders/:orderId/pay`、`/orders/:orderId/pay/confirm` 接口已删除，`AlipayService.queryAlipayTrade` 已删除，前端订单详情页「立即支付」按钮已移除。
 
 ---
 
