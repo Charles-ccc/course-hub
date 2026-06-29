@@ -53,7 +53,7 @@ Page({
             courseName: o.courseName,
             insitutionName: o.insitutionName,
             totalYuan: formatYuan(o.totalAmountCents),
-            payLabel: isDeferred ? `先学后付 · 分${o.periodCount}段` : '立即付款',
+            payLabel: isDeferred ? `先学后付 · 分${o.periodCount}段` : '课程报名',
             createdAt: formatDate(o.createdAt),
             statusText,
             statusCls: s.cls,

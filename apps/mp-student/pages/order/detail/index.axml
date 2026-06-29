@@ -42,7 +42,7 @@
       class="installment {{ item.isOverdue ? 'installment-overdue' : '' }}"
     >
       <view class="installment-left">
-        <text class="installment-no">第 {{ item.periodNo }} 期</text>
+        <text class="installment-no">第 {{ item.periodNo }} 阶段</text>
         <text class="installment-date">扣款日期 {{ item.dueDate }}</text>
       </view>
       <view class="installment-right">
@@ -62,7 +62,7 @@
 
   <view class="card compliance">
     <view class="compliance-text">
-      平台为居间服务方，机构为课程合同甲方。{{ isDeferred ? '先学后付：报名后即时解锁完整课程，按月扣款，凭芝麻信用担保，为商家课程收款安排，非金融产品，不产生利息或手续费。' : '立即付款订单确认后即时生效。' }}
+      平台为居间服务方，机构为课程合同甲方。先学后付：报名后即时解锁完整课程，按月扣款，凭芝麻信用担保，为商家课程收款安排，非金融产品，不产生利息或手续费。
     </view>
   </view>
 
@@ -70,12 +70,6 @@
   <view a:if="{{ canZhima }}" class="footer">
     <view class="footer-hint">授权后即可解锁全部课程内容</view>
     <button class="btn-primary" onTap="onZhima">芝麻先享授权</button>
-  </view>
-
-  <!-- IMMEDIATE 待支付 -->
-  <view a:if="{{ canPay }}" class="footer">
-    <view class="footer-hint">支付成功后即可解锁全部课程内容</view>
-    <button class="btn-primary" onTap="onPay">立即支付 ¥{{ totalYuan }}</button>
   </view>
 
   <!-- 已激活，去学习 -->

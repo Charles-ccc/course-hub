@@ -31,7 +31,6 @@
       <view a:if="{{ segmentCount }}" class="tags">
         <text class="tag">芝麻先享</text>
         <text class="tag">阶段付</text>
-        <text class="tag">7天无理由退课</text>
       </view>
     </view>
   </view>
@@ -49,17 +48,12 @@
     </view>
     <view class="plan-row">
       <text class="plan-label">收费日期</text>
-      <text class="plan-value">固定</text>
+      <text class="plan-value">每30天</text>
     </view>
     <view class="plan-row" onTap="onShowPlan">
       <text class="plan-label">扣款计划</text>
       <text class="plan-value link">查看详情 ›</text>
     </view>
-  </view>
-
-  <view a:if="{{ course.instructorInfo }}" class="section">
-    <view class="section-title">讲师信息</view>
-    <view class="section-content">{{ course.instructorInfo }}</view>
   </view>
 
   <view a:if="{{ course.outline }}" class="section">
@@ -76,20 +70,9 @@
   <view class="spacer"></view>
 
   <view class="footer">
-    <view a:if="{{ segmentCount }}" class="pay-options">
-      <view class="pay-option {{ payType === 'IMMEDIATE' ? 'active' : '' }}" data-pay="IMMEDIATE" onTap="onPayTypeChange">
-        <view class="pay-option-title">立即付款</view>
-        <view class="pay-option-sub">一次性付清</view>
-      </view>
-      <view class="pay-option {{ payType === 'DEFERRED' ? 'active' : '' }}" data-pay="DEFERRED" onTap="onPayTypeChange">
-        <view class="pay-option-title">先学后付</view>
-        <view class="pay-option-sub">0元下单，按月扣款</view>
-      </view>
-    </view>
-
     <view class="action-row">
       <button class="btn-secondary" onTap="onTrialLearn">免费试学第一节</button>
-      <button class="btn-primary" onTap="onEnroll">{{ payType === 'DEFERRED' ? '免预付报名' : '立即报名' }}</button>
+      <button class="btn-primary" onTap="onEnroll">免预付报名</button>
     </view>
   </view>
 
@@ -109,7 +92,7 @@
         </view>
         <view class="plan-item" a:for="{{ planRows }}" a:key="periodNo">
           <view class="plan-item-left">
-            <text class="plan-item-no">第{{ item.periodNo }}期</text>
+            <text class="plan-item-no">第{{ item.periodNo }}阶段</text>
             <text class="plan-item-date">扣款日期 {{ item.dateStr }}</text>
           </view>
           <text class="plan-item-amount">¥{{ item.amountYuan }}</text>

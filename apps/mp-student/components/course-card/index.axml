@@ -20,7 +20,6 @@
     <view a:if="{{ segmentCount }}" class="tags">
       <text class="tag">芝麻先享</text>
       <text class="tag">阶段付</text>
-      <text class="tag">7天无理由退课</text>
     </view>
     <view class="card-footer">
       <button class="btn-enroll" catchTap="onTap">去报名</button>

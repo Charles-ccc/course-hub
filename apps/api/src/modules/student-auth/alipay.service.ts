@@ -406,30 +406,6 @@ export class AlipayService {
     return { tradeNo };
   }
 
-  async queryAlipayTrade(params: {
-    outTradeNo: string;
-  }): Promise<{ paid: boolean; status: string }> {
-    if (!this.sdk) {
-      if (!this.isProduction) {
-        this.logger.warn(JSON.stringify({ event: "alipay_trade_query_mocked" }));
-        return { paid: true, status: "TRADE_SUCCESS" };
-      }
-      throw new Error("AlipaySDK not configured");
-    }
-
-    const result = (await this.sdk.exec("alipay.trade.query", {
-      bizContent: { out_trade_no: params.outTradeNo },
-    })) as Record<string, unknown>;
-
-    this.logger.log(JSON.stringify({ event: "alipay_trade_query_response", result }));
-
-    const status = (result.tradeStatus ?? "") as string;
-    return {
-      paid: status === "TRADE_SUCCESS" || status === "TRADE_FINISHED",
-      status,
-    };
-  }
-
   // ── 手机号解密 ───────────────────────────────────────────
 
   decryptPhone(encryptedData: string, iv?: string): string {

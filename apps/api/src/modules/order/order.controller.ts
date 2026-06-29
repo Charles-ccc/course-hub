@@ -20,8 +20,6 @@ import {
   type ZhimaInitializeRespDto,
   type ZhimaConfirmRespDto,
   type RepayRespDto,
-  type PayInitRespDto,
-  type PayConfirmRespDto,
 } from "./dto/order.dto";
 
 @Controller("orders")
@@ -69,25 +67,7 @@ export class OrderController {
     return this.orderService.zhimaConfirm(user.subject, orderId);
   }
 
-  // ── 一次性付款（IMMEDIATE）────────────────────────────
-
-  @Post(":orderId/pay")
-  pay(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param("orderId") orderId: string,
-  ): Promise<PayInitRespDto> {
-    return this.orderService.pay(user.subject, orderId);
-  }
-
-  @Post(":orderId/pay/confirm")
-  payConfirm(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param("orderId") orderId: string,
-  ): Promise<PayConfirmRespDto> {
-    return this.orderService.payConfirm(user.subject, orderId);
-  }
-
-  // ── 逾期还款 ─────────────────────────────────────────────
+  // ── 逾期履约还款 ─────────────────────────────────────────
 
   @Post(":orderId/installments/:periodNo/repay")
   repay(

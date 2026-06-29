@@ -63,12 +63,3 @@ export interface ZhimaConfirmRespDto {
 export interface RepayRespDto {
   tradeNo: string;
 }
-
-export interface PayInitRespDto {
-  tradeNo: string;
-}
-
-export interface PayConfirmRespDto {
-  success: boolean;
-  orderStatus: string;
-}

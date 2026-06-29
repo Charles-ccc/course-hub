@@ -43,7 +43,6 @@ Page({
     statusCls: '',
     installments: [],
     canZhima: false,
-    canPay: false,
     canLearn: false,
     hasOverdue: false,
   },
@@ -84,24 +83,18 @@ Page({
         }));
         const isDeferred = order.payType === 'DEFERRED';
         const hasOverdue = installments.some((it) => it.isOverdue);
-        // CREATED 状态按付款方式区分文案
         const statusText =
-          order.status === 'CREATED'
-            ? isDeferred
-              ? '待履约'
-              : '待支付'
-            : statusInfo.text;
+          order.status === 'CREATED' ? '待履约' : statusInfo.text;
         this.setData({
           order,
           loading: false,
           isDeferred,
-          payTitle: isDeferred ? '先学后付' : '立即付款',
+          payTitle: '先学后付',
           totalYuan: formatYuan(order.totalAmountCents),
           statusText,
           statusCls: statusInfo.cls,
           installments,
-          canZhima: order.status === 'CREATED' && isDeferred,
-          canPay: order.status === 'CREATED' && !isDeferred,
+          canZhima: order.status === 'CREATED',
           canLearn: order.status === 'ACTIVE',
           hasOverdue,
         });
@@ -144,47 +137,6 @@ Page({
       })
       .catch(() => {
         // 未完成授权不显示错误，用户可再次点击按钮重试
-      });
-  },
-
-  onPay() {
-    const { orderId } = this.data;
-    my.showLoading({ content: '发起支付...' });
-    request({ url: `/orders/${orderId}/pay`, method: 'POST' })
-      .then((res) => {
-        my.hideLoading();
-        const tradeNo = res && res.tradeNo;
-        if (!tradeNo) {
-          my.showToast({ content: '创建支付单失败', type: 'fail' });
-          return;
-        }
-        my.tradePay({
-          tradeNO: tradeNo,
-          success: () => {
-            this._payConfirm(orderId);
-          },
-          fail: () => {
-            my.showToast({ content: '支付已取消', type: 'none' });
-          },
-        });
-      })
-      .catch((err) => {
-        my.hideLoading();
-        my.showToast({ content: (err && err.message) || '发起支付失败', type: 'fail' });
-      });
-  },
-
-  _payConfirm(orderId) {
-    request({ url: `/orders/${orderId}/pay/confirm`, method: 'POST' })
-      .then((res) => {
-        if (res && res.orderStatus === 'ACTIVE') {
-          my.showToast({ content: '支付成功，课程已解锁！', type: 'success' });
-        }
-        this._fetch(orderId);
-      })
-      .catch(() => {
-        // 确认失败时（如回调延迟）刷新订单，状态以 notify 为准
-        this._fetch(orderId);
       });
   },
 

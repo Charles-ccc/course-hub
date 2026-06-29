@@ -11,8 +11,6 @@ import type {
   ZhimaInitializeRespDto,
   ZhimaConfirmRespDto,
   RepayRespDto,
-  PayInitRespDto,
-  PayConfirmRespDto,
 } from "./dto/order.dto";
 
 /** 将无连字符的 32 位 hex 还原为标准 UUID（8-4-4-4-12） */
@@ -365,88 +363,7 @@ export class OrderService {
     return { tradeNo };
   }
 
-  // ── 一次性付款（IMMEDIATE）────────────────────────────────
-
-  async pay(studentId: string, orderId: string): Promise<PayInitRespDto> {
-    const order = await this.prisma.order.findFirst({
-      where: { id: orderId, studentId },
-      include: { student: { select: { alipayOpenId: true } } },
-    });
-    if (!order) throw new ApiBusinessException(40411, "订单不存在", 404);
-    if (order.payType !== "IMMEDIATE") {
-      throw new ApiBusinessException(40024, "仅一次性付款订单可使用此支付", 400);
-    }
-    if (order.status !== "CREATED") {
-      throw new ApiBusinessException(40025, "订单状态不允许支付", 400);
-    }
-
-    const periodNo = 1;
-    const installment = await this.prisma.installment.findUnique({
-      where: { orderId_periodNo: { orderId, periodNo } },
-    });
-    if (!installment) throw new ApiBusinessException(40412, "分期不存在", 404);
-
-    const outTradeNo = `${orderId.replace(/-/g, "")}_${periodNo}`;
-    const subject = order.courseName;
-
-    let tradeNo: string;
-    try {
-      ({ tradeNo } = await this.alipay.createAlipayTrade({
-        outTradeNo,
-        totalAmountCents: installment.plannedAmountCents,
-        subject,
-        buyerOpenId: order.student?.alipayOpenId ?? "",
-      }));
-    } catch (err) {
-      if (String(err).includes("TRADE_API_UNAVAILABLE")) {
-        throw new ApiBusinessException(50102, "支付服务暂不可用，小程序支付产品开通中，请稍后重试", 501);
-      }
-      throw err;
-    }
-
-    this.logger.log(
-      JSON.stringify({ event: "pay_trade_created", orderId, tradeNo }),
-    );
-
-    return { tradeNo };
-  }
-
-  async payConfirm(
-    studentId: string,
-    orderId: string,
-  ): Promise<PayConfirmRespDto> {
-    const order = await this.prisma.order.findFirst({
-      where: { id: orderId, studentId },
-    });
-    if (!order) throw new ApiBusinessException(40411, "订单不存在", 404);
-    if (order.status !== "CREATED") {
-      return { success: true, orderStatus: order.status };
-    }
-
-    const periodNo = 1;
-    const outTradeNo = `${orderId.replace(/-/g, "")}_${periodNo}`;
-    const { paid } = await this.alipay.queryAlipayTrade({ outTradeNo });
-    if (!paid) {
-      throw new ApiBusinessException(40501, "支付尚未完成", 400);
-    }
-
-    await this.prisma.$transaction([
-      this.prisma.installment.updateMany({
-        where: { orderId, periodNo },
-        data: { status: "PAID", paidAmountCents: order.totalAmountCents },
-      }),
-      this.prisma.order.update({
-        where: { id: orderId },
-        data: { status: "ACTIVE" },
-      }),
-    ]);
-
-    this.logger.log(JSON.stringify({ event: "pay_confirmed", orderId }));
-
-    return { success: true, orderStatus: "ACTIVE" };
-  }
-
-  /** 普通收单支付回调（IMMEDIATE 首付 + 逾期还款共用）*/
+  /** 普通收单支付回调（逾期履约还款）*/
   async handleTradeNotify(params: Record<string, string>): Promise<void> {
     const valid = this.alipay.verifyNotifySign(params);
     if (!valid) {
@@ -479,18 +396,8 @@ export class OrderService {
       data: { status: "PAID", paidAmountCents: paidAmountCents || undefined },
     });
 
-    // IMMEDIATE 首次付款：CREATED → ACTIVE（不置 COMPLETED）
-    if (order.status === "CREATED") {
-      await this.prisma.order.update({
-        where: { id: orderId },
-        data: { status: "ACTIVE" },
-      });
-      this.logger.log(JSON.stringify({ event: "order_activated_by_pay", orderId }));
-      return;
-    }
-
-    // DEFERRED 逾期还款：全部期 PAID → COMPLETED
-    if (order.payType === "DEFERRED") {
+    // 逾期履约还款：全部期 PAID → COMPLETED
+    {
       const remaining = await this.prisma.installment.count({
         where: { orderId, status: { not: "PAID" } },
       });

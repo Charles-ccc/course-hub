@@ -33,11 +33,9 @@ function computePlan(priceCents, periodCount) {
 Page({
   data: {
     courseId: '',
-    payType: 'IMMEDIATE',
     course: null,
     loading: true,
     submitting: false,
-    isDeferred: false,
     priceTotal: '0',
     segmentCount: 0,
     planRows: [],
@@ -45,31 +43,24 @@ Page({
 
   onLoad(query) {
     const courseId = (query && query.courseId) || '';
-    const payType = (query && query.payType) === 'DEFERRED' ? 'DEFERRED' : 'IMMEDIATE';
     if (!courseId) {
       my.showToast({ content: '课程参数缺失', type: 'fail' });
       return;
     }
-    this.setData({
-      courseId,
-      payType,
-      isDeferred: payType === 'DEFERRED',
-      loading: true,
-    });
+    this.setData({ courseId, loading: true });
     this._fetch(courseId);
   },
 
   _fetch(courseId) {
     request({ url: `/courses/${courseId}`, method: 'GET', noAuth: true })
       .then((course) => {
-        const periods = course.periodCount || 1;
-        const isDeferred = this.data.payType === 'DEFERRED';
+        const periods = Math.max(course.periodCount || 1, 1);
         this.setData({
           course,
           loading: false,
           priceTotal: formatYuan(course.priceCents),
-          segmentCount: periods > 1 ? periods : 0,
-          planRows: isDeferred && periods > 1 ? computePlan(course.priceCents, periods) : [],
+          segmentCount: periods,
+          planRows: computePlan(course.priceCents, periods),
         });
       })
       .catch((err) => {
@@ -85,7 +76,7 @@ Page({
     request({
       url: '/orders',
       method: 'POST',
-      data: { courseId: this.data.courseId, payType: this.data.payType },
+      data: { courseId: this.data.courseId, payType: 'DEFERRED' },
     })
       .then((res) => {
         my.showToast({ content: '报名成功', type: 'success' });

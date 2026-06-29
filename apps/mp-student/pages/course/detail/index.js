@@ -35,7 +35,6 @@ Page({
     courseId: '',
     course: null,
     loading: true,
-    payType: 'IMMEDIATE',
     priceTotal: '0',
     segmentCount: 0,
     planRows: [],
@@ -53,11 +52,6 @@ Page({
     }
     this.setData({ courseId, loading: true });
     this._fetch(courseId);
-  },
-
-  onPayTypeChange(e) {
-    const payType = e.currentTarget.dataset.pay;
-    if (payType) this.setData({ payType });
   },
 
   onShowPlan() {
@@ -98,7 +92,7 @@ Page({
 
   _goConfirm() {
     my.navigateTo({
-      url: `/pages/order/confirm/index?courseId=${this.data.courseId}&payType=${this.data.payType}`,
+      url: `/pages/order/confirm/index?courseId=${this.data.courseId}`,
     });
   },
 
