@@ -4,6 +4,7 @@ export type OrderStatus =
   | "CREATED"
   | "COOLING_OFF"
   | "ACTIVE"
+  | "OVERDUE"
   | "COMPLETED"
   | "REFUNDED"
   | "TERMINATED";
@@ -21,6 +22,7 @@ export class InsitutionOrderQueryDto {
     "CREATED",
     "COOLING_OFF",
     "ACTIVE",
+    "OVERDUE",
     "COMPLETED",
     "REFUNDED",
     "TERMINATED",

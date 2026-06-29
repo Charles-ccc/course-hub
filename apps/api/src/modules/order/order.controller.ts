@@ -91,7 +91,7 @@ export class ZhimaWebhookController {
   }
 }
 
-// 普通收单支付回调（IMMEDIATE 首付 + 逾期还款，无需认证）
+// 普通收单支付回调（仅逾期履约还款，无需认证）
 @Controller("orders/trade")
 export class TradeWebhookController {
   constructor(private readonly orderService: OrderService) {}

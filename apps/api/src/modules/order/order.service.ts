@@ -35,6 +35,14 @@ export class OrderService {
     studentId: string,
     dto: CreateOrderReqDto,
   ): Promise<CreateOrderRespDto> {
+    const config = await this.getSystemConfig();
+    if (!config.zhimaEnabled) {
+      throw new ApiBusinessException(50301, "先享后付暂未开放，请联系机构", 503);
+    }
+    if (dto.payType && dto.payType !== "DEFERRED") {
+      throw new ApiBusinessException(40024, "当前仅支持先学后付报名", 400);
+    }
+
     const student = await this.prisma.student.findUniqueOrThrow({
       where: { id: studentId },
     });
@@ -51,9 +59,23 @@ export class OrderService {
       throw new ApiBusinessException(40010, "课程不存在或已下架", 400);
     }
 
+    const existingOrder = await this.prisma.order.findFirst({
+      where: {
+        studentId: student.id,
+        courseId: course.id,
+        status: {
+          notIn: ["COMPLETED", "REFUNDED", "TERMINATED"],
+        },
+      },
+      select: { id: true },
+    });
+    if (existingOrder) {
+      throw new ApiBusinessException(40404, "您已报名该课程，请勿重复下单", 400);
+    }
+
     const studentName = student.name ?? student.phone;
-    const periodCount =
-      dto.payType === "DEFERRED" ? Math.max(course.periodCount, 1) : 1;
+    const payType = "DEFERRED" as const;
+    const periodCount = Math.max(course.periodCount, 1);
 
     const orderId = randomUUID();
     const now = new Date();
@@ -62,7 +84,6 @@ export class OrderService {
       orderId,
       course.priceCents,
       periodCount,
-      dto.payType,
       now,
     );
 
@@ -78,7 +99,7 @@ export class OrderService {
           courseName: course.name,
           totalAmountCents: course.priceCents,
           periodCount,
-          payType: dto.payType,
+          payType,
           status: "CREATED",
           createdAt: now,
         },
@@ -92,7 +113,7 @@ export class OrderService {
         orderId,
         studentId: student.id,
         courseId: course.id,
-        payType: dto.payType,
+        payType,
         periodCount,
       }),
     );
@@ -181,6 +202,11 @@ export class OrderService {
     studentId: string,
     orderId: string,
   ): Promise<ZhimaInitializeRespDto> {
+    const config = await this.getSystemConfig();
+    if (!config.zhimaEnabled) {
+      throw new ApiBusinessException(50301, "先享后付暂未开放，请联系机构", 503);
+    }
+
     const order = await this.prisma.order.findFirst({
       where: { id: orderId, studentId },
     });
@@ -301,18 +327,7 @@ export class OrderService {
       },
     });
 
-    if (isSuccess) {
-      const remaining = await this.prisma.installment.count({
-        where: { orderId, status: { not: "PAID" } },
-      });
-      if (remaining === 0) {
-        await this.prisma.order.update({
-          where: { id: orderId },
-          data: { status: "COMPLETED" },
-        });
-        this.logger.log(JSON.stringify({ event: "order_completed", orderId }));
-      }
-    }
+    await this.syncOrderStatus(orderId);
   }
 
   async repay(
@@ -384,34 +399,20 @@ export class OrderService {
       data: { status: "PAID", paidAmountCents: paidAmountCents || undefined },
     });
 
-    // 逾期履约还款：全部期 PAID → COMPLETED
-    {
-      const remaining = await this.prisma.installment.count({
-        where: { orderId, status: { not: "PAID" } },
-      });
-      if (remaining === 0) {
-        await this.prisma.order.update({
-          where: { id: orderId },
-          data: { status: "COMPLETED" },
-        });
-        this.logger.log(JSON.stringify({ event: "order_completed", orderId }));
-      }
-    }
+    await this.syncOrderStatus(orderId);
   }
 
   // ── 分期明细生成 ────────────────────────────────────────
 
   /**
    * 生成分期明细。
-   * - IMMEDIATE：1 期全额，dueDate = 下单时间
-   * - DEFERRED：N 期，每期金额向下取整均分，末期吸收余数；
+   * - 统一先学后付：N 期，每期金额向下取整均分，末期吸收余数；
    *   第 k 期 dueDate = createdAt + k × 30 天（k 从 1 开始）
    */
   private buildInstallments(
     orderId: string,
     totalCents: number,
     periodCount: number,
-    payType: "IMMEDIATE" | "DEFERRED",
     createdAt: Date,
   ): {
     id: string;
@@ -421,7 +422,7 @@ export class OrderService {
     plannedAmountCents: number;
     status: "PENDING";
   }[] {
-    if (payType === "IMMEDIATE" || periodCount <= 1) {
+    if (periodCount <= 1) {
       return [
         {
           id: randomUUID(),
@@ -451,5 +452,56 @@ export class OrderService {
       });
     }
     return result;
+  }
+
+  private async syncOrderStatus(orderId: string): Promise<void> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { status: true },
+    });
+    if (!order) return;
+
+    const [overdueCount, unpaidCount] = await this.prisma.$transaction([
+      this.prisma.installment.count({
+        where: { orderId, status: "OVERDUE" },
+      }),
+      this.prisma.installment.count({
+        where: { orderId, status: { not: "PAID" } },
+      }),
+    ]);
+
+    const nextStatus = overdueCount > 0 ? "OVERDUE" : unpaidCount === 0 ? "COMPLETED" : "ACTIVE";
+    if (order.status === nextStatus) {
+      return;
+    }
+
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: nextStatus },
+    });
+
+    this.logger.log(
+      JSON.stringify({
+        event: nextStatus === "COMPLETED" ? "order_completed" : "order_status_synced",
+        orderId,
+        status: nextStatus,
+        overdueCount,
+        unpaidCount,
+      }),
+    );
+  }
+
+  private async getSystemConfig() {
+    return this.prisma.systemConfig.upsert({
+      where: { key: "default" },
+      create: {
+        key: "default",
+        priceLimitCents: 200000,
+        minAge: 8,
+        maxAge: 18,
+        zhimaEnabled: true,
+      },
+      update: {},
+    });
   }
 }

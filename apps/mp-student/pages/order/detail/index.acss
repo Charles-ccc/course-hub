@@ -27,6 +27,10 @@
   background: linear-gradient(135deg, #36c46f 0%, #18a058 100%);
 }
 
+.status-bar.status-overdue {
+  background: linear-gradient(135deg, #ff7875 0%, #cf1322 100%);
+}
+
 .status-bar.status-done {
   background: linear-gradient(135deg, #9aa0a6 0%, #6b7177 100%);
 }

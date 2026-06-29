@@ -20,6 +20,7 @@ const tabItems: TabsProps["items"] = [
   { key: "CREATED", label: "待签约" },
   { key: "COOLING_OFF", label: "冷静期中" },
   { key: "ACTIVE", label: "学习中" },
+  { key: "OVERDUE", label: "已逾期" },
   { key: "COMPLETED", label: "已完成" },
   { key: "REFUNDED", label: "已退款" },
   { key: "TERMINATED", label: "已终止" },
@@ -61,6 +62,9 @@ export const OrdersPage = (): ReactElement => {
       render: (status: OrderStatus) => {
         if (status === "COOLING_OFF") {
           return <Badge status='processing' text={orderStatusLabel[status]} />;
+        }
+        if (status === "OVERDUE") {
+          return <Tag color='red'>{orderStatusLabel[status]}</Tag>;
         }
         return <Tag>{orderStatusLabel[status]}</Tag>;
       },

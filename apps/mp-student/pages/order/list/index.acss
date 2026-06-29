@@ -91,6 +91,11 @@
   color: #2e7d32;
 }
 
+.tag-red {
+  background: #fff1f0;
+  color: #cf1322;
+}
+
 .tag-grey {
   background: #f5f5f5;
   color: #888;

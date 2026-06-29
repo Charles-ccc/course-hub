@@ -18,6 +18,7 @@ function formatDate(iso) {
 const ORDER_STATUS_MAP = {
   CREATED: { text: '待授权', cls: 'status-created' },
   ACTIVE: { text: '进行中', cls: 'status-active' },
+  OVERDUE: { text: '已逾期', cls: 'status-overdue' },
   COMPLETED: { text: '已完成', cls: 'status-done' },
   REFUNDED: { text: '已退款', cls: 'status-done' },
   TERMINATED: { text: '已终止', cls: 'status-done' },
@@ -36,7 +37,6 @@ Page({
     orderId: '',
     order: null,
     loading: true,
-    isDeferred: false,
     payTitle: '',
     totalYuan: '0',
     statusText: '',
@@ -81,14 +81,12 @@ Page({
           statusText: PERIOD_STATUS_MAP[it.status] || it.status,
           isOverdue: it.status === 'OVERDUE',
         }));
-        const isDeferred = order.payType === 'DEFERRED';
         const hasOverdue = installments.some((it) => it.isOverdue);
         const statusText =
           order.status === 'CREATED' ? '待履约' : statusInfo.text;
         this.setData({
           order,
           loading: false,
-          isDeferred,
           payTitle: '先学后付',
           totalYuan: formatYuan(order.totalAmountCents),
           statusText,

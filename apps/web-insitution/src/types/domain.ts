@@ -6,6 +6,7 @@ export type OrderStatus =
   | "CREATED"
   | "COOLING_OFF"
   | "ACTIVE"
+  | "OVERDUE"
   | "COMPLETED"
   | "REFUNDED"
   | "TERMINATED";

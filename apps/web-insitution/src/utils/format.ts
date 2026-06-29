@@ -16,6 +16,7 @@ export const orderStatusLabel: Record<OrderStatus, string> = {
   CREATED: "待签约",
   COOLING_OFF: "冷静期中",
   ACTIVE: "学习中",
+  OVERDUE: "已逾期",
   COMPLETED: "已完成",
   REFUNDED: "已退款",
   TERMINATED: "已终止",

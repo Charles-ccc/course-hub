@@ -15,6 +15,7 @@ function formatDate(iso) {
 const STATUS_MAP = {
   CREATED:    { text: '待处理', cls: 'tag-orange' },
   ACTIVE:     { text: '进行中', cls: 'tag-green' },
+  OVERDUE:    { text: '已逾期', cls: 'tag-red' },
   COMPLETED:  { text: '已完成', cls: 'tag-grey' },
   REFUNDED:   { text: '已退款', cls: 'tag-grey' },
   TERMINATED: { text: '已终止', cls: 'tag-grey' },
@@ -43,17 +44,14 @@ Page({
       .then((list) => {
         const orders = (list || []).map((o) => {
           const s = STATUS_MAP[o.status] || { text: o.status, cls: 'tag-grey' };
-          const isDeferred = o.payType === 'DEFERRED';
-          // CREATED 按付款方式区分文案
-          const statusText =
-            o.status === 'CREATED' ? (isDeferred ? '待履约' : '待支付') : s.text;
+          const statusText = o.status === 'CREATED' ? '待履约' : s.text;
           const overdueCount = o.overdueCount || 0;
           return {
             id: o.id,
             courseName: o.courseName,
             insitutionName: o.insitutionName,
             totalYuan: formatYuan(o.totalAmountCents),
-            payLabel: isDeferred ? `先学后付 · 分${o.periodCount}段` : '课程报名',
+            payLabel: `先学后付 · 分${o.periodCount}段`,
             createdAt: formatDate(o.createdAt),
             statusText,
             statusCls: s.cls,

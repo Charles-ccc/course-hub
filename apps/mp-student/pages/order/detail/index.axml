@@ -23,7 +23,7 @@
         <text class="row-label">订单总额</text>
         <text class="row-value highlight">¥{{ totalYuan }}</text>
       </view>
-      <view a:if="{{ isDeferred }}" class="row">
+      <view class="row">
         <text class="row-label">合同周期</text>
         <text class="row-value">{{ order.periodCount }}期</text>
       </view>
@@ -34,7 +34,7 @@
     </view>
   </view>
 
-  <view a:if="{{ isDeferred }}" class="card">
+  <view class="card">
     <view class="card-title">扣款计划</view>
     <view
       a:for="{{ installments }}"
@@ -66,7 +66,6 @@
     </view>
   </view>
 
-  <!-- DEFERRED 待授权 -->
   <view a:if="{{ canZhima }}" class="footer">
     <view class="footer-hint">授权后即可解锁全部课程内容</view>
     <button class="btn-primary" onTap="onZhima">芝麻先享授权</button>

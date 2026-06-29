@@ -1,12 +1,13 @@
-import { IsIn, IsString, IsNotEmpty } from "class-validator";
+import { IsIn, IsOptional, IsString, IsNotEmpty } from "class-validator";
 
 export class CreateOrderReqDto {
   @IsString()
   @IsNotEmpty({ message: "课程参数缺失" })
   courseId!: string;
 
-  @IsIn(["IMMEDIATE", "DEFERRED"], { message: "付款方式不正确" })
-  payType!: "IMMEDIATE" | "DEFERRED";
+  @IsOptional()
+  @IsIn(["DEFERRED"], { message: "当前仅支持先学后付" })
+  payType?: "DEFERRED";
 }
 
 export interface OrderInstallmentDto {
