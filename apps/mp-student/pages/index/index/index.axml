@@ -15,6 +15,11 @@
     <button class="search-btn" onTap="onSearch">搜索</button>
   </view>
 
+  <view class="credit-notice">
+    <text class="credit-notice-title">芝麻能力适用说明</text>
+    <text class="credit-notice-text">仅带“芝麻先享课程”标识的培训课程支持支付宝芝麻先享信用报名，用于本课程先学后付与按期扣款。</text>
+  </view>
+
   <view a:if="{{ loading && !courses.length }}" class="loading-state">
     <text>加载中...</text>
   </view>

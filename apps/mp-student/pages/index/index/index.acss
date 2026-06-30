@@ -4,6 +4,29 @@
   padding-bottom: 40rpx;
 }
 
+.credit-notice {
+  margin: 20rpx 24rpx 0;
+  background: #fff8f0;
+  border: 1rpx solid #ffd8b2;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+}
+
+.credit-notice-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #b85a00;
+}
+
+.credit-notice-text {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: #8a5a2b;
+}
+
 .search-bar {
   display: flex;
   align-items: center;

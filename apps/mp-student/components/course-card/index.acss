@@ -90,6 +90,13 @@
   padding: 4rpx 12rpx;
 }
 
+.credit-desc {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: #6f5b43;
+}
+
 .card-footer {
   display: flex;
   justify-content: flex-end;

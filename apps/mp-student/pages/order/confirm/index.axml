@@ -27,6 +27,7 @@
         <text class="course-price-amount">¥{{ priceTotal }}</text>
         <text a:if="{{ segmentCount }}" class="seg-tag">分{{ segmentCount }}段</text>
       </view>
+      <view class="course-credit-note">本次报名商品支持芝麻先享信用服务，仅用于本课程先学后付。</view>
     </view>
   </view>
 
@@ -54,6 +55,11 @@
       <text class="zhima-score">芝麻分 ≥ 550</text>
     </view>
     <view class="zhima-sub">服务先享 · 按月扣款</view>
+    <view class="zhima-scope">
+      <view class="zhima-scope-line">适用商品：当前报名课程“{{ course.name }}”</view>
+      <view class="zhima-scope-line">使用场景：0 元报名后，按付款方案向商家收取课程服务费。</view>
+      <view class="zhima-scope-line">准入范围：教育培训课程服务，不用于借款、充值、套现或租赁。</view>
+    </view>
     <view class="zhima-promise">承诺按时上完订单内全部课程，如中途违约退课须向商家支付违约金。</view>
     <view class="compare-row">
       <view class="compare-col compare-ok">
@@ -76,7 +82,7 @@
     <view class="card-title">常见问题</view>
     <view class="faq">
       <view class="faq-q">1. 什么是先学后付？</view>
-      <view class="faq-a">先学后付是欢乐学平台基于支付宝芝麻信用提供的服务。芝麻分达标的用户报名「芝麻先享」担保方式的课程，可享受「0元下单、先学后付」的权益。</view>
+      <view class="faq-a">先学后付是欢乐学平台基于支付宝芝麻信用提供的课程报名服务。仅带“芝麻先享课程”标识的培训课程，可使用「0元下单、先学后付」权益。</view>
       <view class="faq-q">2. 先学后付如何扣款？</view>
       <view class="faq-a">报名后，系统将按课程付款方案的日期与金额，从您的支付宝账户自动扣除应支付给商家的课程款。</view>
       <view class="faq-q">3. 如何退课/退款？</view>
@@ -92,7 +98,7 @@
 
   <view class="card compliance">
     <view class="compliance-text">
-      平台为居间服务方，机构为课程合同甲方。提交订单即视为您已认可课程内容并同意报名须知。
+      平台为居间服务方，机构为课程合同甲方。芝麻能力仅用于当前课程报名与后续课程费扣款。提交订单即视为您已认可课程内容并同意报名须知。
     </view>
   </view>
 

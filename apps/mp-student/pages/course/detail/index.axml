@@ -29,10 +29,18 @@
         <text a:if="{{ segmentCount }}" class="seg-tag">分{{ segmentCount }}段</text>
       </view>
       <view a:if="{{ segmentCount }}" class="tags">
-        <text class="tag">芝麻先享</text>
-        <text class="tag">阶段付</text>
+        <text class="tag">芝麻先享课程</text>
+        <text class="tag">教育培训服务</text>
       </view>
     </view>
+  </view>
+
+  <view a:if="{{ segmentCount }}" class="section credit-section">
+    <view class="section-title">芝麻能力使用说明</view>
+    <view class="credit-line">适用商品：当前课程“{{ course.name }}”</view>
+    <view class="credit-line">使用场景：用于本课程 0 元报名、先学后付、按付款计划自动扣款。</view>
+    <view class="credit-line">准入范围：教育培训课程服务，不用于借款、充值、套现或实物租赁。</view>
+    <view class="credit-line">识别方式：仅带“芝麻先享课程”标识的课程可使用芝麻能力。</view>
   </view>
 
   <view class="section">
@@ -72,7 +80,7 @@
   <view class="footer">
     <view class="action-row">
       <button class="btn-secondary" onTap="onTrialLearn">免费试学第一节</button>
-      <button class="btn-primary" onTap="onEnroll">免预付报名</button>
+      <button class="btn-primary" onTap="onEnroll">芝麻先享报名</button>
     </view>
   </view>
 
@@ -107,7 +115,7 @@
       <view class="modal-content">本课程提供免费试学，建议先试学后再报名。提交即视为您已体验并认可课程内容，报名后不支持退课退款，请确认。</view>
       <view class="modal-actions">
         <button class="btn-secondary modal-btn" onTap="onCancelNotice">取消</button>
-        <button class="btn-primary modal-btn" onTap="onConfirmNotice">我已了解，确认报名</button>
+        <button class="btn-primary modal-btn" onTap="onConfirmNotice">确认报名</button>
       </view>
     </view>
   </view>

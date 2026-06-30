@@ -101,6 +101,17 @@
   padding: 4rpx 14rpx;
 }
 
+.credit-section {
+  background: #fffaf4;
+}
+
+.credit-line {
+  font-size: 26rpx;
+  color: #5d4a33;
+  line-height: 1.8;
+  margin-top: 10rpx;
+}
+
 .plan-row {
   display: flex;
   align-items: center;

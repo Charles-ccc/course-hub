@@ -14,6 +14,7 @@
   <view class="card">
     <view class="course-name" onTap="onViewCourse">{{ order.courseName }}</view>
     <view class="course-insitution">{{ order.insitutionName }}</view>
+    <view class="credit-summary">本订单商品“{{ order.courseName }}”使用芝麻先享信用服务，仅用于教育培训课程先学后付与按期扣款。</view>
     <view class="info-rows">
       <view class="row">
         <text class="row-label">付款方式</text>
@@ -62,7 +63,7 @@
 
   <view class="card compliance">
     <view class="compliance-text">
-      平台为居间服务方，机构为课程合同甲方。先学后付：报名后即时解锁完整课程，按月扣款，凭芝麻信用担保，为商家课程收款安排，非金融产品，不产生利息或手续费。
+      平台为居间服务方，机构为课程合同甲方。先学后付：报名后即时解锁完整课程，按月扣款，凭芝麻信用担保，为商家课程收款安排，非金融产品，不产生利息或手续费。芝麻能力仅适用于本订单课程服务。
     </view>
   </view>
 
